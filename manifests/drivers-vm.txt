@@ -1,0 +1,8 @@
+# Virtual-machine guest tools
+# The installer picks the entry that matches the detected hypervisor. All are
+# present in the offline repo so a VM install remains offline.
+
+qemu-guest-agent             # QEMU/KVM guest agent
+spice-vdagent                # SPICE clipboard/resolution integration
+open-vm-tools                # VMware guest integration
+virtualbox-guest-utils       # VirtualBox guest integration

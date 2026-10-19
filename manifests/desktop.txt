@@ -1,0 +1,35 @@
+# AstraOS desktop session
+# The base manifest already provides services, portals, audio and Qt runtime.
+# This file is the graphical session itself.
+
+niri                         # Wayland compositor
+noctalia                     # desktop shell; includes its own polkit/network/Bluetooth/UPower clients
+quickshell                   # QML runtime used by Noctalia and the keybind overlay
+xwayland-satellite           # rootless Xwayland for X11 applications
+xorg-xwayland                # Xwayland server files
+
+# Session integrations
+gnome-keyring                # secrets service
+polkit                       # authorization; Noctalia provides the agent UI
+networkmanager               # Noctalia network panel backend
+bluez                        # Noctalia Bluetooth panel backend
+power-profiles-daemon        # Noctalia power profile backend
+upower                       # Noctalia battery backend
+pipewire                     # audio
+wireplumber                  # audio session policy
+wl-clipboard                 # clipboard integration
+brightnessctl                # brightness fallback
+playerctl                    # media control
+grim                         # screenshot backend
+slurp                        # region selection
+
+# Qt compatibility for SDDM and desktop apps
+qt5-wayland
+qt6-wayland
+qt6-svg
+qt6-declarative
+qt6-5compat
+qt6-virtualkeyboard
+qt6-multimedia-ffmpeg
+
+# The keybind overlay is shipped by astra-keybinds.

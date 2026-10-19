@@ -1,0 +1,36 @@
+# NVIDIA GPU stack
+# Classification is by PCI device ID from NVIDIA's supported-GPU data, not by
+# marketing name. Turing and newer (including GTX 16xx) use the current open
+# branch. Maxwell, Pascal and Volta use the 580xx branch. Pre-Maxwell falls
+# back to nouveau.
+#
+# The live ISO uses open drivers only (amdgpu/i915/xe/nouveau). The
+# proprietary stack is installed on the target only.
+
+# Current branch: Turing / GTX 16xx and newer
+nvidia-open                  # prebuilt open kernel modules for the ISO kernel
+nvidia-open-dkms             # DKMS fallback for other kernels
+nvidia-utils                 # userspace driver, EGL/Wayland integration
+lib32-nvidia-utils           # 32-bit userspace for Steam/Wine
+nvidia-settings              # configuration utility
+nvidia-prime                 # hybrid graphics offload (prime-run)
+opencl-nvidia                # OpenCL
+lib32-opencl-nvidia          # 32-bit OpenCL
+linux-headers                # required by DKMS variants
+
+# 580xx branch: Maxwell / Pascal / Volta (AUR; built in a clean chroot at ISO build time)
+# nvidia-580xx-dkms         # kernel modules, AUR
+# nvidia-580xx-utils        # userspace, AUR
+# lib32-nvidia-580xx-utils  # 32-bit userspace, AUR
+# nvidia-580xx-settings     # configuration utility, AUR
+# opencl-nvidia-580xx       # OpenCL, AUR
+# lib32-opencl-nvidia-580xx # 32-bit OpenCL, AUR
+
+# Fallback for pre-Maxwell and recovery. nouveau itself is in the kernel, not a
+# package; only the userspace Vulkan driver is a package.
+vulkan-nouveau               # NVK Vulkan driver for unsupported NVIDIA cards
+
+# Required kernel parameters and services are handled by the installer:
+# nvidia_drm.modeset=1, nvidia_drm.fbdev=1, early KMS, suspend/hibernate/resume
+# units, NVreg_PreserveVideoMemoryAllocations=1, and the niri NVIDIA workaround.
+# The exact package names and support matrix must be re-verified at build time.

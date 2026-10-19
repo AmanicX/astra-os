@@ -1,0 +1,66 @@
+# AstraOS applications
+# Every line has a one-line reason. Packages marked PENDING need owner approval.
+# AUR packages are listed in aur.txt, not here.
+
+# Internet
+firefox                      # primary web browser
+# torbrowser-launcher        # PENDING: Tor Browser launcher found on the audit host
+
+# Files and archives
+nautilus                     # file manager (installed as a dependency on the audit host)
+gvfs                         # virtual filesystem and device mounts
+gvfs-mtp                     # Android/MTP devices in Nautilus
+gvfs-smb                     # SMB/Windows shares in Nautilus
+ffmpegthumbnailer            # video thumbnails in Nautilus
+file-roller                  # archive manager and Nautilus extraction
+
+# Terminal and shell
+kitty                        # terminal emulator
+zsh                          # login shell
+zsh-autosuggestions          # zsh autosuggestions
+zsh-syntax-highlighting      # zsh syntax highlighting
+
+# Editing and development
+neovim                       # editor
+lazygit                      # git TUI
+fzf                          # fuzzy finder for shell/editor workflows
+fd                           # fast file finder
+ripgrep                      # fast recursive search
+bat                          # syntax-highlighted file viewer
+eza                          # modern directory listing
+zoxide                       # directory jumper
+nodejs                       # Node runtime for LazyVim/opencode tooling
+npm                          # Node package manager
+tree-sitter-cli              # Tree-sitter parser development
+python-pynvim                # Neovim Python client
+python-json5                 # JSON5 parsing used by Noctalia/theme tooling
+python-tomlkit               # TOML editing used by Noctalia/theme tooling
+
+# Media
+mpv                          # media player
+loupe                        # PENDING: image viewer proposal
+gimp                         # PENDING: image editor proposal
+pavucontrol                  # PENDING: audio mixer proposal
+
+# System utilities
+btop                         # resource monitor
+fastfetch                    # system information
+opencode                     # coding agent with the Astra theme
+papers                       # PENDING: PDF viewer proposal
+gnome-calculator             # PENDING: calculator proposal
+gnome-text-editor            # PENDING: simple text editor proposal
+gnome-disk-utility           # PENDING: disk utility proposal
+smartmontools                # disk health
+
+# Games (all PENDING; not installed on the audit host)
+# steam                      # game client
+# gamemode                   # game performance tuning
+# lib32-gamemode             # 32-bit game support
+# mangohud                   # game overlay
+# lib32-mangohud             # 32-bit game overlay
+
+# Deliberately excluded from the default image
+# htop, nano, vim            # optional; btop/Neovim/gnome-text-editor cover the default use
+# network-manager-applet     # Noctalia owns the network UI
+# nwg-look                   # GTK settings are shipped as defaults
+# cloudflare-warp-bin        # personal VPN, not part of AstraOS

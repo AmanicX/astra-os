@@ -1,0 +1,4 @@
+# Optional LTS rescue kernel. Not enabled until the owner approves the added
+# ISO size and the second NVIDIA module set.
+linux-lts
+linux-lts-headers

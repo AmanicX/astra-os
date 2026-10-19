@@ -1,0 +1,18 @@
+# AUR packages built in a clean chroot from pinned commits at ISO build time.
+# Format: package version reason
+# Versions were read from the AUR RPC on 2026-10-19; pin the exact commit in
+# the generated source lock before building.
+
+paru                         2.1.0-2       AUR helper installed on the target
+oh-my-posh-bin               31.8.0-1      prompt binary matching the audited 31.8.0
+nvidia-580xx-dkms            580.178.04-4  Maxwell/Pascal/Volta kernel modules
+nvidia-580xx-utils           580.178.04-4  Maxwell/Pascal/Volta userspace
+lib32-nvidia-580xx-utils     580.178.04-1  32-bit Maxwell/Pascal/Volta userspace
+nvidia-580xx-settings        580.178.04-1  Maxwell/Pascal/Volta settings utility
+opencl-nvidia-580xx          580.178.04-4  Maxwell/Pascal/Volta OpenCL
+lib32-opencl-nvidia-580xx    580.178.04-1  32-bit Maxwell/Pascal/Volta OpenCL
+
+# PENDING / excluded
+# cloudflare-warp-bin        personal VPN; not part of AstraOS
+# yay-bin, yay-bin-debug     replaced by paru
+# sddm-astronaut-theme       asset licensing unclear; see THIRD_PARTY.md

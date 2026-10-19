@@ -1,0 +1,10 @@
+*.iso
+*.iso.sha256
+/build/
+/out/
+/repo/
+/work/
+*.log
+.env
+*.key
+*.pem

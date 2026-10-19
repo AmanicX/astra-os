@@ -1,0 +1,10 @@
+# Fonts, icons and GTK theme
+# These package names were verified with pacman -Si on 2026-10-19.
+
+noto-fonts                   # Latin, Greek and Cyrillic text
+noto-fonts-emoji             # emoji fallback
+noto-fonts-cjk               # CJK fallback
+ttf-liberation               # metric-compatible Microsoft font replacement
+ttf-jetbrains-mono-nerd      # terminal and editor monospace font
+adw-gtk-theme                # GTK3/GTK4 Adwaita-style theme used by the desktop
+papirus-icon-theme           # icon theme used by the desktop

@@ -1,0 +1,4 @@
+# Foreign/AUR packages on the audit host, captured 2026-10-19.
+cloudflare-warp-bin
+yay-bin
+yay-bin-debug

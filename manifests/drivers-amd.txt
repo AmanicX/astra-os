@@ -1,0 +1,16 @@
+# AMD CPU/GPU stack
+# Selected by installer/lib/hw.sh when the CPU vendor is AuthenticAMD
+# and/or the GPU is AMD.
+
+amd-ucode                    # AMD CPU microcode
+mesa                         # Mesa graphics; provides libva-mesa-driver in the 2026 snapshot
+vulkan-radeon                # RADV Vulkan driver
+lib32-mesa                   # 32-bit Mesa for Steam/Wine
+lib32-vulkan-radeon          # 32-bit RADV
+libva                        # VA-API client library
+libva-utils                  # vainfo diagnostics
+
+# No separate libva-mesa-driver package exists in the current snapshot (D-006).
+# No mesa-vdpau package exists in the current snapshot; VA-API is the supported path.
+# Xorg drivers are not required for a Wayland-only niri session.
+# If an Xorg fallback is added later, xf86-video-amdgpu can be added here.

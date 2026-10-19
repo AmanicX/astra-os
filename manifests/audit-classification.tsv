@@ -1,0 +1,97 @@
+package	repo	version	category	decision	note
+adw-gtk-theme	extra	6.5-1	theme	include	GTK theme used by dconf
+amd-ucode	core	20260916-1	driver	include	AMD microcode for this CPU
+archinstall	extra	4.5-1	build	exclude	installer tool, not a target app
+archiso	extra	91-1	build	exclude	ISO build tool, not a target app
+base	core	3-3	base	include	minimal base
+base-devel	core	1-2	dev	include	build toolchain for AUR
+bluez	extra	5.87-2	desktop	include	Bluetooth service
+bluez-utils	extra	5.87-2	desktop	include	Bluetooth tools
+btop	extra	1.4.7-1	app	include	resource monitor
+btrfs-progs	core	7.1-1	base	include	filesystem tools
+cloudflare-warp-bin	foreign	2026.8.2110.0-1	personal	exclude	personal VPN service
+cmake	extra	4.4.4-1	dev	include	build tool for development
+efibootmgr	core	18-4	base	include	UEFI boot entries
+fastfetch	extra	2.70.0-1	app	include	system info
+fd	extra	10.5.0-3	app	include	file finder
+file-roller	extra	44.7-1	app	include	archive manager
+firefox	extra	158.0-1	app	include	web browser
+fuzzel	extra	1.15.0-1	legacy	exclude	unused launcher; Noctalia has one
+fzf	extra	0.74.5-1	app	include	fuzzy finder
+git	extra	2.56.0-1	dev	include	version control
+gnome-keyring	extra	1:51.1-1	desktop	include	secrets service
+gst-plugin-pipewire	extra	1:1.6.9-1	desktop	include	GStreamer PipeWire plugin
+htop	extra	3.5.3-1	legacy	exclude	btop covers this
+intel-media-driver	extra	26.3.5-1	driver	repo-only	Intel GPU payload; not this AMD host
+kitty	extra	0.49.2-1	desktop	include	terminal
+lazygit	extra	0.66.2-1	app	include	git TUI
+libpulse	extra	17.0+r98+gb096704c0-1	desktop	include	PulseAudio client compatibility
+libva-intel-driver	extra	2.4.5-1	driver	repo-only	legacy Intel VA-API payload
+libvpl	extra	2.17.0-1	driver	repo-only	Intel VPL payload
+linux	core	7.2.11.arch1-1	base	include	default kernel
+linux-firmware	core	20260916-1	base	include	firmware
+linux-headers	core	7.2.11.arch1-1	base	include	DKMS/module builds
+make	core	4.4.1-3	dev	include	build tool
+mako	extra	1.11.0-1	legacy	exclude	unused notification daemon; Noctalia has one
+mkinitcpio	core	42.2-1	base	include	initramfs
+mpv	extra	1:0.41.0-6	app	include	media player
+nano	core	9.2-1	legacy	exclude	optional; not default
+neovim	extra	0.12.6-1	app	include	editor
+network-manager-applet	extra	1.36.0-2	legacy	exclude	Noctalia owns the network UI
+networkmanager	extra	1.58.1-2	desktop	include	network backend
+niri	extra	26.04-1	desktop	include	Wayland compositor
+noctalia	extra	5.3.0-1	desktop	include	desktop shell
+nodejs	extra	26.12.0-1	dev	include	Node runtime for tooling
+npm	extra	12.2.1-1	dev	include	Node package manager
+ntfs-3g	extra	2026.9.28-1	base	include	NTFS support
+nwg-look	extra	1.2.1-1	legacy	exclude	GTK defaults are shipped
+opencode	extra	2.0.32-1	app	include	coding agent
+papirus-icon-theme	extra	20260801-1	theme	include	icon theme
+pipewire	extra	1:1.6.9-1	desktop	include	audio graph
+pipewire-alsa	extra	1:1.6.9-1	desktop	include	ALSA compatibility
+pipewire-jack	extra	1:1.6.9-1	desktop	include	JACK compatibility
+pipewire-pulse	extra	1:1.6.9-1	desktop	include	PulseAudio compatibility
+plymouth	extra	26.134.222-3	base	include	boot splash
+power-profiles-daemon	extra	0.30-1	desktop	include	power profiles
+python-json5	extra	0.17.3-1	desktop	include	Noctalia/theme tooling
+python-pip	extra	26.2.1-1	dev	exclude	optional dev tool; not needed at runtime
+python-pynvim	extra	0.6.0-2	app	include	Neovim Python client
+python-tomlkit	extra	0.15.2-1	desktop	include	Noctalia/theme tooling
+qt6-multimedia-ffmpeg	extra	6.12.0-1	desktop	include	SDDM video background support
+qt6-virtualkeyboard	extra	6.12.0-1	desktop	include	SDDM virtual keyboard
+quickshell	extra	0.3.2-1	desktop	include	QML runtime
+sddm	extra	0.21.0-7	desktop	include	display manager
+seatd	extra	0.9.3-1	legacy	exclude	systemd-logind handles the seat
+smartmontools	extra	7.5-2	base	include	disk health
+sof-firmware	extra	2026.09.2-1	base	include	Sound Open Firmware
+sudo	core	1.9.17.p2-6	base	include	privilege escalation
+swaybg	extra	1.2.2-1	legacy	exclude	unused wallpaper daemon; Noctalia owns wallpaper
+swayidle	extra	1.9.0-1	legacy	exclude	Noctalia handles idle/lock
+swaylock	extra	1.8.6-1	legacy	exclude	Noctalia lockscreen
+torbrowser-launcher	extra	0.3.9-1	personal	pending	owner decision
+tree-sitter-cli	extra	0.26.9-1	app	include	parser tooling
+ttf-jetbrains-mono-nerd	extra	3.5.1-2	theme	include	terminal font
+unzip	extra	6.0-23	base	include	archive extraction
+vim	extra	9.2.1178-1	legacy	exclude	optional; Neovim is default
+vpl-gpu-rt	extra	26.3.5-1	driver	repo-only	Intel VPL payload
+vulkan-intel	extra	1:26.2.5-1	driver	repo-only	Intel Vulkan payload
+vulkan-nouveau	extra	1:26.2.5-1	driver	repo-only	NVIDIA open fallback payload
+vulkan-radeon	extra	1:26.2.5-1	driver	include	AMD Vulkan driver
+waybar	extra	0.15.0-3	legacy	exclude	Noctalia is the bar
+wget	extra	1.25.0-6	base	include	downloads
+wireplumber	extra	0.5.18-1	desktop	include	audio session policy
+wl-clipboard	extra	1:2.3.0-1	desktop	include	clipboard utilities
+wpa_supplicant	core	2:2.12-1	base	include	Wi-Fi backend
+xdg-desktop-portal-gnome	extra	51.0-1	desktop	include	portal backend
+xdg-utils	extra	1.2.1-2	desktop	include	XDG helpers
+xf86-video-amdgpu	extra	25.0.0-1	driver	repo-only	Xorg fallback, not needed for Wayland
+xf86-video-ati	extra	1:22.0.0-3	driver	repo-only	legacy Xorg fallback
+xf86-video-nouveau	extra	1.0.18-1	driver	repo-only	Xorg fallback
+xorg-xwayland	extra	24.1.14-1	desktop	include	Xwayland
+xwayland-satellite	extra	0.8.3-1	desktop	include	rootless Xwayland
+yay-bin	foreign	13.0.1-1	personal	exclude	replaced by paru
+yay-bin-debug	foreign	13.0.1-1	personal	exclude	yay debug symbols
+zram-generator	extra	1.2.1-1	base	include	zram swap
+zsh	extra	5.9.2-1	desktop	include	login shell
+zsh-autosuggestions	extra	0.7.1-1	desktop	include	zsh plugin
+zsh-syntax-highlighting	extra	0.8.0-2	desktop	include	zsh plugin
