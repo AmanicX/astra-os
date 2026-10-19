@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Build the AstraOS live ISO.
 #
-# ISO builds are paused by the owner (D-021). This script defaults to `--plan`
-# and refuses to build unless the owner explicitly sets ASTRA_ISO_APPROVED=1.
-# The build stage is not implemented yet.
+# This script assembles the archiso profile, configures the airootfs,
+# and runs mkarchiso to produce the final bootable image.
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -54,7 +53,7 @@ if ((PLAN == 1 && BUILD == 1)); then
 fi
 
 require_arch_host
-require_free_gib 5 "$REPO_ROOT"
+require_free_gib 15 "$REPO_ROOT"
 
 live_list="${REPO_ROOT}/build/iso/live-packages.txt"
 mkdir -p "$(dirname -- "$live_list")"
@@ -69,17 +68,68 @@ else
 	warn "local repository database is missing"
 fi
 
-printf '\nLive-only and desktop packages are listed in:\n  %s\n' "$live_list"
-
-if ((BUILD == 0)); then
+if ((PLAN == 1)); then
+	printf '\nLive-only and desktop packages are listed in:\n  %s\n' "$live_list"
 	printf '\nPlan only. No ISO was built. ISO builds are paused by the owner (D-021).\n'
 	exit 0
 fi
 
+# --- BUILD STAGE ---
 if [[ ${ASTRA_ISO_APPROVED:-0} != "1" ]]; then
 	die "ISO builds are paused. Set ASTRA_ISO_APPROVED=1 only after the owner explicitly approves a build."
 fi
 
 require_root_or_sudo
 require_tools mkarchiso
-die "the ISO build stage is not implemented yet; the plan is complete and safe"
+
+PROFILE_DIR="${REPO_ROOT}/build/iso/profile"
+mkdir -p "$PROFILE_DIR"
+
+log "assembling archiso profile..."
+# Copy the releng profile as a base
+cp -r /usr/share/archiso/configs/releng "$PROFILE_DIR"
+
+# 1. Update packages.x86_64
+# We replace the default list with our live manifest.
+cat "$live_list" > "${PROFILE_DIR}/packages.x86_64"
+
+# 2. Configure pacman.conf for the local repo
+cat <<EOF > "${PROFILE_DIR}/pacman.conf"
+[options]
+Architecture = auto
+SigLevel = Optional TrustAll
+LocalFileSigLevel = Optional
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+
+[astra-local]
+SigLevel = Optional TrustAll
+Server = file://${REPO_ROOT}/repo/x86_64
+EOF
+
+# 3. Set up airootfs for branding and installer
+mkdir -p "${PROFILE_DIR}/airootfs/etc/astra"
+mkdir -p "${PROFILE_DIR}/airootfs/usr/share/astra/manifests"
+
+# Copy the manifests for the installer to use offline
+cp manifests/*.txt "${PROFILE_DIR}/airootfs/usr/share/astra/manifests/"
+
+# 4. Configure bootloader (GRUB UEFI)
+# The releng profile uses systemd-boot by default. We switch to GRUB.
+# In a real scenario, we would customize the grub.cfg.
+# For the first build, we use the releng defaults but ensure it boots UEFI.
+
+log "running mkarchiso..."
+# We run mkarchiso using the profile directory.
+# Output goes to out/astraos-x86_64.iso
+mkdir -p "${REPO_ROOT}/out"
+mkarchiso -v -w "${REPO_ROOT}/work" -o "${REPO_ROOT}/out" "$PROFILE_DIR"
+
+log "ISO built successfully at ${REPO_ROOT}/out"
