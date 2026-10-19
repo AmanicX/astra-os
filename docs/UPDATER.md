@@ -1,8 +1,8 @@
 # AstraUpdate
 
 Status: **design; the Phase 0 gate approved two update tracks. The OS track is
-defined; the app track needs one owner clarification (D-026). No updater code
-has been written or run.**
+defined; the app track is deferred by the owner (D-026). No updater code has
+been written or run.**
 
 ## Two tracks
 
@@ -47,10 +47,11 @@ in sandboxed Flatpak runtimes that update separately. Directly installing
 Debian, Fedora or other distributions' binary packages on the Arch base is not
 proposed because of glibc/ABI mismatch and package-manager conflicts.
 
-**Open question for the owner:** does "actual stable release" mean (a) upstream
-stable versions built by AstraOS for the installed OS (recommended), or
-(b) another distribution's binary packages? Option (b) needs a container or
-Flatpak layer and a different support model.
+**Open question for the owner (deferred):** does "actual stable release" mean
+(a) upstream stable versions built by AstraOS for the installed OS
+(recommended), or (b) another distribution's binary packages? Option (b) needs
+a container or Flatpak layer and a different support model. The owner chose to
+decide later; the OS track and native default apps are not blocked.
 
 ## Update flow
 

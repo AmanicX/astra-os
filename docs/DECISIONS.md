@@ -166,24 +166,19 @@ available. The audited `service.json` contains a credential and is excluded.
 The owner wants two independent update tracks:
 
 1. **OS track** — the AstraOS base, desktop, drivers, services and `[astra]`
-   packages. Metadata is hosted on GitHub. Proposed shape: a signed
-   `stable.json` pointing at a pinned Arch Linux Archive date and an `[astra]`
-   repository built for that snapshot.
+   packages. GitHub hosts the signed `stable.json` and the small `[astra]`
+   package artifacts. Arch base packages come from a date-pinned Arch Linux
+   Archive; GitHub is not used as a full Arch mirror.
 2. **App track** — application updates, using actual upstream stable releases
    rather than beta/nightly builds. The owner's goal is that a buggy app update
-   cannot destabilize the OS.
+   cannot destabilize the OS. The mechanism is deferred (D-026).
 
-The exact app-delivery mechanism is still an open decision (D-025). The
-default engineering proposal is a separate signed `apps.json` plus
-`[astra-apps]` repository, built from pinned upstream stable tags against the
-current OS snapshot, with a compatibility gate that refuses an app update
-requiring a newer OS. Directly mixing another distribution's binary packages
-into an Arch base is not proposed because of glibc/ABI and package-manager
-conflicts. Flatpak is the alternative if real app sandboxing is required.
-
-GitHub hosts the signed metadata and the Astra-owned package artifacts; Arch
-base packages come from the date-pinned Arch Linux Archive unless the owner
-chooses to fund and operate a full mirror.
+The proposed OS shape is
+`{ "snapshot": "YYYY/MM/DD", "astra_repo": "...", "notes": "...",
+"requires_manual": [] }`, signed with the `astra-keyring` key. The `[astra]`
+repository is versioned in lockstep with the snapshot. Directly mixing another
+distribution's binary packages into an Arch base is not proposed because of
+glibc/ABI and package-manager conflicts.
 
 ## D-019 — Steam is approved; gamemode and mangohud are not
 
@@ -194,8 +189,8 @@ repository must contain the full multilib closure. `gamemode`, `lib32-gamemode`,
 `mangohud` and `lib32-mangohud` remain out of v1 because the owner asked for
 Steam only.
 
-Steam is target-only. The live ISO may omit it to keep the image smaller; the
-installed system includes it. This live/target split is recorded in D-030.
+Steam is target-only. The live ISO omits it to keep the image smaller; the
+installed system includes it (owner-confirmed 2026-10-19).
 
 ## D-020 — The audit host is AMD-only
 
@@ -262,16 +257,21 @@ The owner approved the Phase 0 include/exclude list with these changes:
 
 All other proposed inclusions and exclusions stand.
 
-## D-026 — App update track still needs one clarification
+## D-026 — App update track is deferred
 
-The owner's phrase "use other distro's stable release" is not taken literally
-as mixing Debian/Fedora binaries into an Arch base. The recommended reading is:
-ship upstream stable releases of each app, not beta/nightly builds, through a
-separate Astra app repository. A separate native app repository can still
-share libraries with the OS, so the updater must gate app updates on the
-installed OS snapshot. If the owner wants hard isolation, Flatpak is the
-alternative. This remains an open question for the owner (see
-`docs/UPDATER.md`).
+The owner chose to decide the app update mechanism later. The OS track is
+defined; the app track remains a design placeholder. This does not block
+package scaffolding, the installer, or the OS build. Before AstraUpdate is
+implemented, the owner must choose between:
+
+1. upstream stable releases built by AstraOS into a signed `[astra-apps]`
+   repository, compatibility-gated against the OS snapshot (recommended);
+2. Flatpak sandboxed apps for the optional app layer;
+3. another distribution's binary packages via containers, which is not native
+   and not fully offline by default.
+
+The default app set remains native Arch packages from the pinned OS snapshot
+until that decision is made.
 
 ## D-027 — GIMP is excluded from v1
 

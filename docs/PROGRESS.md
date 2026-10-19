@@ -42,8 +42,11 @@ Updated: 2026-10-19
 - [x] Owner approval of the include/exclude list, with changes (D-025).
 - [x] Owner decisions: Steam in, GIMP out, Noctalia SDDM theme, original
       wallpaper/logo, no LTS, two update tracks, passwordless sudo requested.
+- [x] OS hosting: GitHub signed metadata + `[astra]`, Arch base from ALA.
+- [x] Steam is target-only; live ISO omits it.
+- [ ] Owner to specify additional include/exclude changes.
 - [ ] Passwordless sudo rule installed and verified.
-- [ ] App update track clarified (D-026).
+- [ ] App update track chosen (deferred; D-026).
 - [ ] Section 14 decisions that remain open.
 
 ## Gate outcome (2026-10-19)
@@ -60,8 +63,11 @@ The owner approved the Phase 0 include/exclude list with these changes:
 | Logo | Original geometric star plus wordmark |
 | Default apps | loupe, pavucontrol, Papers, GNOME Calculator, Text Editor, Disk Utility approved |
 | OS updates | Signed metadata on GitHub; pinned Arch snapshot |
-| App updates | Separate stable app track; mechanism open (D-026) |
+| App updates | Separate stable app track; mechanism deferred (D-026) |
+| OS hosting | GitHub hosts signed metadata + `[astra]`; Arch base from ALA |
+| Steam on live ISO | Target-only, omitted from live ISO |
 | Privileged work | Passwordless sudo requested; rule not yet installed |
+| Additional changes | Owner will specify; gate not fully closed |
 
 ## Blockers and constraints
 
