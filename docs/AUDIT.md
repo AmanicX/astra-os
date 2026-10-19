@@ -1,6 +1,8 @@
 # AstraOS Phase 0 Audit
 
-Status: **read-only audit complete; include/exclude gate awaiting owner approval.**
+Status: **read-only audit complete; gate approved with changes on 2026-10-19.**
+The owner's decisions are summarized in `docs/PROGRESS.md` (Gate outcome) and
+`docs/DECISIONS.md` (D-025). The audit itself remains the historical record.
 Date: 2026-10-19
 Method: inspection only (`pacman -Q*`, `find`, `sed`, `grep`, `fc-list`,
 `lspci`, `bootctl`, `systemctl`, `niri validate`, package APIs). No host config,

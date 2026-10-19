@@ -64,20 +64,27 @@ The target will install a pinned package from the offline repository
 binary version). The build will pin and verify the source. First-run update
 notices and telemetry must be disabled in the shipped environment.
 
-## D-009 — SDDM theme is an open licensing question
+## D-009 — SDDM theme: Noctalia theme with Astra-owned art
 
-Two third-party SDDM themes are installed:
+The owner chose the `sddm-noctalia-theme` over the active astronaut theme. The
+theme is a GPLv3 git clone at `/usr/share/sddm/themes/sddm-noctalia-theme`,
+upstream `https://github.com/ClementFombonne/sddm-noctalia-theme.git`, commit
+`92bf8e6ff35be19b50b60a38e0f3d6e38e1c66e1`.
 
-- `sddm-astronaut-theme`, active in `/etc/sddm.conf`, GPL-3.0-or-later code.
-  Its README states that many wallpapers and fonts were copied from unknown
-  original creators. Those assets are **not cleared for redistribution**.
-- `sddm-noctalia-theme`, installed but not active, GPLv3. It includes a
-  bundled wallpaper and a Tabler icon font with a separate license file.
+The package will:
 
-No theme will be copied into the repository until the owner chooses one and
-confirms asset rights. The default engineering recommendation is the
-Noctalia theme because it matches the desktop and has a clearer provenance,
-but the active theme is the astronaut theme.
+- pin that commit and ship the GPLv3 license;
+- keep the Tabler icon font (MIT, separate license file);
+- remove the bundled wallpaper `Assets/Wallpaper/noctalia.png` and the
+  screenshot asset, whose provenance is not clear, and install an original
+  AstraOS wallpaper at the same path or patch `Commons/Settings.conf` to the
+  Astra wallpaper;
+- change `fontFamily="Roboto"` to a font the distribution ships (`Noto Sans`)
+  unless `ttf-roboto` is added;
+- install `/etc/sddm.conf.d/astra.conf` selecting `noctalia-sddm`.
+
+The theme code is redistributable under GPLv3; the removed assets are not
+shipped. The astronaut theme is excluded.
 
 ## D-010 — Scrub-check identity handling
 
@@ -154,20 +161,41 @@ incompatible with the offline-first rule. The shipped config will either pin
 and vendor the MCP package or omit the MCP server until an offline package is
 available. The audited `service.json` contains a credential and is excluded.
 
-## D-018 — Stable channel design is pending owner approval
+## D-018 — Stable channel: two tracks, OS on GitHub
 
-The proposed default is a signed `stable.json` hosted in a GitHub repository,
-with clients pinned to
-`https://archive.archlinux.org/repos/YYYY/MM/DD/$repo/os/$arch` and an
-`[astra]` repository versioned in lockstep. The Arch Archive is not a
-mass-distribution CDN; the long-term path is an AstraOS-hosted snapshot
-mirror. The owner must choose between the default and self-hosting.
+The owner wants two independent update tracks:
 
-## D-019 — Steam is not installed on the audited host
+1. **OS track** — the AstraOS base, desktop, drivers, services and `[astra]`
+   packages. Metadata is hosted on GitHub. Proposed shape: a signed
+   `stable.json` pointing at a pinned Arch Linux Archive date and an `[astra]`
+   repository built for that snapshot.
+2. **App track** — application updates, using actual upstream stable releases
+   rather than beta/nightly builds. The owner's goal is that a buggy app update
+   cannot destabilize the OS.
 
-The build brief lists Steam as a baseline app, but the audit found no Steam
-package or game data. Adding it materially changes ISO size and the 32-bit
-graphics closure. It is proposed for approval rather than assumed.
+The exact app-delivery mechanism is still an open decision (D-025). The
+default engineering proposal is a separate signed `apps.json` plus
+`[astra-apps]` repository, built from pinned upstream stable tags against the
+current OS snapshot, with a compatibility gate that refuses an app update
+requiring a newer OS. Directly mixing another distribution's binary packages
+into an Arch base is not proposed because of glibc/ABI and package-manager
+conflicts. Flatpak is the alternative if real app sandboxing is required.
+
+GitHub hosts the signed metadata and the Astra-owned package artifacts; Arch
+base packages come from the date-pinned Arch Linux Archive unless the owner
+chooses to fund and operate a full mirror.
+
+## D-019 — Steam is approved; gamemode and mangohud are not
+
+The audit found no Steam package or game data. The owner approved Steam for
+the installed system. Steam pulls the 32-bit graphics stack and requires the
+`multilib` repository. The installer must enable `[multilib]`, and the offline
+repository must contain the full multilib closure. `gamemode`, `lib32-gamemode`,
+`mangohud` and `lib32-mangohud` remain out of v1 because the owner asked for
+Steam only.
+
+Steam is target-only. The live ISO may omit it to keep the image smaller; the
+installed system includes it. This live/target split is recorded in D-030.
 
 ## D-020 — The audit host is AMD-only
 
@@ -217,3 +245,84 @@ UUID after the change. A checksum of the whole GPT table cannot be compared
 because adding a partition legitimately changes it. QEMU dual-boot tests will
 also place a known pattern inside a dummy existing partition and verify it
 after the install. No real block device is used in tests.
+
+## D-025 — Gate outcome: approved with changes
+
+The owner approved the Phase 0 include/exclude list with these changes:
+
+- Steam is included for the installed system.
+- GIMP is excluded.
+- The Noctalia SDDM theme is used with Astra-owned art.
+- The current wallpaper is replaced by an original AstraOS wallpaper.
+- `linux-lts` is omitted for v1.
+- The logo direction is an original geometric star plus wordmark.
+- The stable channel is split into OS and app tracks (D-018).
+- Privileged work should be unblocked with passwordless sudo for the
+  workspace (D-032).
+
+All other proposed inclusions and exclusions stand.
+
+## D-026 — App update track still needs one clarification
+
+The owner's phrase "use other distro's stable release" is not taken literally
+as mixing Debian/Fedora binaries into an Arch base. The recommended reading is:
+ship upstream stable releases of each app, not beta/nightly builds, through a
+separate Astra app repository. A separate native app repository can still
+share libraries with the OS, so the updater must gate app updates on the
+installed OS snapshot. If the owner wants hard isolation, Flatpak is the
+alternative. This remains an open question for the owner (see
+`docs/UPDATER.md`).
+
+## D-027 — GIMP is excluded from v1
+
+The owner excluded GIMP. The approved app set is loupe, pavucontrol, Papers,
+GNOME Calculator, GNOME Text Editor and GNOME Disk Utility, plus the other
+already-approved apps. No image editor is shipped by default.
+
+## D-028 — Original AstraOS branding
+
+The owner chose an original geometric star plus wordmark and an original
+wallpaper. No third-party wallpaper or logo asset is shipped. Branding work is
+Phase 5; the final assets must be authored in-repo or generated from
+owner-approved source files, with a license recorded in `THIRD_PARTY.md`.
+
+## D-029 — `linux-lts` is omitted from v1
+
+The owner chose to omit `linux-lts`. The default `linux` kernel is the only
+kernel installed. `manifests/kernel-lts.txt` stays as a documented option but
+is not part of the v1 repository or ISO closure. NVIDIA DKMS for a second
+kernel is therefore not required in v1.
+
+## D-030 — Manifests are repository payload, not one install list
+
+The manifest files describe packages that must be available in the offline
+repository. They are not a single package list to install everywhere:
+
+- **Target install**: base + desktop + detected driver set + apps + fonts +
+  `astra-*`.
+- **Live ISO**: base + desktop + curated apps + ISO-only tools. Steam is
+  target-only to keep the live image smaller. Proprietary NVIDIA drivers are
+  target-only; the live session uses `amdgpu`/`i915`/`xe`/`nouveau`.
+- **Repository payload**: both AMD and Intel sets, both NVIDIA branches,
+  VMware/VirtualBox guest tools and conditional packages, so the installer can
+  work offline on different hardware.
+
+The build scripts will implement these three selections explicitly rather
+than installing every manifest line. This distinction is a prerequisite for
+computing the repository closure correctly.
+
+## D-031 — Multilib is enabled because Steam is included
+
+Steam is a 32-bit application and depends on the multilib stack. The target
+`pacman.conf` will enable `[multilib]`, and the offline repository build will
+include multilib packages. The installer must fail with a clear message if the
+multilib repository payload is missing.
+
+## D-032 — Passwordless sudo is requested but not yet active
+
+The owner selected passwordless sudo for the workspace. The agent must not ask
+for or store the password. The owner will install a sudoers rule themselves.
+Until `sudo -n true` succeeds, package installation, loop devices, chroots and
+QEMU tests remain blocked. The exact sudoers scope is still to be agreed; a
+broad `NOPASSWD: ALL` for the login user is the simplest option but is a real
+security trade-off.

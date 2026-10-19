@@ -10,8 +10,9 @@ niri + Noctalia Wayland desktop. It ships:
 
 ## Status
 
-**Phase 0 audit complete; the include/exclude gate is awaiting owner approval.**
-No personal configuration has been copied into this repository yet.
+**Phase 0 complete; gate approved with changes. Phase 1 (decisions and
+scaffolding) is in progress.** No personal configuration has been copied into
+this repository, and no ISO will be built until the owner explicitly says so.
 
 The audit is in [`docs/AUDIT.md`](docs/AUDIT.md). The phase checklist is in
 [`docs/PROGRESS.md`](docs/PROGRESS.md). Non-obvious choices are recorded in

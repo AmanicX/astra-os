@@ -6,8 +6,8 @@ Updated: 2026-10-19
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Read-only audit of the host; manifests; gate | **Audit complete; gate awaiting approval** |
-| 1 | Decisions, include/exclude approval, repo skeleton | In progress |
+| 0 | Read-only audit of the host; manifests; gate | **Complete; approved with changes** |
+| 1 | Decisions, include/exclude approval, repo skeleton | **In progress** |
 | 2 | Package scaffolding and build tooling | Not started |
 | 3 | Installer core and offline pacstrap path | Not started |
 | 4 | Hardware detection and driver selection | Not started |
@@ -39,8 +39,29 @@ Updated: 2026-10-19
 - [x] Target and ISO manifests written; all 166 package names resolved
       (158 official, 8 AUR, 0 unresolved).
 - [x] Proposed include/exclude list in `docs/AUDIT.md`.
-- [ ] Owner approval of include/exclude list.
-- [ ] Owner decisions from section 14 of the build brief.
+- [x] Owner approval of the include/exclude list, with changes (D-025).
+- [x] Owner decisions: Steam in, GIMP out, Noctalia SDDM theme, original
+      wallpaper/logo, no LTS, two update tracks, passwordless sudo requested.
+- [ ] Passwordless sudo rule installed and verified.
+- [ ] App update track clarified (D-026).
+- [ ] Section 14 decisions that remain open.
+
+## Gate outcome (2026-10-19)
+
+The owner approved the Phase 0 include/exclude list with these changes:
+
+| Topic | Decision |
+|---|---|
+| Steam | Included for the installed system; target-only; multilib required |
+| GIMP | Excluded |
+| SDDM | Noctalia theme, GPLv3 code pinned at `92bf8e6`, original Astra wallpaper |
+| Wallpaper | Original AstraOS art; current unknown-license image not shipped |
+| LTS kernel | Omitted for v1 |
+| Logo | Original geometric star plus wordmark |
+| Default apps | loupe, pavucontrol, Papers, GNOME Calculator, Text Editor, Disk Utility approved |
+| OS updates | Signed metadata on GitHub; pinned Arch snapshot |
+| App updates | Separate stable app track; mechanism open (D-026) |
+| Privileged work | Passwordless sudo requested; rule not yet installed |
 
 ## Blockers and constraints
 
@@ -61,6 +82,9 @@ Updated: 2026-10-19
    unresolved). Re-verify at build time because Arch is rolling.
 6. No NVIDIA hardware is present. NVIDIA current and 580xx paths can only be
    fixture-tested here; real hardware must be verified by the owner.
+7. The owner approved passwordless sudo but the rule is not installed yet.
+   `sudo -n true` still fails. The app update track (D-026) also needs one
+   clarification before the updater design is final.
 
 ## Verification log
 
@@ -80,5 +104,8 @@ Updated: 2026-10-19
 
 ## Next
 
-After approval: Phase 1 decisions, then package scaffolding and the installer
-core. No personal file will be copied before the gate is approved.
+Phase 1: record the approved changes, finish the package manifest
+verification for Steam/multilib, scaffold the package and build layout, and
+clarify the app update track. No ISO will be built until the owner explicitly
+says so (D-021). No personal configuration will be copied without a
+sanitization pass.

@@ -44,9 +44,10 @@ placed in the ISO. An unclear license is a release blocker, not a warning.
 | keybind overlay (`gen-keybinds.py`, `shell.qml`, `keybinds-toggle`) | Owner-authored | Owner-owned | Pending owner confirmation | No license file found |
 | Neovim config | LazyVim starter derivative, Apache-2.0 | Apache-2.0 | Yes | Custom `kitty-theme.lua` is owner-authored |
 | Neovim plugins | 33 plugins pinned by `lazy-lock.json` | MIT / Apache-2.0 / GPL-3.0; generated in `manifests/nvim-plugins.tsv` | Yes, with source URLs and license files recorded | Includes GPL-3.0 `bufferline.nvim` and `nvim-lint`; unmodified upstream plugins |
-| Noctalia SDDM theme | GitHub `ClementFombonne/sddm-noctalia-theme` | GPLv3 | Yes for code; asset provenance to confirm | Bundled `Assets/Wallpaper/noctalia.png`, Tabler icon font with license file |
-| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme` | GPL-3.0-or-later code | **No — asset licensing unclear** | Upstream README says wallpaper/font creators are unknown; active theme on audit host |
-| Wallpaper | `~/Pictures/Wallpapers/` (filename points at a public wallpaper site) | Unknown | **No — blocked** | 7680x4320 JPEG; active in Noctalia; no author/license metadata |
+| Noctalia SDDM theme | GitHub `ClementFombonne/sddm-noctalia-theme`, commit `92bf8e6` | GPLv3 code; Tabler icons MIT | Yes for code; bundled wallpaper/screenshot removed | Chosen by owner; original Astra wallpaper replaces the bundled image |
+| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme` | GPL-3.0-or-later code | **No — asset licensing unclear** | Excluded; active on the audit host only |
+| Wallpaper | Original AstraOS artwork | Owner-owned / project license | Yes | Replaces the unknown-license 7680x4320 image; not copied |
+| Steam | `steam` 1.0.0.87-3, Arch multilib | LicenseRef-steam-subscriber-agreement | Yes, under Valve's terms | Owner-approved; target-only; multilib closure required |
 
 ## Explicitly not shipped
 
@@ -63,8 +64,9 @@ placed in the ISO. An unclear license is a release blocker, not a warning.
 Before an ISO is published:
 
 1. Every row above must have a final license and a redistributable decision.
-2. The chosen SDDM theme's assets must be listed individually.
-3. The wallpaper must have a written owner confirmation or be replaced by an
-   original AstraOS wallpaper.
+2. The chosen SDDM theme's removed wallpaper/screenshot must be absent from the
+   package, and the Tabler font license must be installed with it.
+3. The wallpaper must be original AstraOS art or carry a written license
+   confirmation. The unknown-license image is never shipped.
 4. The Neovim plugin licenses must be generated from the pinned plugin tree.
 5. `scripts/scrub-check.sh` must pass on the repository and the ISO tree.

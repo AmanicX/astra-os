@@ -28,6 +28,22 @@ Both scripts are not implemented yet.
 - AUR packages are built from pinned commit hashes in a clean chroot.
 - `SOURCE_DATE_EPOCH` is set for `repo-add` and `mkarchiso`.
 - The generated source lock and package versions are committed with the build.
+- The repository closure includes `multilib` because Steam is approved
+  (D-031). The build fails if the closure is incomplete.
+
+## Manifest roles
+
+The manifest files are repository payload lists, not one install list
+(D-030):
+
+- **Target install**: base + desktop + detected driver set + apps + fonts +
+  `astra-*`.
+- **Live ISO**: base + desktop + curated apps + ISO-only tools.
+- **Repository payload**: all driver branches, guest tools and conditional
+  packages needed for offline installs on other hardware.
+
+Steam is target-only. The NVIDIA proprietary stack is target-only; the live
+ISO uses the open kernel drivers.
 
 ## Release checks
 

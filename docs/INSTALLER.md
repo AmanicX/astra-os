@@ -49,8 +49,14 @@ No disk write happens before the final confirmation.
 
 `pacstrap -K -C /etc/astra/pacman-offline.conf` uses only the local
 `astra-local` repository. The target receives the real `pacman.conf` with
-multilib and the mirrorlist chosen in step 2. Packages unavailable offline are
-queued for the first online boot through `astra-pending-packages.service`.
+`[multilib]` enabled (Steam requires it) and the mirrorlist chosen in step 2.
+Packages unavailable offline are queued for the first online boot through
+`astra-pending-packages.service`.
+
+The installer selects packages from the manifests rather than installing
+every line: base + desktop + the detected driver set + approved apps + fonts +
+`astra-*`. Steam is installed on the target but is not part of the live ISO
+(D-030).
 
 ## Hardware detection
 

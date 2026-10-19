@@ -1,10 +1,11 @@
 # AstraOS applications
-# Every line has a one-line reason. Packages marked PENDING need owner approval.
+# Every line has a one-line reason. The owner approved this set on 2026-10-19.
+# Packages marked PENDING need a later owner decision.
 # AUR packages are listed in aur.txt, not here.
 
 # Internet
 firefox                      # primary web browser
-# torbrowser-launcher        # PENDING: Tor Browser launcher found on the audit host
+# torbrowser-launcher        # excluded: downloads Tor Browser at runtime; not offline-safe
 
 # Files and archives
 nautilus                     # file manager (installed as a dependency on the audit host)
@@ -38,28 +39,28 @@ python-tomlkit               # TOML editing used by Noctalia/theme tooling
 
 # Media
 mpv                          # media player
-loupe                        # PENDING: image viewer proposal
-gimp                         # PENDING: image editor proposal
-pavucontrol                  # PENDING: audio mixer proposal
+loupe                        # image viewer (approved)
+pavucontrol                  # audio mixer (approved)
+
+# Games
+steam                        # owner-approved; target-only, requires multilib and the 32-bit graphics stack
+# gamemode                   # not requested; optional game tuning
+# lib32-gamemode             # not requested
+# mangohud                   # not requested; optional overlay
+# lib32-mangohud             # not requested
 
 # System utilities
 btop                         # resource monitor
 fastfetch                    # system information
 opencode                     # coding agent with the Astra theme
-papers                       # PENDING: PDF viewer proposal
-gnome-calculator             # PENDING: calculator proposal
-gnome-text-editor            # PENDING: simple text editor proposal
-gnome-disk-utility           # PENDING: disk utility proposal
+papers                       # PDF viewer (approved)
+gnome-calculator             # calculator (approved)
+gnome-text-editor            # simple text editor (approved)
+gnome-disk-utility           # disk utility (approved)
 smartmontools                # disk health
 
-# Games (all PENDING; not installed on the audit host)
-# steam                      # game client
-# gamemode                   # game performance tuning
-# lib32-gamemode             # 32-bit game support
-# mangohud                   # game overlay
-# lib32-mangohud             # 32-bit game overlay
-
 # Deliberately excluded from the default image
+# gimp                       # owner excluded from v1
 # htop, nano, vim            # optional; btop/Neovim/gnome-text-editor cover the default use
 # network-manager-applet     # Noctalia owns the network UI
 # nwg-look                   # GTK settings are shipped as defaults
