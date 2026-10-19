@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Offline AstraOS installer. UEFI only.
+#
+# Prompt order (fixed): keyboard -> mirror region -> storage -> hostname ->
+# root password -> user account/sudo -> additional packages -> timezone ->
+# summary/confirm -> install.
+#
+# Nothing is written to disk until the final confirmation. The answers JSON is
+# kept at /run/astra-install/answers.json without passwords; passwords move only
+# through pipes to chpass.
+
+set -Eeuo pipefail
+
+umask 022
+
+readonly ASTRA_LIB_DIR="/usr/lib/astra/installer"
+# shellcheck source=lib/common.sh
+source "${ASTRA_LIB_DIR}/lib/common.sh"
+# shellcheck source=lib/hw.sh
+source "${ASTRA_LIB_DIR}/lib/hw.sh"
+# shellcheck source=lib/mirrors.sh
+source "${ASTRA_LIB_DIR}/lib/mirrors.sh"
+# shellcheck source=lib/storage.sh
+source "${ASTRA_LIB_DIR}/lib/storage.sh"
+# shellcheck source=lib/install.sh
+source "${ASTRA_LIB_DIR}/lib/install.sh"
+
+require_root() {
+	((EUID == 0)) || die "install must run as root"
+}
+
+dump_answers() {
+	mkdir -p "${STATE_DIR}"
+	printf '%s\n' "${STATE[*]}" | jq '.' >"${ANSWERS}"
+}
+
+banner() {
+	clear
+	gum style --foreground 117 --align center --width 62 --margin 1 \
+		"AstraOS installer" \
+		"Offline • UEFI-only • v$(astra_version)"
+}
+
+main() {
+	require_root
+	require_tools gum jq parted sgdisk pacstrap grub-install grub-mkconfig genfstab mkfs.fat mkfs.btrfs btrfs
+
+	STATE_DIR="${ASTRA_STATE_DIR:-/run/astra-install}"
+	ANSWERS="${STATE_DIR}/answers.json"
+	LOG="${STATE_DIR}/install.log"
+	mkdir -p "${STATE_DIR}"
+	: >"${LOG}"
+
+	# ERR trap: unmount cleanly and print the log path. Never log secrets.
+	trap 'abort "$LINENO" "$BASH_COMMAND"' ERR
+	trap 'abort_user' INT TERM
+
+	banner
+
+	# 1. Keyboard layout
+	ask_keyboard
+
+	# 2. Mirror regions
+	ask_mirror_regions
+
+	# 3. Storage (whole disk / dual-boot free space)
+	ask_storage
+
+	# 4. Hostname
+	ask_hostname
+
+	# 5. Root password
+	ask_root_password
+
+	# 6. User account and sudo
+	ask_user
+
+	# 7. Additional packages
+	ask_packages
+
+	# 8. Timezone
+	ask_timezone
+
+	# 9. Summary and final confirmation
+	summary
+
+	# 10. Install with progress UI
+	run_install
+
+	dump_answers
+	tear_down_logging
+
+	gum format --type markdown -- <<'EOF'
+## Install complete
+
+The system was installed to the selected disk. Reboot, remove the USB, and
+select "AstraOS" in the GRUB menu. First boot has no network; run:
+
+    sudo astra-update
+
+to pull OS and app updates from the stable channel.
+EOF
+}
+
+main "$@"

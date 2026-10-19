@@ -1,0 +1,25 @@
+# Pacman configuration for AstraOS build chroots and package downloads.
+# @SNAPSHOT@ is replaced with a date such as 2026/10/18.
+# @REPO_ROOT@ is replaced with the absolute repository path.
+
+[options]
+Architecture = x86_64
+HoldPkg = pacman glibc
+ParallelDownloads = 5
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+Color
+CheckSpace
+
+[core]
+Server = https://archive.archlinux.org/repos/@SNAPSHOT@/core/os/$arch
+
+[extra]
+Server = https://archive.archlinux.org/repos/@SNAPSHOT@/extra/os/$arch
+
+[multilib]
+Server = https://archive.archlinux.org/repos/@SNAPSHOT@/multilib/os/$arch
+
+[astra-local]
+SigLevel = Optional TrustAll
+Server = file://@REPO_ROOT@/repo/$arch

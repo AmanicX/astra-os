@@ -1,0 +1,31 @@
+# Maintainer: AstraOS <build@astraos.org>
+# Description: Offline, UEFI-only TUI installer. ISO-only; not a dependency of astra-meta.
+pkgname=astra-installer
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Offline AstraOS installer with a gum-powered TUI"
+arch=('x86_64')
+license=('MIT')
+depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz')
+install=astra-installer.install
+options=(!strip)
+
+package() {
+	install -d "${pkgdir}/usr/lib/astra/installer/lib"
+	install -Dm755 "${startdir}/astra-install" \
+		"${pkgdir}/usr/bin/astra-install"
+
+	cp -a "${startdir}/lib/." "${pkgdir}/usr/lib/astra/installer/lib/"
+
+	# Offline repo metadata used at install time.
+	install -Dm644 "${startdir}/pacman-offline.conf" \
+		"${pkgdir}/etc/astra/pacman-offline.conf"
+	install -Dm644 "${startdir}/pacman-target.conf" \
+		"${pkgdir}/etc/astra/pacman-target.conf"
+
+	# systemd first-boot units.
+	install -Dm644 "${startdir}/astra-pending-packages.service" \
+		"${pkgdir}/usr/lib/systemd/system/astra-pending-packages.service"
+	install -Dm644 "${startdir}/astra-pending-packages.sh" \
+		"${pkgdir}/usr/lib/astra/installer/pending-packages.sh"
+}

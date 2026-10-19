@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Write the AstraOS release identity. Called from the package install script
+# and from a pacman hook after filesystem upgrades.
+set -Eeuo pipefail
+
+readonly OS_RELEASE_SOURCE="/usr/lib/astraos-release"
+readonly OS_RELEASE_TARGET="/usr/lib/os-release"
+readonly ISSUE_SOURCE="/usr/share/astra/issue"
+readonly ISSUE_TARGET="/etc/issue"
+
+[[ -r ${OS_RELEASE_SOURCE} ]] || {
+	printf 'astra-write-os-release: missing %s\n' "$OS_RELEASE_SOURCE" >&2
+	exit 1
+}
+
+install -Dm644 "$OS_RELEASE_SOURCE" "$OS_RELEASE_TARGET"
+
+if [[ -L /etc/os-release ]]; then
+	if [[ "$(readlink /etc/os-release)" != "../usr/lib/os-release" ]]; then
+		ln -sfn ../usr/lib/os-release /etc/os-release
+	fi
+elif [[ -e /etc/os-release ]]; then
+	rm -f /etc/os-release
+	ln -s ../usr/lib/os-release /etc/os-release
+else
+	ln -s ../usr/lib/os-release /etc/os-release
+fi
+
+if [[ -r ${ISSUE_SOURCE} ]]; then
+	install -Dm644 "$ISSUE_SOURCE" "$ISSUE_TARGET"
+fi

@@ -1,0 +1,7 @@
+[Unit]
+Description=AstraUpdate daily check
+Wants=astra-update.timer
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/astra-update check

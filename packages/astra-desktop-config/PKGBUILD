@@ -1,0 +1,90 @@
+# Maintainer: AstraOS <build@astraos.org>
+# Description: Seeded, sanitized desktop configuration for the AstraOS niri + Noctalia session.
+pkgname=astra-desktop-config
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Seeded niri, Noctalia, kitty, Zsh, Neovim and XDG desktop defaults for AstraOS"
+arch=('x86_64')
+license=('MIT')
+depends=(
+	'niri'
+	'noctalia'
+	'quickshell'
+	'kitty'
+	'zsh'
+	'zsh-autosuggestions'
+	'zsh-syntax-highlighting'
+	'neovim'
+	'opencode'
+	'fastfetch'
+	'btop'
+	'adwaita-fonts'
+	'adw-gtk-theme'
+	'papirus-icon-theme'
+	'ttf-jetbrains-mono-nerd'
+	'dconf'
+	'glib2'
+	'xdg-user-dirs'
+	'xdg-utils'
+	'gnome-keyring'
+	'polkit'
+	'networkmanager'
+	'bluez'
+	'bluez-utils'
+	'power-profiles-daemon'
+	'upower'
+	'pipewire'
+	'wireplumber'
+	'wl-clipboard'
+	'brightnessctl'
+	'playerctl'
+	'grim'
+	'slurp'
+	'nautilus'
+	'firefox'
+	'mpv'
+	'loupe'
+	'papers'
+	'gnome-text-editor'
+	'gnome-calculator'
+	'gnome-disk-utility'
+	'pavucontrol'
+	'file-roller'
+	'gvfs'
+	'gvfs-mtp'
+	'gvfs-smb'
+	'ffmpegthumbnailer'
+)
+# oh-my-posh ships from the AUR; it is built into the offline repository and
+# resolved by pacstrap at install time. Keep it out of depends so the package
+# still validates in a clean chroot that lacks the AUR tree (it is pulled in by
+# the base manifests instead).
+optdepends=('oh-my-posh-bin: Oh My Posh prompt matching the audited 1_shell theme')
+install=astra-desktop-config.install
+options=(!strip)
+
+package() {
+	install -d "${pkgdir}/etc/skel"
+	cp -a "${startdir}/files/etc/skel/." "${pkgdir}/etc/skel/"
+
+	# Normalize ownership/mode for skel files: directories 755, files 644,
+	# executables 755. Some cloned files may be 600 or odd-owned on disk.
+	(
+		cd "${pkgdir}/etc/skel" || exit 1
+		find . -type d -exec chmod -R u+rwX,go+rX,go-w {} +
+		find . -type f -exec chmod u+rw,go+r,go-w {} +
+		find . -type f -name '*.sh' -o -type f -name '*.py' | xargs -r chmod 0755
+	)
+
+	install -Dm755 "${startdir}/files/usr/bin/astra-default-browser" \
+		"${pkgdir}/usr/bin/astra-default-browser"
+
+	install -Dm644 "${startdir}/files/etc/dconf/profile/user" \
+		"${pkgdir}/etc/dconf/profile/user"
+	install -Dm644 "${startdir}/files/etc/dconf/db/astra.d/00-astra" \
+		"${pkgdir}/etc/dconf/db/astra.d/00-astra"
+
+	# Directories that would otherwise be omitted by cp of an empty tree.
+	install -d -m 0755 "${pkgdir}/etc/skel/Pictures/Screenshots"
+	install -d -m 0755 "${pkgdir}/etc/skel/.local/state/noctalia"
+}

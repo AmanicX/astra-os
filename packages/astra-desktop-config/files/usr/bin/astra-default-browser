@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Open the user's default browser (or a URL) through the XDG handler.
+set -Eeuo pipefail
+
+exec xdg-open "${1:-https://astraos.org}"

@@ -1,0 +1,12 @@
+pkgname=astra-keybinds
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Quickshell keybind cheatsheet for the AstraOS niri desktop"
+arch=('x86_64')
+license=('MIT')
+depends=('niri' 'quickshell' 'python')
+options=(!strip)
+
+package() {
+	cp -a "${startdir}/files/." "${pkgdir}/"
+}

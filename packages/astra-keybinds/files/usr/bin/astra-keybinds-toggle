@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Toggle the Quickshell keybind cheatsheet, regenerating its data first.
+set -Eeuo pipefail
+
+readonly GENERATOR="/usr/share/astra/keybinds/gen-keybinds.py"
+
+[[ -r ${GENERATOR} ]] || {
+	printf 'astra-keybinds-toggle: missing %s\n' "$GENERATOR" >&2
+	exit 1
+}
+
+python3 "$GENERATOR" >/dev/null
+
+if qs ipc -c keybinds call keybinds toggle >/dev/null 2>&1; then
+	exit 0
+fi
+
+qs -c keybinds -d >/dev/null 2>&1 || true
+
+for _ in {1..60}; do
+	if qs ipc -c keybinds call keybinds open >/dev/null 2>&1; then
+		exit 0
+	fi
+	sleep 0.05
+done
+
+exit 1

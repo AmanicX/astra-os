@@ -1,0 +1,7 @@
+NAME="AstraOS"
+PRETTY_NAME="AstraOS"
+ID=astraos
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;103;232;249"
+LOGO=astraos-logo

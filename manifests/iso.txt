@@ -7,12 +7,14 @@
 # shown in the live session is the installed desktop, not a mock-up.
 
 arch-install-scripts         # pacstrap, arch-chroot and genfstab for the installer
+mkinitcpio-archiso           # archiso hooks for the live initramfs
 gum                          # TUI screens
 parted                       # inspection and free-space discovery
 gptfdisk                     # sgdisk partition editing
 jq                           # answers JSON and installer state
 pciutils                     # lspci hardware detection
 usbutils                     # lsusb diagnostics
+vulkan-nouveau               # NVK Vulkan driver so live NVIDIA cards work without the proprietary stack
 nano                         # last-resort editing on the live system
 
 # Build-host-only packages are documented in docs/BUILD.md and are not

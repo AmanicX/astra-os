@@ -1,0 +1,12 @@
+// Add include "kitty-appearance.kdl" at the END of ~/.config/niri/config.kdl.
+// Requires Niri 26.04+. This affects Kitty only.
+window-rule {
+    match app-id="^kitty$"
+    geometry-corner-radius 16
+    clip-to-geometry true
+    draw-border-with-background false
+    background-effect {
+        blur true
+        xray true
+    }
+}

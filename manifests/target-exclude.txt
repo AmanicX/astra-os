@@ -1,0 +1,4 @@
+# Packages built into the offline repository and installed on the live ISO,
+# but not installed on the target by default.
+
+astra-installer

@@ -1,0 +1,25 @@
+pkgname=astra-branding
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="AstraOS identity, original logo, wallpaper and release metadata"
+arch=('x86_64')
+license=('MIT' 'CC-BY-SA-4.0')
+depends=('adwaita-fonts')
+install=astra-branding.install
+backup=('etc/motd')
+options=(!strip)
+
+package() {
+	cp -a "${startdir}/files/usr/." "${pkgdir}/usr/"
+
+	install -Dm755 "${startdir}/astra-write-os-release" \
+		"${pkgdir}/usr/bin/astra-write-os-release"
+	install -Dm644 "${startdir}/astraos-release" \
+		"${pkgdir}/usr/lib/astraos-release"
+	install -Dm644 "${startdir}/issue" \
+		"${pkgdir}/usr/share/astra/issue"
+	install -Dm644 "${startdir}/motd" \
+		"${pkgdir}/etc/motd"
+	install -Dm644 "${startdir}/99-astra-os-release.hook" \
+		"${pkgdir}/usr/share/libalpm/hooks/99-astra-os-release.hook"
+}

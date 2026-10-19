@@ -1,0 +1,191 @@
+// Niri keybindings.
+// Edit this file freely; niri includes it from config.kdl.
+// The keybind overlay (Super+Shift+/) reads it automatically.
+
+binds {
+    // Noctalia v5 IPC. Shell must be running for these shortcuts.
+    Mod+Space repeat=false hotkey-overlay-title="App launcher" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Alt+Space repeat=false hotkey-overlay-title="Wallpaper picker" { spawn "noctalia" "msg" "panel-toggle" "wallpaper"; }
+    Mod+Alt+Return repeat=false hotkey-overlay-title="Noctalia settings" { spawn "noctalia" "msg" "settings-toggle"; }
+    Mod+S repeat=false hotkey-overlay-title="Control Center" { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
+    Mod+V repeat=false hotkey-overlay-title="Clipboard history" { spawn "noctalia" "msg" "panel-toggle" "clipboard"; }
+    Mod+Alt+M repeat=false hotkey-overlay-title="Media controls" { spawn "noctalia" "msg" "panel-toggle" "control-center" "media"; }
+    Mod+Alt+P repeat=false hotkey-overlay-title="Play / pause media" { spawn "noctalia" "msg" "media" "toggle"; }
+    Mod+Alt+Left repeat=false hotkey-overlay-title="Previous track" { spawn "noctalia" "msg" "media" "previous"; }
+    Mod+Alt+Right repeat=false hotkey-overlay-title="Next track" { spawn "noctalia" "msg" "media" "next"; }
+    Alt+Tab repeat=false hotkey-overlay-title="Window switcher" { spawn "noctalia" "msg" "window-switcher" "hold"; }
+    Mod+Tab repeat=false hotkey-overlay-title="Switch to previous workspace" { focus-workspace-previous; }
+
+    // Shift+number moves ONE window; Ctrl+number retains the whole-column action.
+    Mod+Shift+1 hotkey-overlay-title="Move window to workspace 1" { move-window-to-workspace 1; }
+    Mod+Shift+2 hotkey-overlay-title="Move window to workspace 2" { move-window-to-workspace 2; }
+    Mod+Shift+3 hotkey-overlay-title="Move window to workspace 3" { move-window-to-workspace 3; }
+    Mod+Shift+4 hotkey-overlay-title="Move window to workspace 4" { move-window-to-workspace 4; }
+    Mod+Shift+5 hotkey-overlay-title="Move window to workspace 5" { move-window-to-workspace 5; }
+    Mod+Shift+6 hotkey-overlay-title="Move window to workspace 6" { move-window-to-workspace 6; }
+    Mod+Shift+7 hotkey-overlay-title="Move window to workspace 7" { move-window-to-workspace 7; }
+    Mod+Shift+8 hotkey-overlay-title="Move window to workspace 8" { move-window-to-workspace 8; }
+    Mod+Shift+9 hotkey-overlay-title="Move window to workspace 9" { move-window-to-workspace 9; }
+
+    Mod+Shift+Slash repeat=false hotkey-overlay-title="Show this keybind menu" { spawn "/usr/bin/astra-keybinds-toggle"; }
+
+    Mod+Return repeat=false hotkey-overlay-title="Open terminal (Kitty)" { spawn "kitty"; }
+    Mod+Alt+L repeat=false allow-inhibiting=false hotkey-overlay-title="Lock screen" { spawn "noctalia" "msg" "session" "lock"; }
+    Mod+B repeat=false hotkey-overlay-title="Open default browser" { spawn "/usr/bin/astra-default-browser"; }
+    Mod+E repeat=false hotkey-overlay-title="Open files (Nautilus)" { spawn "nautilus"; }
+
+    // Optional screen reader: install orca before enabling this shortcut.
+    // Super+Alt+S allow-when-locked=true { spawn-sh "pkill orca || exec orca"; }
+
+    XF86AudioRaiseVolume allow-when-locked=true hotkey-overlay-title="Volume up" { spawn "noctalia" "msg" "volume-up"; }
+    XF86AudioLowerVolume allow-when-locked=true hotkey-overlay-title="Volume down" { spawn "noctalia" "msg" "volume-down"; }
+    XF86AudioMute allow-when-locked=true hotkey-overlay-title="Mute audio" { spawn "noctalia" "msg" "volume-mute"; }
+    XF86AudioMicMute allow-when-locked=true hotkey-overlay-title="Mute microphone" { spawn "noctalia" "msg" "mic-mute"; }
+
+    XF86AudioPlay allow-when-locked=true hotkey-overlay-title="Play / pause media" { spawn "noctalia" "msg" "media" "toggle"; }
+    XF86AudioStop allow-when-locked=true hotkey-overlay-title="Stop media" { spawn "noctalia" "msg" "media" "stop"; }
+    XF86AudioPrev allow-when-locked=true hotkey-overlay-title="Previous track" { spawn "noctalia" "msg" "media" "previous"; }
+    XF86AudioNext allow-when-locked=true hotkey-overlay-title="Next track" { spawn "noctalia" "msg" "media" "next"; }
+
+    XF86MonBrightnessUp allow-when-locked=true hotkey-overlay-title="Brightness up" { spawn "noctalia" "msg" "brightness-up"; }
+    XF86MonBrightnessDown allow-when-locked=true hotkey-overlay-title="Brightness down" { spawn "noctalia" "msg" "brightness-down"; }
+
+    Mod+O repeat=false hotkey-overlay-title="Toggle overview" { toggle-overview; }
+
+    Mod+Q repeat=false hotkey-overlay-title="Close window" { close-window; }
+
+    Mod+Left  hotkey-overlay-title="Focus column left" { focus-column-left; }
+    Mod+Down  hotkey-overlay-title="Focus window down" { focus-window-down; }
+    Mod+Up    hotkey-overlay-title="Focus window up" { focus-window-up; }
+    Mod+Right hotkey-overlay-title="Focus column right" { focus-column-right; }
+    Mod+H     hotkey-overlay-title="Focus column left" { focus-column-left; }
+    Mod+J     hotkey-overlay-title="Focus window down" { focus-window-down; }
+    Mod+K     hotkey-overlay-title="Focus window up" { focus-window-up; }
+    Mod+L     hotkey-overlay-title="Focus column right" { focus-column-right; }
+
+    Mod+Ctrl+Left  hotkey-overlay-title="Move column left" { move-column-left; }
+    Mod+Ctrl+Down  hotkey-overlay-title="Move window down" { move-window-down; }
+    Mod+Ctrl+Up    hotkey-overlay-title="Move window up" { move-window-up; }
+    Mod+Ctrl+Right hotkey-overlay-title="Move column right" { move-column-right; }
+    Mod+Ctrl+H     hotkey-overlay-title="Move column left" { move-column-left; }
+    Mod+Ctrl+J     hotkey-overlay-title="Move window down" { move-window-down; }
+    Mod+Ctrl+K     hotkey-overlay-title="Move window up" { move-window-up; }
+    Mod+Ctrl+L     hotkey-overlay-title="Move column right" { move-column-right; }
+
+    Mod+Home hotkey-overlay-title="Focus first column" { focus-column-first; }
+    Mod+End  hotkey-overlay-title="Focus last column" { focus-column-last; }
+    Mod+Ctrl+Home hotkey-overlay-title="Move column to first" { move-column-to-first; }
+    Mod+Ctrl+End  hotkey-overlay-title="Move column to last" { move-column-to-last; }
+
+    Mod+Shift+Left  hotkey-overlay-title="Focus monitor left" { focus-monitor-left; }
+    Mod+Shift+Down  hotkey-overlay-title="Focus monitor down" { focus-monitor-down; }
+    Mod+Shift+Up    hotkey-overlay-title="Focus monitor up" { focus-monitor-up; }
+    Mod+Shift+Right hotkey-overlay-title="Focus monitor right" { focus-monitor-right; }
+    Mod+Shift+H     hotkey-overlay-title="Focus monitor left" { focus-monitor-left; }
+    Mod+Shift+J     hotkey-overlay-title="Focus monitor down" { focus-monitor-down; }
+    Mod+Shift+K     hotkey-overlay-title="Focus monitor up" { focus-monitor-up; }
+    Mod+Shift+L     hotkey-overlay-title="Focus monitor right" { focus-monitor-right; }
+
+    Mod+Shift+Ctrl+Left  hotkey-overlay-title="Move column to monitor left" { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+Down  hotkey-overlay-title="Move column to monitor down" { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+Up    hotkey-overlay-title="Move column to monitor up" { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+Right hotkey-overlay-title="Move column to monitor right" { move-column-to-monitor-right; }
+    Mod+Shift+Ctrl+H     hotkey-overlay-title="Move column to monitor left" { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+J     hotkey-overlay-title="Move column to monitor down" { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+K     hotkey-overlay-title="Move column to monitor up" { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+L     hotkey-overlay-title="Move column to monitor right" { move-column-to-monitor-right; }
+
+    Mod+Page_Down      hotkey-overlay-title="Focus workspace down" { focus-workspace-down; }
+    Mod+Page_Up        hotkey-overlay-title="Focus workspace up" { focus-workspace-up; }
+    Mod+U              hotkey-overlay-title="Focus workspace down" { focus-workspace-down; }
+    Mod+I              hotkey-overlay-title="Focus workspace up" { focus-workspace-up; }
+    Mod+Ctrl+Page_Down hotkey-overlay-title="Move column to workspace down" { move-column-to-workspace-down; }
+    Mod+Ctrl+Page_Up   hotkey-overlay-title="Move column to workspace up" { move-column-to-workspace-up; }
+    Mod+Ctrl+U         hotkey-overlay-title="Move column to workspace down" { move-column-to-workspace-down; }
+    Mod+Ctrl+I         hotkey-overlay-title="Move column to workspace up" { move-column-to-workspace-up; }
+
+    Mod+Shift+Page_Down hotkey-overlay-title="Move workspace down" { move-workspace-down; }
+    Mod+Shift+Page_Up   hotkey-overlay-title="Move workspace up" { move-workspace-up; }
+    Mod+Shift+U         hotkey-overlay-title="Move workspace down" { move-workspace-down; }
+    Mod+Shift+I         hotkey-overlay-title="Move workspace up" { move-workspace-up; }
+
+    Mod+WheelScrollDown      cooldown-ms=150 hotkey-overlay-title="Focus workspace down" { focus-workspace-down; }
+    Mod+WheelScrollUp        cooldown-ms=150 hotkey-overlay-title="Focus workspace up" { focus-workspace-up; }
+    Mod+Ctrl+WheelScrollDown cooldown-ms=150 hotkey-overlay-title="Move column to workspace down" { move-column-to-workspace-down; }
+    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 hotkey-overlay-title="Move column to workspace up" { move-column-to-workspace-up; }
+
+    Mod+WheelScrollRight      hotkey-overlay-title="Focus column right" { focus-column-right; }
+    Mod+WheelScrollLeft       hotkey-overlay-title="Focus column left" { focus-column-left; }
+    Mod+Ctrl+WheelScrollRight hotkey-overlay-title="Move column right" { move-column-right; }
+    Mod+Ctrl+WheelScrollLeft  hotkey-overlay-title="Move column left" { move-column-left; }
+
+    Mod+Shift+WheelScrollDown      hotkey-overlay-title="Focus column right" { focus-column-right; }
+    Mod+Shift+WheelScrollUp        hotkey-overlay-title="Focus column left" { focus-column-left; }
+    Mod+Ctrl+Shift+WheelScrollDown hotkey-overlay-title="Move column right" { move-column-right; }
+    Mod+Ctrl+Shift+WheelScrollUp   hotkey-overlay-title="Move column left" { move-column-left; }
+
+    Mod+1 hotkey-overlay-title="Focus workspace 1" { focus-workspace 1; }
+    Mod+2 hotkey-overlay-title="Focus workspace 2" { focus-workspace 2; }
+    Mod+3 hotkey-overlay-title="Focus workspace 3" { focus-workspace 3; }
+    Mod+4 hotkey-overlay-title="Focus workspace 4" { focus-workspace 4; }
+    Mod+5 hotkey-overlay-title="Focus workspace 5" { focus-workspace 5; }
+    Mod+6 hotkey-overlay-title="Focus workspace 6" { focus-workspace 6; }
+    Mod+7 hotkey-overlay-title="Focus workspace 7" { focus-workspace 7; }
+    Mod+8 hotkey-overlay-title="Focus workspace 8" { focus-workspace 8; }
+    Mod+9 hotkey-overlay-title="Focus workspace 9" { focus-workspace 9; }
+    Mod+Ctrl+1 hotkey-overlay-title="Move column to workspace 1" { move-column-to-workspace 1; }
+    Mod+Ctrl+2 hotkey-overlay-title="Move column to workspace 2" { move-column-to-workspace 2; }
+    Mod+Ctrl+3 hotkey-overlay-title="Move column to workspace 3" { move-column-to-workspace 3; }
+    Mod+Ctrl+4 hotkey-overlay-title="Move column to workspace 4" { move-column-to-workspace 4; }
+    Mod+Ctrl+5 hotkey-overlay-title="Move column to workspace 5" { move-column-to-workspace 5; }
+    Mod+Ctrl+6 hotkey-overlay-title="Move column to workspace 6" { move-column-to-workspace 6; }
+    Mod+Ctrl+7 hotkey-overlay-title="Move column to workspace 7" { move-column-to-workspace 7; }
+    Mod+Ctrl+8 hotkey-overlay-title="Move column to workspace 8" { move-column-to-workspace 8; }
+    Mod+Ctrl+9 hotkey-overlay-title="Move column to workspace 9" { move-column-to-workspace 9; }
+
+    Mod+BracketLeft  hotkey-overlay-title="Consume or expel window left" { consume-or-expel-window-left; }
+    Mod+BracketRight hotkey-overlay-title="Consume or expel window right" { consume-or-expel-window-right; }
+
+    Mod+Comma  hotkey-overlay-title="Consume window into column" { consume-window-into-column; }
+    Mod+Period hotkey-overlay-title="Expel window from column" { expel-window-from-column; }
+
+    Mod+R hotkey-overlay-title="Cycle column width forward" { switch-preset-column-width; }
+    Mod+Shift+R hotkey-overlay-title="Cycle column width backward" { switch-preset-column-width-back; }
+
+    Mod+Ctrl+Shift+R hotkey-overlay-title="Cycle window height" { switch-preset-window-height; }
+    Mod+Ctrl+R hotkey-overlay-title="Reset window height" { reset-window-height; }
+
+    Mod+F hotkey-overlay-title="Maximize column" { maximize-column; }
+    Mod+Shift+F hotkey-overlay-title="Fullscreen window" { fullscreen-window; }
+
+    Mod+M hotkey-overlay-title="Maximize window to edges" { maximize-window-to-edges; }
+
+    Mod+Ctrl+F hotkey-overlay-title="Expand column to available width" { expand-column-to-available-width; }
+
+    Mod+C hotkey-overlay-title="Center column" { center-column; }
+
+    Mod+Ctrl+C hotkey-overlay-title="Center visible columns" { center-visible-columns; }
+
+    Mod+Minus hotkey-overlay-title="Shrink column width by 10%" { set-column-width "-10%"; }
+    Mod+Equal hotkey-overlay-title="Grow column width by 10%" { set-column-width "+10%"; }
+
+    Mod+Shift+Minus hotkey-overlay-title="Shrink window height by 10%" { set-window-height "-10%"; }
+    Mod+Shift+Equal hotkey-overlay-title="Grow window height by 10%" { set-window-height "+10%"; }
+
+    Mod+Ctrl+V  hotkey-overlay-title="Toggle window floating" { toggle-window-floating; }
+    Mod+Shift+V hotkey-overlay-title="Switch focus between floating and tiling" { switch-focus-between-floating-and-tiling; }
+
+    Mod+W hotkey-overlay-title="Toggle tabbed column display" { toggle-column-tabbed-display; }
+
+    Print hotkey-overlay-title="Screenshot (region)" { screenshot; }
+    Ctrl+Print hotkey-overlay-title="Screenshot (full screen)" { screenshot-screen; }
+    Alt+Print hotkey-overlay-title="Screenshot (window)" { screenshot-window; }
+
+    Mod+Escape allow-inhibiting=false hotkey-overlay-title="Toggle keyboard shortcuts inhibit" { toggle-keyboard-shortcuts-inhibit; }
+
+    Mod+Shift+E repeat=false hotkey-overlay-title="Session menu" { spawn "noctalia" "msg" "panel-toggle" "session"; }
+    Ctrl+Alt+Delete repeat=false hotkey-overlay-title="Session menu" { spawn "noctalia" "msg" "panel-toggle" "session"; }
+    Mod+Ctrl+Shift+Escape repeat=false hotkey-overlay-title="Quit Niri" { quit; }
+
+    Mod+Shift+P hotkey-overlay-title="Power off monitors" { power-off-monitors; }
+}

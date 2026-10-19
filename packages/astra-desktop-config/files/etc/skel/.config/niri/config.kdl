@@ -1,0 +1,158 @@
+// Niri + Noctalia v5 — Arch Linux
+// Target: Niri 26.04 and Noctalia v5 (the `noctalia` executable).
+// Validate the staged pair before installing: niri validate -c ./config.kdl
+// Mod is Super in a normal Niri session. Return means Enter.
+// Device settings, dynamic workspaces and most original shortcuts are preserved.
+
+
+input {
+    keyboard {
+        xkb {
+
+        }
+
+        numlock
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+    }
+
+    mouse {
+    }
+
+    trackpoint {
+    }
+
+}
+
+
+layout {
+    gaps 10
+
+    center-focused-column "on-overflow"
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+
+    }
+
+    default-column-width { proportion 0.5; }
+
+    focus-ring {
+
+        width 2
+
+        active-color "#7fc8ff"
+
+        inactive-color "#505050"
+
+    }
+
+    border {
+        off
+
+        width 2
+        active-color "#ffc87f"
+        inactive-color "#505050"
+
+        urgent-color "#9b0000"
+
+    }
+
+    shadow {
+        on
+
+        softness 30
+
+        spread 2
+
+        offset x=0 y=5
+
+        color "#00000055"
+    }
+
+    struts {
+    }
+}
+
+spawn-at-startup "noctalia"
+spawn-at-startup "astra-keybinds-start"
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+animations {
+
+}
+
+window-rule {
+    match app-id=r#"^org\.wezfurlong\.wezterm$"#
+    default-column-width {}
+}
+
+window-rule {
+    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    open-floating true
+}
+
+/-window-rule {
+    match app-id=r#"^org\.keepassxc\.KeePassXC$"#
+    match app-id=r#"^org\.gnome\.World\.Secrets$"#
+
+    block-out-from "screen-capture"
+
+}
+
+window-rule {
+    geometry-corner-radius 16
+    clip-to-geometry true
+}
+
+include "keybinds.kdl"
+
+// Never activate overview from a screen corner.
+gestures {
+    hot-corners { off; }
+}
+
+// Wallpaper-derived overview. Enable Backdrop in Noctalia Settings > Niri.
+layer-rule {
+    match namespace="^noctalia-backdrop"
+    place-within-backdrop true
+}
+
+// Frosted glass behind the keybind cheatsheet overlay.
+layer-rule {
+    match namespace="^keybinds$"
+    background-effect {
+        blur true
+        noise 0.02
+        saturation 1.15
+    }
+}
+
+overview {
+    zoom 0.4
+    backdrop-color "#070722"
+}
+
+window-rule {
+    match app-id="^dev[.]noctalia[.]Noctalia$"
+    open-floating true
+}
+
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
+
+// Keep this LAST: Noctalia updates this color-only file when its theme changes.
+include "noctalia.kdl"
+
+include "kitty-appearance.kdl"

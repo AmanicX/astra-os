@@ -1,0 +1,38 @@
+pkgname=astra-sddm-theme
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Noctalia-inspired SDDM theme with AstraOS artwork"
+arch=('x86_64')
+license=('GPL-3.0-or-later' 'MIT')
+depends=('sddm' 'qt6-declarative' 'qt6-svg' 'qt6-virtualkeyboard' 'astra-branding')
+makedepends=('git')
+source=("sddm-noctalia-theme::git+https://github.com/ClementFombonne/sddm-noctalia-theme.git#commit=92bf8e6ff35be19b50b60a38e0f3d6e38e1c66e1")
+sha256sums=('SKIP')
+
+prepare() {
+	cd "${srcdir}/sddm-noctalia-theme"
+
+	# The upstream wallpaper and screenshot have unclear provenance and are
+	# not redistributed. The AstraOS wallpaper replaces them (D-009).
+	rm -rf Assets/Screenshots
+	rm -f Assets/Wallpaper/noctalia.png
+
+	sed -i 's|^background=.*|background=Assets/Wallpaper/astraos-default.png|' \
+		Commons/Settings.conf
+	sed -i 's|^fontFamily=.*|fontFamily="Adwaita Sans"|' \
+		Commons/Settings.conf
+}
+
+package() {
+	install -d "${pkgdir}/usr/share/sddm/themes/noctalia-sddm"
+	cp -a "${srcdir}/sddm-noctalia-theme/." \
+		"${pkgdir}/usr/share/sddm/themes/noctalia-sddm/"
+	rm -rf "${pkgdir}/usr/share/sddm/themes/noctalia-sddm/.git"
+
+	install -d "${pkgdir}/usr/share/sddm/themes/noctalia-sddm/Assets/Wallpaper"
+	ln -s /usr/share/backgrounds/astraos/astraos-default.png \
+		"${pkgdir}/usr/share/sddm/themes/noctalia-sddm/Assets/Wallpaper/astraos-default.png"
+
+	install -Dm644 "${startdir}/astra.conf" \
+		"${pkgdir}/etc/sddm.conf.d/astra.conf"
+}

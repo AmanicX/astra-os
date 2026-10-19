@@ -1,0 +1,27 @@
+# Noctalia v5 companion settings. Install in ~/.config/noctalia/.
+# This is NOT a Niri file. Never add it to Niri's include list.
+# GUI overrides in ~/.local/state/noctalia/settings.toml take precedence.
+# If an option does not apply, set the same value in Noctalia Settings.
+
+[wallpaper]
+enabled = true
+
+[backdrop]
+enabled = true
+blur_intensity = 0.6
+tint_intensity = 0.35
+
+[hot_corners]
+enabled = false
+
+[shell]
+clipboard_enabled = true
+
+[lockscreen]
+enabled = true
+lock_before_suspend = true
+
+# Derive Noctalia's palette from the wallpaper.
+[theme]
+source = "wallpaper"
+wallpaper_scheme = "m3-tonal-spot"

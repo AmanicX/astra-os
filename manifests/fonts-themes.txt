@@ -6,5 +6,6 @@ noto-fonts-emoji             # emoji fallback
 noto-fonts-cjk               # CJK fallback
 ttf-liberation               # metric-compatible Microsoft font replacement
 ttf-jetbrains-mono-nerd      # terminal and editor monospace font
+adwaita-fonts                # Adwaita Sans/Mono used by the desktop and branding
 adw-gtk-theme                # GTK3/GTK4 Adwaita-style theme used by the desktop
 papirus-icon-theme           # icon theme used by the desktop

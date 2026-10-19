@@ -1,0 +1,54 @@
+config_version = 15
+
+[bar]
+order = ["main"]
+
+    [bar.main]
+    enabled = true
+    capsule = true
+    thickness = 40
+    radius = 16
+    margin_edge = 5
+    margin_ends = 5
+    margin_opposite_edge = 5
+    widget_spacing = 10
+    font_family = "Adwaita Sans"
+    start = ["launcher", "wallpaper", "active_window"]
+    center = ["clock", "media", "control-center"]
+    end = ["notifications", "clipboard", "battery", "session"]
+
+[battery]
+warning_threshold = 20
+
+[hot_corners]
+enabled = false
+
+[shell]
+screen_time_enabled = false
+
+    [shell.launcher]
+    track_usage = false
+
+    [shell.panel]
+    launcher_placement = "attached"
+
+[theme]
+builtin = "Ayu"
+community_palette = "Oxocarbon"
+mode = "dark"
+source = "builtin"
+wallpaper_scheme = "m3-content"
+
+    [theme.templates]
+    builtin_ids = ["btop", "kitty", "niri", "gtk3", "gtk4"]
+    community_ids = []
+    enable_builtin_templates = true
+
+[wallpaper]
+directory = "~/Pictures/Wallpapers"
+
+    [wallpaper.default]
+    path = "/usr/share/backgrounds/astraos/astraos-default.png"
+
+    [wallpaper.last]
+    path = "/usr/share/backgrounds/astraos/astraos-default.png"

@@ -1,0 +1,8 @@
+{
+  "snapshot": "0.1.0",
+  "astra_repo": "https://github.com/astraos/updates/releases/download/snapshot/astra-local.db",
+  "arch_mirrors": "https://archive.archlinux.org/repos/$snapshot/",
+  "notes": "Initial stable release: pinned Arch Linux Archive 2026/10/18, stable channel signed metadata deferred.",
+  "requires_manual": [],
+  "signed": false
+}
