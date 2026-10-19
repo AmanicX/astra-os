@@ -1,0 +1,16 @@
+# Maintainer: AstraOS <build@astraos.org>
+# Description: AstraOS GPG keyring for signed packages.
+pkgname=astra-keyring
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="AstraOS GPG Keyring"
+arch=('x86_64')
+license=('MIT')
+depends=()
+options=(!strip)
+
+package() {
+	# For now, we provide a placeholder as the system relies on TrustAll in local repo.
+	install -d "${pkgdir}/usr/share/astra"
+	touch "${pkgdir}/usr/share/astra/keyring.placeholder"
+}

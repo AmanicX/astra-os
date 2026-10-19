@@ -10,6 +10,7 @@ SigLevel = Required DatabaseOptional
 LocalFileSigLevel = Optional
 Color
 CheckSpace
+ILoveCandy
 
 [core]
 Server = https://archive.archlinux.org/repos/@SNAPSHOT@/core/os/$arch

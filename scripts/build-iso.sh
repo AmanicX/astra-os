@@ -65,7 +65,7 @@ log "repository: ${REPO_ROOT}/repo/x86_64"
 if [[ -r ${REPO_ROOT}/repo/x86_64/astra-local.db ]]; then
 	log "local repository database: present"
 else
-	# In online mode, the local repo is optional for the ISO but 
+	# In online mode, the local repo is optional for the ISO but
 	# still needed for Astra-owned packages.
 	warn "local repository database is missing; ensure Astra packages are built"
 fi
@@ -88,15 +88,29 @@ PROFILE_DIR="${REPO_ROOT}/build/iso/profile"
 mkdir -p "$PROFILE_DIR"
 
 log "assembling archiso profile..."
-# Copy the releng profile as a base
-cp -r /usr/share/archiso/configs/releng "$PROFILE_DIR"
+rm -rf -- "$PROFILE_DIR"
+mkdir -p "$PROFILE_DIR"
+cp -r /usr/share/archiso/configs/releng/. "$PROFILE_DIR/"
 
-# 1. Update packages.x86_64
-# We replace the default list with our live manifest.
-cat "$live_list" > "${PROFILE_DIR}/packages.x86_64"
+# 1. AstraOS identity and UEFI-only boot. v1 does not ship BIOS support.
+sed -i \
+	-e 's|^iso_name=.*|iso_name="astraos"|' \
+	-e 's|^iso_label=.*|iso_label="ASTRA_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"|' \
+	-e 's|^iso_publisher=.*|iso_publisher="AstraOS <https://astraos.org>"|' \
+	-e 's|^iso_application=.*|iso_application="AstraOS Live Installer"|' \
+	"${PROFILE_DIR}/profiledef.sh"
+
+# Replace the two-entry bootmodes array with UEFI systemd-boot only.
+sed -i \
+	-e "s|^bootmodes=('bios.syslinux'|bootmodes=('uefi.systemd-boot')|" \
+	-e "/^[[:space:]]*'uefi.systemd-boot')\$/d" \
+	"${PROFILE_DIR}/profiledef.sh"
+
+# 2. Replace the default package list with the AstraOS live manifest.
+cat "$live_list" >"${PROFILE_DIR}/packages.x86_64"
 
 # 2. Configure pacman.conf for standard official mirrors.
-cat <<EOF > "${PROFILE_DIR}/pacman.conf"
+cat <<EOF >"${PROFILE_DIR}/pacman.conf"
 [options]
 Architecture = auto
 SigLevel = Required DatabaseOptional
@@ -121,13 +135,14 @@ mkdir -p "${PROFILE_DIR}/airootfs/etc/astra"
 mkdir -p "${PROFILE_DIR}/airootfs/usr/share/astra/manifests"
 
 # Copy the manifests for the installer to use offline
-cp manifests/*.txt "${PROFILE_DIR}/airootfs/usr/share/astra/manifests/"
+cp "${REPO_ROOT}/manifests/"*.txt "${PROFILE_DIR}/airootfs/usr/share/astra/manifests/"
 
 # 4. Configure bootloader (GRUB UEFI)
 # The releng profile uses systemd-boot by default. We switch to GRUB.
 
 log "running mkarchiso..."
 mkdir -p "${REPO_ROOT}/out"
+rm -rf -- "${REPO_ROOT}/work"
 mkarchiso -v -w "${REPO_ROOT}/work" -o "${REPO_ROOT}/out" "$PROFILE_DIR"
 
 log "ISO built successfully at ${REPO_ROOT}/out"

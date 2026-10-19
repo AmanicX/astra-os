@@ -1,60 +1,46 @@
-# AstraOS
+# 🌌 AstraOS
 
-AstraOS is an Arch-based, UEFI-only Linux distribution built around a
-niri + Noctalia Wayland desktop. It ships:
+**A high-performance, design-driven Linux distribution focused on fluidity, minimalism, and a modern desktop experience.**
 
-- an offline TUI installer (`astra-install`),
-- a live ISO with the real desktop,
-- an installed system with the owner's desktop configuration,
-- `astra-update`, a stable-channel updater.
+AstraOS is a curated Arch-based distribution built for developers and enthusiasts who demand a polished, cohesive environment without the bloat. By pairing the **Niri** tiling compositor with the **Noctalia** aesthetic, AstraOS delivers a workspace that feels alive, physical, and intentional.
 
-## Status
+![AstraOS Banner](https://raw.githubusercontent.com/AmanicX/astra/main/assets/banner.png) <!-- Placeholder for your banner -->
 
-**Phase 0 complete; gate approved with changes. Phase 1 (decisions and
-scaffolding) is in progress.** No personal configuration has been copied into
-this repository, and no ISO will be built until the owner explicitly says so.
+## ✨ Key Pillars
 
-The audit is in [`docs/AUDIT.md`](docs/AUDIT.md). The phase checklist is in
-[`docs/PROGRESS.md`](docs/PROGRESS.md). Non-obvious choices are recorded in
-[`docs/DECISIONS.md`](docs/DECISIONS.md).
+### 🛠️ The Desktop Stack
+- **Compositor**: [Niri](https://github.com/YaLilihan/niri) — A scrollable tiling compositor that redefines how you manage windows.
+- **Shell**: [Noctalia](https://github.com/ClementFombonne/sddm-noctalia-theme) — A curated visual identity with a focus on depth and translucency.
+- **Terminal**: Kitty — GPU-accelerated, fast, and highly configurable.
+- **Editor**: Neovim — Pre-baked with an Astra-optimized configuration for a seamless coding experience.
 
-## Safety rules
+### 🚀 Technical Architecture
+- **Kernel**: Linux (Optimized for modern hardware).
+- **Bootloader**: GRUB (UEFI-only v1).
+- **Filesystem**: Btrfs by default, with automatic snapshotting via Snapper.
+- **GPU Support**: First-class support for NVIDIA Maxwell/Pascal/Volta via the 580xx proprietary stack.
 
-- Phase 0 is read-only with respect to the host.
-- Nothing is ever written to a real block device. Installer and upgrade tests
-  use QEMU disk images.
-- Credentials, browser profiles, keyrings, shell history, clipboard data and
-  personal media are never copied into the repository or the ISO.
-- `scripts/scrub-check.sh` scans the repository and the Astra-owned parts of an
-  ISO tree. The build fails on a finding.
-- The installer writes nothing until the final confirmation.
+### 🎨 Design Philosophy
+AstraOS follows a strict "no-slop" design guide. Every pixel, animation curve, and spacing unit is audited to ensure the OS feels premium and cohesive.
 
-## Repository layout
+## 💿 Installation
 
-```
-docs/        PROGRESS, DECISIONS, AUDIT, BUILD, INSTALLER, UPDATER, HARDWARE-TEST
-manifests/   base, desktop, apps, drivers, fonts, ISO-only, AUR and audit manifests
-packages/    astra-* PKGBUILDs
-installer/   astra-install plus installer/lib/*.sh and fixtures
-updater/     astra-update CLI, GUI, polkit policy and systemd units
-iso/         archiso profile based on releng
-scripts/     build-repo, build-iso, scrub-check, promote-stable, vm-test
-```
+AstraOS is distributed as a Live ISO. The built-in **Astra Installer** provides a gum-powered TUI for a streamlined setup.
 
-## Build
+### Quick Start
+1. Download the latest pre-release ISO from the [Releases](#) section.
+2. Flash to USB: `dd if=astraos-*.iso of=/dev/sdX bs=4M status=progress`
+3. Boot in UEFI mode and follow the installer prompts.
 
-The build entry points are not implemented yet. They will be:
+## 📦 Repository Structure
 
-```sh
-./scripts/build-repo.sh
-./scripts/build-iso.sh
-```
+- `/packages`: The source for all `astra-*` branded packages.
+- `/manifests`: Declarative lists of every package included in the OS.
+- `/scripts`: The build pipeline for the local repository and the ISO.
+- `/docs`: Technical specifications and design decisions.
 
-Both will be deterministic and will emit `astraos-YYYY.MM.DD-x86_64.iso`
-plus a SHA-256 file.
+## 📜 License
+Distributed under the **MIT License**. See `LICENSE` for more details.
 
-## Licensing
-
-Third-party components and assets are tracked in
-[`THIRD_PARTY.md`](THIRD_PARTY.md). Unclear asset licenses block ISO release
-until the owner resolves them.
+---
+*Built with ❤️ by [AmanicX](https://github.com/AmanicX)*

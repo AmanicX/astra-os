@@ -165,9 +165,16 @@ case '${STATE[user_sudo]}' in
 	with-password) printf '%%wheel ALL=(ALL) ALL\\n' > /etc/sudoers.d/90-astra ;;
 esac
 chmod 0440 /etc/sudoers.d/90-astra || true
+
+# Handle dual-boot OS prober
+if [[ "${STATE[storage_mode]}" == "dual" ]]; then
+	echo "GRUB_DISABLE_OS_PROBER=false" >> /etc/default/grub
+	pacman -S --noconfirm os-prober
+fi
+
 grub-install --target=x86_64-efi --efi-directory="${ESP_MOUNT}" --bootloader-id=AstraOS --removable
 grub-mkconfig -o /boot/grub/grub.cfg
-systemctl enable sddm niri.service NetworkManager bluetooth.set-out-of-bounds-on-error bluetooth.service
+systemctl enable sddm niri.service NetworkManager bluetooth.service
 systemctl disable dhcpcd.service 2>/dev/null || true
 EOF
 }
