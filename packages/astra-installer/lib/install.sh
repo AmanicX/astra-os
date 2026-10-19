@@ -1,6 +1,5 @@
 # Installation logic. Executes only after the summary confirms the user's
-# final Yes. The offline repository is at ASTRA_REPO_DIR; manifests live in
-# MANIFESTS_DIR.
+# final Yes. This version uses ONLINE installation via the internet.
 
 ask_keyboard() {
 	local layout
@@ -120,7 +119,6 @@ partition_and_mount() {
 		GPT_BEFORE="$(snapshot_gpt "$disk")"
 	fi
 
-	# ESP: 1 GiB FAT32 (EF00). Root: remaining space as Btrfs.
 	sgdisk -n "${part}:0:+${STATE[esp_size]:-1GiB}" -t "${part}:EF00" "$disk"
 	ESP_PART="${disk}${part}"
 	n_root=$((part + 1))
@@ -157,40 +155,41 @@ set -euo pipefail
 ln -sf "/usr/share/zoneinfo/${tz}" /etc/localtime
 echo "KEYMAP=${kb}" > /etc/vconsole.conf
 echo "${host}" > /etc/hostname
-printf '127.0.0.1 localhost\n::1 localhost\n127.0.1.1 %s.local %s\n' "${host}" "${host}" > /etc/hosts
+printf '127.0.0.1 localhost\\n::1 localhost\\n127.0.1.1 %s.local %s\\n' "${host}" "${host}" > /etc/hosts
 printf 'LANG=%s\\n' "${locale}" > /etc/locale.conf
 printf '%s:%s\\n' '${STATE[root_password]}' '${STATE[root_password]}' | chpasswd
 useradd -m -G wheel -s /bin/zsh '${STATE[user_name]}'
 printf '%s:%s\\n' '${STATE[user_name]}' '${STATE[user_password]}' | chpasswd
 case '${STATE[user_sudo]}' in
-	passwordless) printf '%%wheel ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/90-astra ;;
-	with-password) printf '%%wheel ALL=(ALL) ALL\n' > /etc/sudoers.d/90-astra ;;
+	passwordless) printf '%%wheel ALL=(ALL) NOPASSWD: ALL\\n' > /etc/sudoers.d/90-astra ;;
+	with-password) printf '%%wheel ALL=(ALL) ALL\\n' > /etc/sudoers.d/90-astra ;;
 esac
 chmod 0440 /etc/sudoers.d/90-astra || true
 grub-install --target=x86_64-efi --efi-directory="${ESP_MOUNT}" --bootloader-id=AstraOS --removable
 grub-mkconfig -o /boot/grub/grub.cfg
-systemctl enable sddm niri.service NetworkManager bluetooth.service
+systemctl enable sddm niri.service NetworkManager bluetooth.set-out-of-bounds-on-error bluetooth.service
 systemctl disable dhcpcd.service 2>/dev/null || true
 EOF
 }
 
 run_install() {
-	require_offline_repo
+	#- require_offline_repo # REMOVED for online install
 
 	partition_and_mount
 
 	local -a pkgs=()
 	mapfile -t pkgs < <(build_pkg_list)
 
-	write_offline_pacman_conf "${MNT_ROOT}"
-	log "pacstrap: base + ${#pkgs[@]} packages"
-	pacstrap -C "${MNT_ROOT}/etc/pacman.conf" -c -G -M "${MNT_ROOT}" base "${pkgs[@]}"
+	# We no longer write a local-repo pacman.conf.
+	# Instead, we use the standard pacstrap which uses official mirrors.
+	log "running pacstrap (ONLINE mode)"
+	pacstrap -c -G -M "${MNT_ROOT}" base "${pkgs[@]}"
 
 	configure_target
 
 	if [[ -n "${STATE[extra_packages]}" ]]; then
 		local -a extra=()
-		IFS=',' read -ra extra <<<"${STATE[extra_packages]}"
+		IFS=',' read -ra extra <<< "${STATE[extra_packages]}"
 		arch-chroot "${MNT_ROOT}" pacman -S --noconfirm --needed "${extra[@]}"
 	fi
 

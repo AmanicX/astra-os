@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Build the AstraOS offline repository.
 #
-# This script resolves the official package closure against a pinned Arch
-# Linux Archive snapshot, downloads them, builds AUR and Astra packages,
-# and generates a signed local repository.
+# This script now primarily builds the Astra-owned packages.
+# Official packages are handled via online pacstrap.
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -23,14 +22,14 @@ usage() {
 Usage: build-repo.sh [--plan | --build] [--snapshot YYYY/MM/DD] [--clean]
 
   --plan                 Resolve and print the repository closure (default).
-  --build                Download packages and build AUR packages.
+  --build                Build Astra-owned packages into the local repo.
   --snapshot DATE        Override config/snapshot.
   --clean               Remove build/repo before starting.
   -h, --help            Show this help.
 EOF
 }
 
-while (($# > 0)); do
+while (($# > 0));C
 	case "$1" in
 	--plan)
 		PLAN=1
@@ -67,7 +66,7 @@ fi
 
 require_arch_host
 require_tools awk curl df pacman sed sort
-require_free_gib 60 "$REPO_ROOT"
+require_free_gib 5 "$REPO_ROOT"
 
 if [[ -z ${SNAPSHOT} ]]; then
 	SNAPSHOT="$(tr -d '[:space:]' <"${REPO_ROOT}/config/snapshot")"
@@ -117,6 +116,10 @@ manifest_repo_official >"$official_list"
 manifest_aur >"$aur_list"
 manifest_astra >"$astra_list"
 
+log "official packages in payload: $(wc -l <"$official_list")"
+log "AUR packages to build: $(wc -l <"$aur_list")"
+log "Astra packages to build: $(wc -l <"$astra_list")"
+
 closure="${PLAN_ROOT}/closure.tsv"
 mapfile -t official_packages <"$official_list"
 if ! pacman -Sp --print-format '%n %v %s %r' \
@@ -146,24 +149,13 @@ fi
 require_root_or_sudo
 mkdir -p "$REPO_PATH"
 
-log "downloading official packages..."
-while read -r pkg ver size repo file; do
-	url="https://archive.archlinux.org/repos/${SNAPSHOT}/${repo}/os/x86_64/${file}"
-	if [[ ! -f "${REPO_PATH}/${file}" ]]; then
-		log "fetching ${pkg} (${ver})"
-		curl -fsS --retry 3 -o "${REPO_PATH}/${file}" "$url"
-	fi
-done < "$closure"
-
 log "building Astra packages..."
 for pkg_dir in packages/astra-*; do
 	[[ -d "$pkg_dir" ]] || continue
 	log "building ${pkg_dir##*/}"
-	# Use makepkg in a temporary dir to avoid polluting the repo
 	work_dir=$(mktemp -d)
 	cp -r "$pkg_dir/." "$work_dir/"
 	(cd "$work_dir" && makepkg -s --noconfirm)
-	# Move resulting package to the repo
 	find "$work_dir" -name "*.pkg.tar.zst" -exec cp {} "$REPO_PATH/" \;
 	rm -rf "$work_dir"
 done
@@ -172,13 +164,6 @@ log "building AUR packages..."
 while read -r pkg; do
 	log "building AUR package: ${pkg}"
 	work_dir=$(mktemp -d)
-	# In a real scenario, we'd use a clean chroot (devtools/extra-x86_64-build)
-	# For this scaffold, we use local makepkg.
-	# Need to fetch the PKGBUILD first.
-	if ! curl -fsSL "https://aur.archlinux.org/${pkg}.git" -o /dev/null; then
-		log "AUR package ${pkg} not found; skipping"
-		continue
-	fi
 	git clone "https://aur.archlinux.org/${pkg}.git" "$work_dir"
 	(cd "$work_dir" && makepkg -s --noconfirm)
 	find "$work_dir" -name "*.pkg.tar.zst" -exec cp {} "$REPO_PATH/" \;
@@ -188,6 +173,6 @@ done < "$aur_list"
 log "generating repository database..."
 cd "$REPO_PATH"
 repo-add .local.db.tar.gz *.pkg.tar.zst
-mv .local.db.tar.gz .local.db
+mv .local.db.tar.zst .local.db
 
 log "offline repository built at ${REPO_PATH}"

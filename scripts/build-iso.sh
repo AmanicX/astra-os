@@ -65,7 +65,9 @@ log "repository: ${REPO_ROOT}/repo/x86_64"
 if [[ -r ${REPO_ROOT}/repo/x86_64/astra-local.db ]]; then
 	log "local repository database: present"
 else
-	warn "local repository database is missing"
+	# In online mode, the local repo is optional for the ISO but 
+	# still needed for Astra-owned packages.
+	warn "local repository database is missing; ensure Astra packages are built"
 fi
 
 if ((PLAN == 1)); then
@@ -93,11 +95,11 @@ cp -r /usr/share/archiso/configs/releng "$PROFILE_DIR"
 # We replace the default list with our live manifest.
 cat "$live_list" > "${PROFILE_DIR}/packages.x86_64"
 
-# 2. Configure pacman.conf for the local repo
+# 2. Configure pacman.conf for standard official mirrors.
 cat <<EOF > "${PROFILE_DIR}/pacman.conf"
 [options]
 Architecture = auto
-SigLevel = Optional TrustAll
+SigLevel = Required DatabaseOptional
 LocalFileSigLevel = Optional
 
 [core]
@@ -123,12 +125,8 @@ cp manifests/*.txt "${PROFILE_DIR}/airootfs/usr/share/astra/manifests/"
 
 # 4. Configure bootloader (GRUB UEFI)
 # The releng profile uses systemd-boot by default. We switch to GRUB.
-# In a real scenario, we would customize the grub.cfg.
-# For the first build, we use the releng defaults but ensure it boots UEFI.
 
 log "running mkarchiso..."
-# We run mkarchiso using the profile directory.
-# Output goes to out/astraos-x86_64.iso
 mkdir -p "${REPO_ROOT}/out"
 mkarchiso -v -w "${REPO_ROOT}/work" -o "${REPO_ROOT}/out" "$PROFILE_DIR"
 
