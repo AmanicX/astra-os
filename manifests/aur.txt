@@ -15,4 +15,5 @@ lib32-opencl-nvidia-580xx    580.178.04-1  32-bit Maxwell/Pascal/Volta OpenCL
 # PENDING / excluded
 # cloudflare-warp-bin        personal VPN; not part of AstraOS
 # yay-bin, yay-bin-debug     replaced by paru
-# sddm-astronaut-theme       asset licensing unclear; see THIRD_PARTY.md
+# sddm-astronaut-theme       packaged by astra-sddm-theme at a pinned commit;
+#                            artwork/fonts removed, see THIRD_PARTY.md

@@ -1,12 +1,12 @@
 # Maintainer: AstraOS <build@astraos.org>
-# Description: Offline, UEFI-only TUI installer. ISO-only; not a dependency of astra-meta.
+# Description: UEFI-only TUI installer. ISO-only; not a dependency of astra-meta.
 pkgname=astra-installer
 pkgver=0.1.0
-pkgrel=1
-pkgdesc="Offline AstraOS installer with a gum-powered TUI"
+pkgrel=3
+pkgdesc="AstraOS installer with a gum-powered TUI"
 arch=('x86_64')
 license=('MIT')
-depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz')
+depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz' 'kitty')
 install=astra-installer.install
 options=(!strip)
 
@@ -14,6 +14,8 @@ package() {
 	install -d "${pkgdir}/usr/lib/astra/installer/lib"
 	install -Dm755 "${startdir}/astra-install" \
 		"${pkgdir}/usr/bin/astra-install"
+	install -Dm644 "${startdir}/astra-installer.desktop" \
+		"${pkgdir}/usr/share/applications/astra-installer.desktop"
 
 	cp -a "${startdir}/lib/." "${pkgdir}/usr/lib/astra/installer/lib/"
 

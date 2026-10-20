@@ -84,7 +84,15 @@ The package will:
 - install `/etc/sddm.conf.d/astra.conf` selecting `noctalia-sddm`.
 
 The theme code is redistributable under GPLv3; the removed assets are not
-shipped. The astronaut theme is excluded.
+shipped.
+
+**Superseded on 2026-10-20.** The Noctalia SDDM theme rendered incorrectly on
+the live ISO, so the owner requested the astronaut theme instead. The package
+now pins `keyitdev/sddm-astronaut-theme` at commit
+`abb3163c724935af888ba5ea9ac0c4f22afd8048`, ships only the upstream GPL code,
+components and icons, removes the unrelated backgrounds, previews, install
+helper and bundled fonts, and uses the original AstraOS wallpaper and Adwaita
+Sans. `THIRD_PARTY.md` records the narrower asset set.
 
 ## D-010 — Scrub-check identity handling
 

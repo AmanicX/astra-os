@@ -55,18 +55,23 @@ fi
 require_arch_host
 require_free_gib 15 "$REPO_ROOT"
 
+SNAPSHOT="$(tr -d '[:space:]' <"${REPO_ROOT}/config/snapshot")"
+[[ ${SNAPSHOT} =~ ^[0-9]{4}/[0-9]{2}/[0-9]{2}$ ]] ||
+	die "invalid snapshot date '${SNAPSHOT}'; expected YYYY/MM/DD"
+
 live_list="${REPO_ROOT}/build/iso/live-packages.txt"
 mkdir -p "$(dirname -- "$live_list")"
 manifest_live >"$live_list"
 
+log "snapshot: ${SNAPSHOT}"
 log "live packages: $(wc -l <"$live_list")"
 log "repository: ${REPO_ROOT}/repo/x86_64"
 
 if [[ -r ${REPO_ROOT}/repo/x86_64/astra-local.db ]]; then
 	log "local repository database: present"
+elif ((BUILD == 1)); then
+	die "local repository database is missing; run build-repo.sh --build first"
 else
-	# In online mode, the local repo is optional for the ISO but
-	# still needed for Astra-owned packages.
 	warn "local repository database is missing; ensure Astra packages are built"
 fi
 
@@ -82,7 +87,20 @@ if [[ ${ASTRA_ISO_APPROVED:-0} != "1" ]]; then
 fi
 
 require_root_or_sudo
-require_tools mkarchiso
+require_tools git mkarchiso
+
+# The desktop config expects a pinned, read-only LazyVim tree at
+# /usr/share/astra/nvim/lazy. Build it once and cache it between ISO runs.
+NVIM_TREE="${REPO_ROOT}/build/iso/nvim-lazy"
+if [[ ! -d ${NVIM_TREE}/lazy.nvim ]]; then
+	log "pre-baking the Neovim plugin tree..."
+	prebake_user="${SUDO_USER:-$(id -un)}"
+	if [[ ${EUID} -eq 0 && ${prebake_user} != root ]]; then
+		sudo -u "$prebake_user" "${SCRIPT_DIR}/prebake-nvim.sh" --dest "$NVIM_TREE"
+	else
+		"${SCRIPT_DIR}/prebake-nvim.sh" --dest "$NVIM_TREE"
+	fi
+fi
 
 PROFILE_DIR="${REPO_ROOT}/build/iso/profile"
 mkdir -p "$PROFILE_DIR"
@@ -109,36 +127,48 @@ sed -i \
 # 2. Replace the default package list with the AstraOS live manifest.
 cat "$live_list" >"${PROFILE_DIR}/packages.x86_64"
 
-# 2. Configure pacman.conf for standard official mirrors.
-cat <<EOF >"${PROFILE_DIR}/pacman.conf"
-[options]
-Architecture = auto
-SigLevel = Required DatabaseOptional
-LocalFileSigLevel = Optional
+# 2. Pacman configuration. Both the mkarchiso build and the live environment
+# use the date-pinned Arch Linux Archive, so installs are reproducible and do
+# not drift with the current mirrors.
+sed \
+	-e "s|@SNAPSHOT@|${SNAPSHOT}|g" \
+	-e "s|@REPO_ROOT@|${REPO_ROOT}|g" \
+	"${REPO_ROOT}/config/pacman.conf.in" >"${PROFILE_DIR}/pacman.conf"
 
-[core]
-Include = /etc/pacman.d/mirrorlist
+mkdir -p "${PROFILE_DIR}/airootfs/etc"
+sed \
+	-e "s|@SNAPSHOT@|${SNAPSHOT}|g" \
+	-e "s|@REPO_ROOT@|/usr/share/astra|g" \
+	"${REPO_ROOT}/config/pacman.conf.in" >"${PROFILE_DIR}/airootfs/etc/pacman.conf"
 
-[extra]
-Include = /etc/pacman.d/mirrorlist
+# 3. Overlay the live-session files (SDDM autologin, live user setup, network).
+cp -a "${REPO_ROOT}/config/live/airootfs/." "${PROFILE_DIR}/airootfs/"
+chmod 0755 "${PROFILE_DIR}/airootfs/root/customize_airootfs.sh"
+chmod 0440 "${PROFILE_DIR}/airootfs/etc/sudoers.d/10-astra-live"
 
-[multilib]
-Include = /etc/pacman.d/mirrorlist
-
-[astra-local]
-SigLevel = Optional TrustAll
-Server = file://${REPO_ROOT}/repo/x86_64
-EOF
-
-# 3. Set up airootfs for branding and installer
+# 4. Runtime data for the installer: manifests, snapshot pin and pacman
+# template used to normalise the installed system.
 mkdir -p "${PROFILE_DIR}/airootfs/etc/astra"
 mkdir -p "${PROFILE_DIR}/airootfs/usr/share/astra/manifests"
+cp "${REPO_ROOT}/manifests/"*.txt \
+	"${PROFILE_DIR}/airootfs/usr/share/astra/manifests/"
+install -Dm644 "${REPO_ROOT}/config/pacman.conf.in" \
+	"${PROFILE_DIR}/airootfs/usr/share/astra/pacman.conf.in"
+install -Dm644 "${REPO_ROOT}/config/snapshot" \
+	"${PROFILE_DIR}/airootfs/usr/share/astra/snapshot"
 
-# Copy the manifests for the installer to use offline
-cp "${REPO_ROOT}/manifests/"*.txt "${PROFILE_DIR}/airootfs/usr/share/astra/manifests/"
+# 5. Bundle the local repository so the installer can resolve Astra and AUR
+# packages without a second network source.
+install -d "${PROFILE_DIR}/airootfs/usr/share/astra/repo"
+cp -a "${REPO_ROOT}/repo/x86_64" \
+	"${PROFILE_DIR}/airootfs/usr/share/astra/repo/"
+chown -R 0:0 "${PROFILE_DIR}/airootfs/usr/share/astra/repo"
 
-# 4. Configure bootloader (GRUB UEFI)
-# The releng profile uses systemd-boot by default. We switch to GRUB.
+# 6. Ship the pinned LazyVim plugin tree read-only. First login copies it to
+# the user's data directory (see the Neovim config).
+install -d "${PROFILE_DIR}/airootfs/usr/share/astra/nvim"
+cp -a "$NVIM_TREE" "${PROFILE_DIR}/airootfs/usr/share/astra/nvim/lazy"
+chown -R 0:0 "${PROFILE_DIR}/airootfs/usr/share/astra/nvim"
 
 log "running mkarchiso..."
 mkdir -p "${REPO_ROOT}/out"

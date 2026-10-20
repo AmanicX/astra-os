@@ -9,6 +9,7 @@
 arch-install-scripts         # pacstrap, arch-chroot and genfstab for the installer
 mkinitcpio-archiso           # archiso hooks for the live initramfs
 gum                          # TUI screens
+iwd                          # iwctl for Wi-Fi setup when NetworkManager is not usable
 parted                       # inspection and free-space discovery
 gptfdisk                     # sgdisk partition editing
 jq                           # answers JSON and installer state

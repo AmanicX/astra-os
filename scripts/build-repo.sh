@@ -238,7 +238,12 @@ for pkg in "${AUR_SOURCES[@]}"; do
 
 	if [[ ${pkg} == nvidia-580xx-settings ]]; then
 		# Its makedepends pull nvidia-580xx-utils, which cannot be installed
-		# beside the host's current NVIDIA driver. Build best-effort.
+		# beside the host's current NVIDIA driver. --nodeps therefore skips the
+		# makedepends too; install the one header package the build needs.
+		if ! pacman -Q vulkan-headers >/dev/null 2>&1; then
+			log "installing host header package: vulkan-headers"
+			as_root pacman -S --needed --noconfirm vulkan-headers
+		fi
 		(
 			cd "$work_dir" &&
 				sudo -u "$BUILD_USER" env SRCDEST="$SRCDEST" \

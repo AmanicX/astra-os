@@ -2,11 +2,21 @@
 # Description: Meta-package for AstraOS desktop environment.
 pkgname=astra-meta
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="AstraOS Desktop Meta-package"
 arch=('x86_64')
 license=('MIT')
-depends=('astra-branding' 'astra-desktop-config' 'astra-sddm-theme' 'astra-keybinds' 'astra-updater')
+depends=(
+	'astra-branding'
+	'astra-desktop-config'
+	'astra-sddm-theme'
+	'astra-keybinds'
+	'astra-updater'
+	# AUR payload shipped from astra-local. The prompt and AUR helper are part
+	# of the default desktop, not optional extras.
+	'oh-my-posh-bin'
+	'paru'
+)
 options=(!strip)
 
 package() {

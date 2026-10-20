@@ -45,7 +45,7 @@ placed in the ISO. An unclear license is a release blocker, not a warning.
 | Neovim config | LazyVim starter derivative, Apache-2.0 | Apache-2.0 | Yes | Custom `kitty-theme.lua` is owner-authored |
 | Neovim plugins | 33 plugins pinned by `lazy-lock.json` | MIT / Apache-2.0 / GPL-3.0; generated in `manifests/nvim-plugins.tsv` | Yes, with source URLs and license files recorded | Includes GPL-3.0 `bufferline.nvim` and `nvim-lint`; unmodified upstream plugins |
 | Noctalia SDDM theme | GitHub `ClementFombonne/sddm-noctalia-theme`, commit `92bf8e6` | GPLv3 code; Tabler icons MIT | Yes for code; bundled wallpaper/screenshot removed | Chosen by owner; original Astra wallpaper replaces the bundled image |
-| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme` | GPL-3.0-or-later code | **No — asset licensing unclear** | Excluded; active on the audit host only |
+| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme`, commit `abb3163c` | GPL-3.0-or-later code | Code: yes. Third-party artwork/fonts removed | Owner superseded D-009 on 2026-10-20; only upstream QML/components/icons and the GPL license are shipped; the background is the AstraOS wallpaper; previews, bundled fonts and unrelated wallpapers are removed |
 | Wallpaper | Original AstraOS artwork | Owner-owned / project license | Yes | Replaces the unknown-license 7680x4320 image; not copied |
 | Steam | `steam` 1.0.0.87-3, Arch multilib | LicenseRef-steam-subscriber-agreement | Yes, under Valve's terms | Owner-approved; target-only; multilib closure required |
 
@@ -65,7 +65,8 @@ Before an ISO is published:
 
 1. Every row above must have a final license and a redistributable decision.
 2. The chosen SDDM theme's removed wallpaper/screenshot must be absent from the
-   package, and the Tabler font license must be installed with it.
+   package. For the astronaut theme, the bundled backgrounds, previews and
+   fonts are removed; only GPL code, components and icons are shipped.
 3. The wallpaper must be original AstraOS art or carry a written license
    confirmation. The unknown-license image is never shipped.
 4. The Neovim plugin licenses must be generated from the pinned plugin tree.

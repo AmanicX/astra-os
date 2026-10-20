@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=AstraOS Installer
+Comment=Install AstraOS to disk
+Exec=kitty --title "AstraOS Installer" -e sudo /usr/bin/astra-install
+Icon=astraos-logo
+Terminal=false
+Categories=System;
+Keywords=install;astraos;setup;

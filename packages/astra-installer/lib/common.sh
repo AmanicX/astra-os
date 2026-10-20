@@ -6,9 +6,10 @@ if [[ -n ${ASTRA_INSTALLER_COMMON_LOADED:-} ]]; then
 fi
 ASTRA_INSTALLER_COMMON_LOADED=1
 
-# Offline repository and bundled manifest locations.
-ASTRA_REPO_DIR="/run/astra-install/repo"
-MANIFESTS_DIR="/usr/share/astra/manifests"
+# Bundled repository and manifest locations on the live ISO.
+ASTRA_REPO_DIR="/usr/share/astra/repo"
+ASTRA_DATA_DIR="/usr/share/astra"
+MANIFESTS_DIR="${ASTRA_DATA_DIR}/manifests"
 
 # Partition layout globals, filled by partition_and_mount.
 MNT_ROOT=""
@@ -60,10 +61,10 @@ require_tools() {
 require_root() { ((EUID == 0)) || die "install must run as root"; }
 
 require_offline_repo() {
-	[[ -d "${ASTRA_REPO_DIR}" ]] \
-		|| die "offline repository not mounted at ${ASTRA_REPO_DIR}"
-	[[ -r "${ASTRA_REPO_DIR}/x86_64/astra-local.db" ]] \
-		|| die "offline repository database missing"
+	[[ -d "${ASTRA_REPO_DIR}" ]] ||
+		die "offline repository not mounted at ${ASTRA_REPO_DIR}"
+	[[ -r "${ASTRA_REPO_DIR}/x86_64/astra-local.db" ]] ||
+		die "offline repository database missing"
 }
 
 abort() {

@@ -93,8 +93,8 @@ summary() {
 # driver sets. Each manifest line is "name # reason".
 build_pkg_list() {
 	local -a list=()
-	local m
-	for m in base desktop fonts-themes astra; do
+	local m tmp
+	for m in base desktop apps fonts-themes astra; do
 		while IFS= read -r pkg; do
 			[[ -n "$pkg" ]] && list+=("$pkg")
 		done < <(manifest_packages "${MANIFESTS_DIR}/${m}.txt" 2>/dev/null || true)
@@ -104,7 +104,17 @@ build_pkg_list() {
 			[[ -n "$pkg" ]] && list+=("$pkg")
 		done < <(manifest_packages "${MANIFESTS_DIR}/${drv}.txt" 2>/dev/null || true)
 	done < <(driver_manifests)
-	printf '%s\n' "${list[@]}" | awk '!seen[$0]++'
+
+	# astra-installer is a live-only package; never install it on the target.
+	tmp="$(mktemp)"
+	printf '%s\n' "${list[@]}" >"$tmp"
+	if [[ -r ${MANIFESTS_DIR}/target-exclude.txt ]]; then
+		manifest_packages "${MANIFESTS_DIR}/target-exclude.txt" |
+			awk 'NR == FNR { skip[$0] = 1; next } !($0 in skip) && !seen[$0]++' - "$tmp"
+	else
+		awk '!seen[$0]++' "$tmp"
+	fi
+	rm -f -- "$tmp"
 }
 
 partition_and_mount() {
@@ -146,6 +156,30 @@ partition_and_mount() {
 	mount "$ESP_PART" "${mnt}${ESP_MOUNT}"
 }
 
+write_target_pacman_conf() {
+	local mnt=$1 template="${ASTRA_DATA_DIR}/pacman.conf.in" snapshot
+	[[ -r ${template} ]] || die "missing pacman template: ${template}"
+	snapshot="$(tr -d '[:space:]' <"${ASTRA_DATA_DIR}/snapshot")"
+	[[ ${snapshot} =~ ^[0-9]{4}/[0-9]{2}/[0-9]{2}$ ]] ||
+		die "invalid snapshot date in the live image: ${snapshot}"
+
+	# The live config ends with [astra-local], which only exists on the ISO.
+	# The installed system uses the pinned Arch Linux Archive instead.
+	sed -e "s|@SNAPSHOT@|${snapshot}|g" "$template" |
+		awk '/^\[astra-local\]/ { exit } { print }' >"${mnt}/etc/pacman.conf"
+}
+
+seed_target_nvim() {
+	local mnt=$1 src="${ASTRA_DATA_DIR}/nvim/lazy"
+	if [[ ! -d ${src} ]]; then
+		warn "Neovim plugin tree is missing from the live image"
+		return 0
+	fi
+	install -d "${mnt}/usr/share/astra/nvim"
+	rm -rf "${mnt}/usr/share/astra/nvim/lazy"
+	cp -a "$src" "${mnt}/usr/share/astra/nvim/lazy"
+}
+
 configure_target() {
 	local mnt="${MNT_ROOT}" tz="${STATE[timezone]}" kb="${STATE[kb_layout]}"
 	local host="${STATE[hostname]}" locale="${STATE[locale]}"
@@ -158,13 +192,22 @@ echo "${host}" > /etc/hostname
 printf '127.0.0.1 localhost\\n::1 localhost\\n127.0.1.1 %s.local %s\\n' "${host}" "${host}" > /etc/hosts
 printf 'LANG=%s\\n' "${locale}" > /etc/locale.conf
 printf '%s:%s\\n' '${STATE[root_password]}' '${STATE[root_password]}' | chpasswd
-useradd -m -G wheel -s /bin/zsh '${STATE[user_name]}'
+useradd -m -U -G wheel,video,render,input,audio,storage,optical,network,power -s /bin/zsh '${STATE[user_name]}'
 printf '%s:%s\\n' '${STATE[user_name]}' '${STATE[user_password]}' | chpasswd
 case '${STATE[user_sudo]}' in
 	passwordless) printf '%%wheel ALL=(ALL) NOPASSWD: ALL\\n' > /etc/sudoers.d/90-astra ;;
 	with-password) printf '%%wheel ALL=(ALL) ALL\\n' > /etc/sudoers.d/90-astra ;;
 esac
 chmod 0440 /etc/sudoers.d/90-astra || true
+
+# Ship LazyVim writably for this user; lazy.lua seeds future users from
+# /usr/share/astra/nvim/lazy.
+if [[ -d /usr/share/astra/nvim/lazy ]]; then
+	install -d -o '${STATE[user_name]}' -g '${STATE[user_name]}' "/home/${STATE[user_name]}/.local/share/nvim"
+	rm -rf "/home/${STATE[user_name]}/.local/share/nvim/lazy"
+	cp -a /usr/share/astra/nvim/lazy "/home/${STATE[user_name]}/.local/share/nvim/lazy"
+	chown -R '${STATE[user_name]}:${STATE[user_name]}' "/home/${STATE[user_name]}/.local/share/nvim"
+fi
 
 # Handle dual-boot OS prober
 if [[ "${STATE[storage_mode]}" == "dual" ]]; then
@@ -174,7 +217,8 @@ fi
 
 grub-install --target=x86_64-efi --efi-directory="${ESP_MOUNT}" --bootloader-id=AstraOS --removable
 grub-mkconfig -o /boot/grub/grub.cfg
-systemctl enable sddm niri.service NetworkManager bluetooth.service
+systemctl set-default graphical.target
+systemctl enable sddm.service NetworkManager.service bluetooth.service power-profiles-daemon.service
 systemctl disable dhcpcd.service 2>/dev/null || true
 EOF
 }
@@ -190,13 +234,24 @@ run_install() {
 	# We no longer write a local-repo pacman.conf.
 	# Instead, we use the standard pacstrap which uses official mirrors.
 	log "running pacstrap (ONLINE mode)"
-	pacstrap -c -G -M "${MNT_ROOT}" base "${pkgs[@]}"
+	# Copy the live keyring so the first transaction can verify Arch packages.
+	# The target config is written afterwards from the pinned snapshot template.
+	pacstrap -c -M "${MNT_ROOT}" base "${pkgs[@]}"
 
+	write_target_pacman_conf "${MNT_ROOT}"
+
+	# Defensive fallback for images that ship without a populated keyring.
+	if [[ ! -s "${MNT_ROOT}/etc/pacman.d/gnupg/trustdb.gpg" ]]; then
+		arch-chroot "${MNT_ROOT}" pacman-key --init
+		arch-chroot "${MNT_ROOT}" pacman-key --populate archlinux
+	fi
+
+	seed_target_nvim "${MNT_ROOT}"
 	configure_target
 
 	if [[ -n "${STATE[extra_packages]}" ]]; then
 		local -a extra=()
-		IFS=',' read -ra extra <<< "${STATE[extra_packages]}"
+		IFS=',' read -ra extra <<<"${STATE[extra_packages]}"
 		arch-chroot "${MNT_ROOT}" pacman -S --noconfirm --needed "${extra[@]}"
 	fi
 

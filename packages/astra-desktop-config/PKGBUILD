@@ -2,7 +2,7 @@
 # Description: Seeded, sanitized desktop configuration for the AstraOS niri + Noctalia session.
 pkgname=astra-desktop-config
 pkgver=0.1.0
-pkgrel=1
+pkgrel=3
 pkgdesc="Seeded niri, Noctalia, kitty, Zsh, Neovim and XDG desktop defaults for AstraOS"
 arch=('x86_64')
 license=('MIT')
@@ -73,7 +73,7 @@ package() {
 		cd "${pkgdir}/etc/skel" || exit 1
 		find . -type d -exec chmod -R u+rwX,go+rX,go-w {} +
 		find . -type f -exec chmod u+rw,go+r,go-w {} +
-		find . -type f -name '*.sh' -o -type f -name '*.py' | xargs -r chmod 0755
+		find . -type f \( -name '*.sh' -o -name '*.py' \) -exec chmod 0755 {} +
 	)
 
 	install -Dm755 "${startdir}/files/usr/bin/astra-default-browser" \
@@ -86,5 +86,6 @@ package() {
 
 	# Directories that would otherwise be omitted by cp of an empty tree.
 	install -d -m 0755 "${pkgdir}/etc/skel/Pictures/Screenshots"
+	install -d -m 0755 "${pkgdir}/etc/skel/Pictures/Wallpapers"
 	install -d -m 0755 "${pkgdir}/etc/skel/.local/state/noctalia"
 }

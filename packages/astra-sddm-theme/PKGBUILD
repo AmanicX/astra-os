@@ -1,37 +1,62 @@
+# Maintainer: AstraOS <build@astraos.org>
+# Description: Astronaut SDDM theme, pinned upstream code with AstraOS artwork.
+#
+# Owner decision D-009 was superseded on 2026-10-20: the Noctalia SDDM theme
+# rendered incorrectly on the live ISO, so the owner requested the astronaut
+# theme. Only upstream code is shipped. The unrelated background images, the
+# preview screenshots and the bundled fonts are removed; the AstraOS wallpaper
+# replaces them. See THIRD_PARTY.md.
 pkgname=astra-sddm-theme
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
-pkgdesc="Noctalia-inspired SDDM theme with AstraOS artwork"
-arch=('x86_64')
-license=('GPL-3.0-or-later' 'MIT')
-depends=('sddm' 'qt6-declarative' 'qt6-svg' 'qt6-virtualkeyboard' 'astra-branding')
+pkgdesc="Astronaut SDDM theme with AstraOS artwork"
+arch=('any')
+license=('GPL-3.0-or-later')
+depends=(
+	'sddm'
+	'qt6-5compat'
+	'qt6-declarative'
+	'qt6-multimedia-ffmpeg'
+	'qt6-svg'
+	'qt6-virtualkeyboard'
+	'adwaita-fonts'
+	'astra-branding'
+)
 makedepends=('git')
-source=("sddm-noctalia-theme::git+https://github.com/ClementFombonne/sddm-noctalia-theme.git#commit=92bf8e6ff35be19b50b60a38e0f3d6e38e1c66e1")
+source=("sddm-astronaut-theme::git+https://github.com/Keyitdev/sddm-astronaut-theme.git#commit=abb3163c724935af888ba5ea9ac0c4f22afd8048")
 sha256sums=('SKIP')
 
 prepare() {
-	cd "${srcdir}/sddm-noctalia-theme"
+	cd "${srcdir}/sddm-astronaut-theme"
 
-	# The upstream wallpaper and screenshot have unclear provenance and are
-	# not redistributed. The AstraOS wallpaper replaces them (D-009).
-	rm -rf Assets/Screenshots
-	rm -f Assets/Wallpaper/noctalia.png
+	# Keep the GPL theme code and its icon assets. Remove the unrelated
+	# wallpapers, previews, install helper and bundled fonts whose provenance
+	# is not documented upstream.
+	rm -rf .git .github Previews Fonts setup.sh
+	find Backgrounds -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+	find Themes -mindepth 1 -maxdepth 1 -type f ! -name 'astronaut.conf' -delete
 
-	sed -i 's|^background=.*|background=Assets/Wallpaper/astraos-default.png|' \
-		Commons/Settings.conf
-	sed -i 's|^fontFamily=.*|fontFamily="Adwaita Sans"|' \
-		Commons/Settings.conf
+	# Use the original AstraOS wallpaper and a font the image ships.
+	ln -s /usr/share/backgrounds/astraos/astraos-default.png \
+		Backgrounds/astraos-default.png
+	sed -i \
+		-e 's|^Background=.*|Background="Backgrounds/astraos-default.png"|' \
+		-e 's|^Font=.*|Font="Adwaita Sans"|' \
+		Themes/astronaut.conf
+
+	# Select the astronaut variant and drop the missing preview reference.
+	sed -i \
+		-e 's|^Name=.*|Name=AstraOS Astronaut|' \
+		-e 's|^Description=.*|Description=AstraOS Astronaut SDDM theme|' \
+		-e 's|^ConfigFile=.*|ConfigFile=Themes/astronaut.conf|' \
+		-e '/^Screenshot=/d' \
+		metadata.desktop
 }
 
 package() {
-	install -d "${pkgdir}/usr/share/sddm/themes/noctalia-sddm"
-	cp -a "${srcdir}/sddm-noctalia-theme/." \
-		"${pkgdir}/usr/share/sddm/themes/noctalia-sddm/"
-	rm -rf "${pkgdir}/usr/share/sddm/themes/noctalia-sddm/.git"
-
-	install -d "${pkgdir}/usr/share/sddm/themes/noctalia-sddm/Assets/Wallpaper"
-	ln -s /usr/share/backgrounds/astraos/astraos-default.png \
-		"${pkgdir}/usr/share/sddm/themes/noctalia-sddm/Assets/Wallpaper/astraos-default.png"
+	install -d "${pkgdir}/usr/share/sddm/themes/sddm-astronaut-theme"
+	cp -a "${srcdir}/sddm-astronaut-theme/." \
+		"${pkgdir}/usr/share/sddm/themes/sddm-astronaut-theme/"
 
 	install -Dm644 "${startdir}/astra.conf" \
 		"${pkgdir}/etc/sddm.conf.d/astra.conf"
