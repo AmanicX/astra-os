@@ -1,21 +1,20 @@
 # Maintainer: AstraOS <build@astraos.org>
-# Description: Astronaut SDDM theme, pinned upstream code with AstraOS artwork.
+# Description: SilentSDDM with AstraOS presets, wallpapers and a switcher.
 #
-# Owner decision D-009 was superseded on 2026-10-20: the Noctalia SDDM theme
-# rendered incorrectly on the live ISO, so the owner requested the astronaut
-# theme. Only upstream code is shipped. The unrelated background images, the
-# preview screenshots and the bundled fonts are removed; the AstraOS wallpaper
-# replaces them. See THIRD_PARTY.md.
+# Upstream is pinned to a tested commit. Only the GPL theme code and assets
+# needed by the greeter are installed; upstream demo videos, previews and
+# unrelated backgrounds are removed. See THIRD_PARTY.md.
 pkgname=astra-sddm-theme
-pkgver=0.2.0
+pkgver=0.3.0
 pkgrel=1
-pkgdesc="Astronaut SDDM theme with AstraOS artwork"
+pkgdesc="SilentSDDM theme with AstraOS wallpapers and a preset switcher"
 arch=('any')
 license=('GPL-3.0-or-later')
 depends=(
-	'sddm'
+	'sddm>=0.21.0'
 	'qt6-5compat'
 	'qt6-declarative'
+	'qt6-imageformats'
 	'qt6-multimedia-ffmpeg'
 	'qt6-svg'
 	'qt6-virtualkeyboard'
@@ -23,41 +22,54 @@ depends=(
 	'astra-branding'
 )
 makedepends=('git')
-source=("sddm-astronaut-theme::git+https://github.com/Keyitdev/sddm-astronaut-theme.git#commit=abb3163c724935af888ba5ea9ac0c4f22afd8048")
+source=("silent-sddm::git+https://github.com/uiriansan/SilentSDDM.git#commit=d477613b07ca13729af20cb4699b308ac7348d2f")
 sha256sums=('SKIP')
 
 prepare() {
-	cd "${srcdir}/sddm-astronaut-theme"
+	cd "${srcdir}/silent-sddm"
 
-	# Keep the GPL theme code and its icon assets. Remove the unrelated
-	# wallpapers, previews, install helper and bundled fonts whose provenance
-	# is not documented upstream.
-	rm -rf .git .github Previews Fonts setup.sh
-	find Backgrounds -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-	find Themes -mindepth 1 -maxdepth 1 -type f ! -name 'astronaut.conf' -delete
+	# Keep the theme code, components, icons and QML metadata. Remove upstream
+	# demo media, previews, install helpers and Nix packaging that are not part
+	# of the installed greeter.
+	rm -rf .git .github nix docs install.sh test.sh change_avatar.sh
+	find backgrounds -mindepth 1 -maxdepth 1 -delete
+	rm -f configs/*.conf
 
-	# Use the original AstraOS wallpaper and a font the image ships.
-	ln -s /usr/share/backgrounds/astraos/astraos-default.png \
-		Backgrounds/astraos-default.png
+	# The greeter is configured through our presets and /etc/sddm.conf.d.
 	sed -i \
-		-e 's|^Background=.*|Background="Backgrounds/astraos-default.png"|' \
-		-e 's|^Font=.*|Font="Adwaita Sans"|' \
-		Themes/astronaut.conf
-
-	# Select the astronaut variant and drop the missing preview reference.
-	sed -i \
-		-e 's|^Name=.*|Name=AstraOS Astronaut|' \
-		-e 's|^Description=.*|Description=AstraOS Astronaut SDDM theme|' \
-		-e 's|^ConfigFile=.*|ConfigFile=Themes/astronaut.conf|' \
-		-e '/^Screenshot=/d' \
+		-e 's|^Name=.*|Name=AstraOS Silent|' \
+		-e 's|^Description=.*|Description=AstraOS SilentSDDM theme|' \
+		-e 's|^Screenshot=.*||' \
+		-e 's|^ConfigFile=.*|ConfigFile=configs/astra-orbital.conf|' \
 		metadata.desktop
 }
 
 package() {
-	install -d "${pkgdir}/usr/share/sddm/themes/sddm-astronaut-theme"
-	cp -a "${srcdir}/sddm-astronaut-theme/." \
-		"${pkgdir}/usr/share/sddm/themes/sddm-astronaut-theme/"
+	install -d "${pkgdir}/usr/share/sddm/themes/silent"
+	cp -a "${srcdir}/silent-sddm/." \
+		"${pkgdir}/usr/share/sddm/themes/silent/"
+
+	local theme="${pkgdir}/usr/share/sddm/themes/silent"
+	install -d "${theme}/configs" "${theme}/backgrounds"
+	install -m0644 "${startdir}"/presets/astra-*.conf "${theme}/configs/"
+
+	# Absolute symlinks keep the greeter package independent of the branding
+	# package version while still resolving to the installed wallpaper set.
+	ln -s /usr/share/backgrounds/astraos/astraos-default.png \
+		"${theme}/backgrounds/astraos-default.png"
+	for name in aurora ember lunar; do
+		ln -s "/usr/share/backgrounds/astraos/astraos-${name}.png" \
+			"${theme}/backgrounds/astraos-${name}.png"
+	done
+	ln -s /usr/share/backgrounds/astraos/astraos-earthrise.jpg \
+		"${theme}/backgrounds/astraos-earthrise.jpg"
+	ln -s /usr/share/backgrounds/astraos/astraos-carina.png \
+		"${theme}/backgrounds/astraos-carina.png"
+	ln -s /usr/share/backgrounds/astraos/astraos-deepfield.jpg \
+		"${theme}/backgrounds/astraos-deepfield.jpg"
 
 	install -Dm644 "${startdir}/astra.conf" \
 		"${pkgdir}/etc/sddm.conf.d/astra.conf"
+	install -Dm755 "${startdir}/astra-sddm-theme" \
+		"${pkgdir}/usr/bin/astra-sddm-theme"
 }

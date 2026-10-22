@@ -2,7 +2,8 @@
 Type=Application
 Name=AstraOS Installer
 Comment=Install AstraOS to disk
-Exec=kitty --hold --title "AstraOS Installer" sudo /usr/bin/astra-install
+TryExec=/usr/bin/astra-installer-gui
+Exec=/usr/bin/astra-installer-gui
 Icon=astraos-logo
 Terminal=false
 Categories=System;

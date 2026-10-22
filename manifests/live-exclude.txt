@@ -6,6 +6,12 @@
 # omitted. lib32-mesa and the 32-bit Vulkan drivers exist for Steam/Wine on the
 # installed system, not for the live desktop.
 
+# The live image boots straight into niri as root and must not ship SDDM.
+# astra-meta pulls astra-sddm-theme, which pulls sddm, so exclude all three.
+astra-meta
+astra-sddm-theme
+sddm
+
 steam
 nvidia-open
 nvidia-open-dkms

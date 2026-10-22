@@ -157,7 +157,6 @@ sed \
 # 3. Overlay the live-session files (SDDM autologin, live user setup, network).
 cp -a "${REPO_ROOT}/config/live/airootfs/." "${PROFILE_DIR}/airootfs/"
 chmod 0755 "${PROFILE_DIR}/airootfs/root/customize_airootfs.sh"
-chmod 0440 "${PROFILE_DIR}/airootfs/etc/sudoers.d/10-astra-live"
 
 # 4. Runtime data for the installer: manifests, snapshot pin and pacman
 # template used to normalise the installed system.
@@ -179,6 +178,10 @@ install -Dm644 "${REPO_ROOT}/config/snapshot" \
 installer_overlay="${PROFILE_DIR}/airootfs/root/astra-installer-overlay"
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-install" \
 	"${installer_overlay}/usr/bin/astra-install"
+install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-engine" \
+	"${installer_overlay}/usr/lib/astra/installer/astra-engine"
+ln -s ../lib/astra/installer/astra-engine \
+	"${installer_overlay}/usr/bin/astra-installer-engine"
 install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-installer.desktop" \
 	"${installer_overlay}/usr/share/applications/astra-installer.desktop"
 install -d "${installer_overlay}/usr/lib/astra/installer/lib"
@@ -189,6 +192,14 @@ install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.ser
 	"${installer_overlay}/usr/lib/systemd/system/astra-pending-packages.service"
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.sh" \
 	"${installer_overlay}/usr/lib/astra/installer/pending-packages.sh"
+
+# The Tauri binary is the primary live install UI.  Refuse to build an ISO that
+# silently falls back to the TUI because the GUI was forgotten.
+gui_bin="${REPO_ROOT}/installer/src-tauri/target/release/astra-installer"
+[[ -x ${gui_bin} ]] ||
+	die "astra-installer GUI is not built; run scripts/build-installer.sh --build first"
+install -Dm755 "${gui_bin}" \
+	"${installer_overlay}/usr/bin/astra-installer-gui"
 
 # 5. Bundle the local repository so the installer can resolve Astra and AUR
 # packages without a second network source.

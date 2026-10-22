@@ -1,0 +1,234 @@
+#!/usr/bin/env bash
+# AstraOS non-interactive install engine.
+#
+# This is the privileged half of the Tauri installer.  The GUI collects the
+# answers, shows a read-only plan and writes a mode-0600 JSON file.  Only after
+# the final Install confirmation does it run this script.  Nothing here asks a
+# question: a missing or invalid answer is a hard error, never a prompt.
+#
+# Usage: astra-engine /run/astra-install/plan.json
+#
+# Exit status:
+#   0  installation completed
+#   1  a typed validation or installation error (the GUI reads the log)
+#   2  usage error
+#
+# The JSON file is deleted as soon as it has been read, before any disk write,
+# because it contains passwords.
+set -Eeuo pipefail
+
+LIB_DIR=${ASTRA_LIB_DIR:-/usr/lib/astra/installer}
+# shellcheck source=lib/common.sh
+source "${LIB_DIR}/lib/common.sh"
+# shellcheck source=lib/hw.sh
+source "${LIB_DIR}/lib/hw.sh"
+# shellcheck source=lib/mirrors.sh
+source "${LIB_DIR}/lib/mirrors.sh"
+# shellcheck source=lib/storage.sh
+source "${LIB_DIR}/lib/storage.sh"
+# shellcheck source=lib/install.sh
+source "${LIB_DIR}/lib/install.sh"
+
+# The engine never uses the interactive pause paths.  A GUI-driven install must
+# fail visibly and clean up mounts instead of waiting for Enter.
+UNATTENDED=1
+WIZARD_ACTIVE=0
+INTERACTIVE=0
+trap 'on_exit' EXIT
+trap 'abort_user' INT TERM
+
+PLAN_FILE=${1:-}
+[[ -n ${PLAN_FILE} && -r ${PLAN_FILE} ]] || {
+	printf 'usage: astra-engine <answers.json>\n' >&2
+	exit 2
+}
+
+json() {
+	jq -er --arg key "$1" '.[$key] // empty' "${PLAN_FILE}" 2>/dev/null || true
+}
+
+json_bool() {
+	jq -e --arg key "$1" '.[$key] == true' "${PLAN_FILE}" >/dev/null 2>&1
+}
+
+json_optional() {
+	jq -r --arg key "$1" '.[$key] // ""' "${PLAN_FILE}" 2>/dev/null || true
+}
+
+fail() {
+	printf 'AstraOS engine: %s\n' "$*" >&2
+	exit 1
+}
+
+# Read everything into local variables first, then remove the secret file.  The
+# rest of the process only holds the values in this shell's memory.
+confirmed=0
+if json_bool confirmed; then
+	confirmed=1
+fi
+storage_mode="$(json storage_mode)"
+disk="$(json disk)"
+esp_mode="$(json esp_mode)"
+esp_part="$(json esp_part)"
+root_part="$(json root_part)"
+esp_mount="$(json esp_mount)"
+premounted_root="$(json premounted_root)"
+free_start="$(json free_start)"
+free_end="$(json free_end)"
+hostname="$(json hostname)"
+timezone="$(json timezone)"
+locale="$(json locale)"
+kb_layout="$(json kb_layout)"
+user_name="$(json user_name)"
+user_sudo="$(json user_sudo)"
+user_password="$(json user_password)"
+root_password="$(json root_password)"
+extra_packages="$(json_optional extra_packages)"
+mirror_source="$(json_optional mirror_source)"
+mirror_region="$(json_optional mirror_region)"
+driver_manifests="$(json_optional driver_manifests)"
+rm -f -- "${PLAN_FILE}"
+
+((confirmed == 1)) || fail "the plan was not confirmed; refusing to write anything"
+[[ ${EUID} -eq 0 || ${ASTRA_SKIP_ROOT:-0} == 1 ]] ||
+	fail "the install engine must run as root"
+
+case "${storage_mode}" in
+whole | free | manual | premounted) ;;
+*) fail "invalid storage mode: ${storage_mode:-missing}" ;;
+esac
+validate_hostname "${hostname}" || fail "invalid hostname: ${hostname:-missing}"
+validate_username "${user_name}" || fail "invalid username: ${user_name:-missing}"
+validate_timezone "${timezone}" || fail "invalid timezone: ${timezone:-missing}"
+validate_locale "${locale}" || fail "invalid locale: ${locale:-missing}"
+validate_password "${root_password}" || fail "the root password is empty or invalid"
+validate_password "${user_password}" || fail "the user password is empty or invalid"
+[[ ${kb_layout} =~ ^[A-Za-z0-9_-]+$ ]] || fail "invalid keyboard layout"
+case "${user_sudo}" in
+passwordless | with-password | none) ;;
+*) fail "invalid sudo mode: ${user_sudo:-missing}" ;;
+esac
+case "${mirror_source:-ala}" in
+ala) mirror_source=ala; mirror_region=Worldwide ;;
+mirrors)
+	mirror_source=mirrors
+	[[ -n ${mirror_region} ]] || mirror_region=Worldwide
+	;;
+*) fail "invalid package source: ${mirror_source}" ;;
+esac
+
+init_runtime "$@"
+check_uefi
+require_tools lsblk findmnt blkid blockdev parted sgdisk partprobe udevadm mkfs.fat \
+	mkfs.btrfs btrfs mount umount pacstrap arch-chroot genfstab chpasswd jq gum \
+	localectl timedatectl blockdev sha256sum
+
+STATE[kb_layout]="${kb_layout}"
+STATE[mirror_source]="${mirror_source}"
+STATE[mirror_region]="${mirror_region}"
+STATE[storage_mode]="${storage_mode}"
+STATE[disk]="${disk}"
+STATE[esp_mode]="${esp_mode}"
+STATE[esp_mount]="${esp_mount:-/boot/efi}"
+STATE[esp_part]="${esp_part}"
+STATE[root_part]="${root_part}"
+STATE[premounted_root]="${premounted_root}"
+STATE[free_start]="${free_start}"
+STATE[free_end]="${free_end}"
+STATE[hostname]="${hostname}"
+STATE[timezone]="${timezone}"
+STATE[locale]="${locale}"
+STATE[user_name]="${user_name}"
+STATE[user_sudo]="${user_sudo}"
+STATE[user_password]="${user_password}"
+STATE[root_password]="${root_password}"
+STATE[extra_packages]="${extra_packages}"
+STATE[driver_manifests]="${driver_manifests}"
+
+# Storage validation is read-only.  prepare_storage() in storage.sh performs
+# the writes later, after this plan has passed every check.
+case "${storage_mode}" in
+whole)
+	[[ -b ${disk} ]] || fail "not a block device: ${disk:-missing}"
+	[[ $(lsblk -dn -o TYPE "${disk}" 2>/dev/null) == disk ]] ||
+		fail "${disk} is not a whole disk"
+	is_live_disk "${disk}" &&
+		fail "${disk} is the live boot medium; choose another disk"
+	sectors="$(blockdev --getsz "${disk}" 2>/dev/null || printf 0)"
+	min_sectors=$((MIN_INSTALL_GIB * 1024 * 2048))
+	[[ ${sectors} =~ ^[0-9]+$ ]] || fail "cannot read the size of ${disk}"
+	((sectors >= min_sectors)) ||
+		fail "${disk} is smaller than the ${MIN_INSTALL_GIB} GiB minimum"
+	STATE[disk_size]="$(lsblk -dn -o SIZE "${disk}" | awk '{print $1}')"
+	STATE[storage_note]="ERASE ENTIRE DISK ${disk}"
+	STATE[esp_mode]=new
+	;;
+free)
+	[[ -b ${disk} ]] || fail "not a block device: ${disk:-missing}"
+	[[ $(lsblk -dn -o TYPE "${disk}" 2>/dev/null) == disk ]] ||
+		fail "${disk} is not a whole disk"
+	is_live_disk "${disk}" && fail "${disk} is the live boot medium"
+	disk_has_gpt "${disk}" || fail "${disk} is not a GPT disk"
+	(($(disk_mountpoints "${disk}" | wc -l) == 0)) ||
+		fail "partitions on ${disk} are mounted; unmount them first"
+	[[ ${free_start} =~ ^[0-9]+$ && ${free_end} =~ ^[0-9]+$ ]] ||
+		fail "free-space sector range is invalid"
+	((free_end > free_start)) || fail "free-space sector range is empty"
+	case "${esp_mode}" in
+	new)
+		STATE[esp_mode]=new
+		STATE[esp_part]=""
+		;;
+	existing)
+		[[ -b ${esp_part} ]] || fail "existing ESP is not a block device"
+		[[ $(blkid -o value -s TYPE "${esp_part}" 2>/dev/null || true) == vfat ]] ||
+			fail "${esp_part} is not a vfat ESP"
+		STATE[esp_mode]=existing
+		STATE[esp_part]="${esp_part}"
+		;;
+	*) fail "invalid ESP mode for free-space install" ;;
+	esac
+	STATE[esp_mount]="${esp_mount:-/boot/efi}"
+	# Snapshot the current table before creating anything.  prepare_free_space
+	# verifies this exact baseline afterwards.
+	GPT_BASELINE_FILE="${STATE_DIR}/gpt-baseline-$(basename "${disk}").txt"
+	snapshot_gpt "${disk}" >"${GPT_BASELINE_FILE}" ||
+		fail "could not snapshot the partition table of ${disk}"
+	STATE[free_mib]="$(((free_end - free_start + 1) / 2048))"
+	STATE[free_size]="${STATE[free_mib]} MiB"
+	;;
+manual)
+	[[ -b ${root_part} ]] || fail "root partition is not a block device"
+	[[ -b ${esp_part} ]] || fail "EFI partition is not a block device"
+	[[ ${root_part} != "${esp_part}" ]] || fail "root and EFI must differ"
+	[[ $(blkid -o value -s TYPE "${root_part}" 2>/dev/null || true) != vfat ]] ||
+		fail "${root_part} is a FAT partition; choose a Linux root"
+	[[ $(blkid -o value -s TYPE "${esp_part}" 2>/dev/null || true) == vfat ]] ||
+		fail "${esp_part} is not a vfat ESP"
+	root_bytes="$(blockdev --getsize64 "${root_part}" 2>/dev/null || printf 0)"
+	((root_bytes >= MIN_ROOT_GIB * 1024 * 1024 * 1024)) ||
+		fail "${root_part} is smaller than ${MIN_ROOT_GIB} GiB"
+	STATE[esp_mode]=existing
+	STATE[esp_part]="${esp_part}"
+	STATE[esp_mount]="${esp_mount:-/boot/efi}"
+	;;
+premounted)
+	[[ ${premounted_root} == /* ]] || fail "pre-mounted root must be an absolute path"
+	[[ -b ${root_part} ]] || fail "root partition is not a block device"
+	[[ -b ${esp_part} ]] || fail "EFI partition is not a block device"
+	mountpoint -q "${premounted_root}" || fail "${premounted_root} is not mounted"
+	mountpoint -q "${premounted_root}${esp_mount:-/boot/efi}" ||
+		fail "the ESP is not mounted under ${premounted_root}"
+	STATE[esp_mode]=existing
+	STATE[esp_part]="${esp_part}"
+	STATE[esp_mount]="${esp_mount:-/boot/efi}"
+	STATE[storage_mode]=premounted
+	;;
+esac
+
+# The only answers file left on disk is the password-free copy.  dump_answers
+# writes it, and run_install copies it to the installed system.
+dump_answers
+printf 'AstraOS engine: validated storage plan; starting installation\n'
+run_install
+printf 'AstraOS engine: installation complete\n'

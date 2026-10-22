@@ -94,6 +94,9 @@ install_extra_packages() {
 	if ! arch-chroot "$MNT_ROOT" pacman -S --noconfirm --needed "${extra[@]}" 2>&1 |
 		tee -a "$LOG"; then
 		warn "some extra packages could not be installed"
+		if ((UNATTENDED == 1)); then
+			die "extra packages failed in unattended mode; see ${LOG}"
+		fi
 		ui_confirm "Continue without the failed extra packages?" ||
 			die "installation cancelled after extra package failure"
 	fi

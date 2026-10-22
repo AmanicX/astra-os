@@ -1,13 +1,15 @@
 # Maintainer: AstraOS <build@astraos.org>
-# Description: UEFI-only TUI installer. ISO-only; not a dependency of astra-meta.
+# Description: AstraOS installer: Tauri GUI, non-interactive engine, TUI fallback.
+# ISO-only; not a dependency of astra-meta.
 pkgname=astra-installer
-pkgver=0.1.0
-pkgrel=4
-pkgdesc="AstraOS installer with a gum-powered TUI"
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="AstraOS Tauri GUI installer with a typed non-interactive engine and TUI fallback"
 arch=('x86_64')
 license=('MIT')
 depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz' 'kitty'
-	'arch-install-scripts' 'btrfs-progs' 'dosfstools' 'util-linux' 'kbd' 'networkmanager')
+	'arch-install-scripts' 'btrfs-progs' 'dosfstools' 'util-linux' 'kbd' 'networkmanager'
+	'gtk3' 'webkit2gtk-4.1')
 install=astra-installer.install
 options=(!strip)
 
@@ -15,8 +17,20 @@ package() {
 	install -d "${pkgdir}/usr/lib/astra/installer/lib"
 	install -Dm755 "${startdir}/astra-install" \
 		"${pkgdir}/usr/bin/astra-install"
+	install -Dm755 "${startdir}/astra-engine" \
+		"${pkgdir}/usr/lib/astra/installer/astra-engine"
+	ln -s ../lib/astra/installer/astra-engine \
+		"${pkgdir}/usr/bin/astra-installer-engine"
 	install -Dm644 "${startdir}/astra-installer.desktop" \
 		"${pkgdir}/usr/share/applications/astra-installer.desktop"
+
+	# The Tauri binary is built by scripts/build-installer.sh.  It is optional
+	# in the package so a source-only package build still produces a working TUI
+	# fallback; the ISO build requires it and overlays it explicitly.
+	if [[ -x ${startdir}/astra-installer-gui ]]; then
+		install -Dm755 "${startdir}/astra-installer-gui" \
+			"${pkgdir}/usr/bin/astra-installer-gui"
+	fi
 
 	cp -a "${startdir}/lib/." "${pkgdir}/usr/lib/astra/installer/lib/"
 
@@ -29,6 +43,6 @@ package() {
 	# systemd first-boot units.
 	install -Dm644 "${startdir}/astra-pending-packages.service" \
 		"${pkgdir}/usr/lib/systemd/system/astra-pending-packages.service"
-	install -Dm644 "${startdir}/astra-pending-packages.sh" \
+	install -Dm755 "${startdir}/astra-pending-packages.sh" \
 		"${pkgdir}/usr/lib/astra/installer/pending-packages.sh"
 }

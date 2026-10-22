@@ -1,141 +1,179 @@
 <p align="center">
-  <img src="packages/astra-branding/files/usr/share/astra/branding/astraos-lockup.svg" alt="AstraOS" width="520">
+  <img src="packages/astra-branding/files/usr/share/astra/branding/astraos-lockup.svg" alt="AstraOS" width="560">
 </p>
 
 <h1 align="center">AstraOS</h1>
 
 <p align="center">
-  A focused, design-driven Arch-based Linux distribution built around
+  A focused, design-driven, quiet Linux distribution built around
   <strong>Niri</strong> and <strong>Noctalia v5</strong>.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/base-Arch%20Linux-1793d1?logo=archlinux&logoColor=white" alt="Arch Linux">
-  <img src="https://img.shields.io/badge/session-Niri%20%2B%20Noctalia%20v5-7fc8ff" alt="Niri + Noctalia v5">
-  <img src="https://img.shields.io/badge/boot-UEFI%20only-2ea043" alt="UEFI only">
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
-  <img src="https://img.shields.io/badge/status-pre--release-orange" alt="Pre-release">
+  <a href="https://archlinux.org"><img src="https://img.shields.io/badge/Base-Arch%20Linux-1793d1?logo=archlinux&logoColor=white&style=flat-square" alt="Arch Linux"></a>
+  <a href="https://github.com/YaLixDee/niri"><img src="https://img.shields.io/badge/Compositor-Niri-67e8f9?style=flat-square" alt="Niri"></a>
+  <a href="https://github.com/noctalia-dev/noctalia"><img src="https://img.shields.io/badge/Shell-Noctalia%20v5-2dd4bf?style=flat-square" alt="Noctalia v5"></a>
+  <a href="https://tauri.app"><img src="https://img.shields.io/badge/Installer-Rust%20%2B%20Tauri%202-ffc131?logo=tauri&logoColor=black&style=flat-square" alt="Rust + Tauri 2"></a>
+  <img src="https://img.shields.io/badge/Boot-UEFI%20Only-2ea043?style=flat-square" alt="UEFI Only">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-38bdf8?style=flat-square" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Status-Release%20Candidate-f59e0b?style=flat-square" alt="Release Candidate">
 </p>
-
-AstraOS is a curated Arch-based distribution for people who want a coherent,
-quiet desktop without assembling it themselves. It pairs the scrollable tiling
-model of **Niri** with the **Noctalia v5** shell, then ships the details that
-usually get left out: a pinned package snapshot, a seeded terminal and editor,
-a working live session, and an installer that produces the same system.
-
-The first release targets **UEFI systems only**. Secure Boot must be disabled.
 
 ---
 
-## What is inside
+## 🌌 Overview
 
-| Layer | Choice |
-|---|---|
-| Base | Arch Linux, pinned to the Arch Linux Archive snapshot `2026/10/18` |
-| Session | [Niri](https://github.com/YaLixDee/niri) scrollable tiling compositor |
-| Shell | [Noctalia v5](https://github.com/noctalia-dev/noctalia) |
-| Terminal | Kitty, Zsh, Oh My Posh (`1_shell`) and autosuggestions |
-| Editor | Neovim with a pinned, pre-baked [LazyVim](https://github.com/LazyVim/LazyVim) tree |
-| Boot | GRUB, UEFI only, 1 GiB FAT32 ESP at `/boot/efi` |
-| Filesystem | Btrfs subvolumes (`@`, `@home`, `@log`, `@pkg`, `@snapshots`) |
-| Display manager | SilentSDDM with an AstraOS wallpaper and a theme-switching helper |
-| Graphics | AMD and Intel open drivers by default; NVIDIA Maxwell/Pascal/Volta via the 580xx stack |
-| Updates | Official packages plus the AstraOS repository; the `astra-update` CLI is a v1 preview and the public update channel is not live yet |
+**AstraOS** is an Arch-based Linux distribution crafted for developers, creators, and enthusiasts who desire a coherent, aesthetic, and distraction-free computing experience out of the box. 
 
-## Live image
+Instead of presenting an empty window manager or bloated desktop environment, AstraOS harmoniously pairs the innovative scrollable tiling model of **Niri** with the refined, modern Wayland shell of **Noctalia v5**. It handles the essential details often left incomplete: a daily-pinned Arch Linux Archive snapshot, pre-baked LazyVim with instant startup, GPU-accelerated Kitty terminal with Oh My Posh, a live desktop environment with automatic installer launch, and SilentSDDM login presets featuring high-resolution space imagery.
 
-The live ISO is a real desktop, not a rescue shell. The target design boots
-straight into Niri with Noctalia as root on tty1, with no SDDM login screen,
-and opens the installer automatically. The current development ISO still uses
-the old live-user/SDDM path; Phase 2 replaces it.
+> [!IMPORTANT]
+> **UEFI Systems Only:** AstraOS is engineered strictly for modern UEFI hardware with GPT disk partitioning. Legacy BIOS/CSM and Secure Boot must be disabled.
 
-- **Live session:** root autologin on tty1 (Phase 2)
-- **Wi-Fi:** NetworkManager and `iwctl` are available
-- **Terminal:** `Super + Return`
-- **Launcher:** `Super + Space`
-- **Keybind help:** `Super + Shift + /`
+---
 
-The installer is in the live application launcher and opens automatically
-once the desktop is ready.
+## ✨ Features & Architecture
 
-## Installing
+| Component | Upstream Choice | Description |
+|---|---|---|
+| **Base System** | Arch Linux | Pinned to Arch Linux Archive (`2026/10/18`) for predictable, reproducible builds. |
+| **Window Compositor** | [Niri](https://github.com/YaLixDee/niri) | Scrollable tiling Wayland compositor arranging windows in an infinite horizontal ribbon. |
+| **Desktop Shell** | [Noctalia](https://github.com/noctalia-dev/noctalia) (v5) | Contemporary status bar, quick settings, workspace overview, and notifications. |
+| **Display Manager** | [SilentSDDM](https://github.com/uiriansan/SilentSDDM) | Minimalist login greeter featuring 7 AstraOS orbital & deep space presets. |
+| **Terminal** | Kitty + Zsh | GPU-accelerated terminal paired with Oh My Posh (`1_shell`) and autosuggestions. |
+| **Editor** | Neovim + [LazyVim](https://github.com/LazyVim/LazyVim) | Pre-baked, zero-wait editor environment tailored with custom AstraOS color scheme. |
+| **Filesystem** | Btrfs | Standard subvolumes (`@`, `@home`, `@log`, `@pkg`, `@snapshots`) with zstd compression. |
+| **Bootloader** | GNU GRUB (Target) / systemd-boot (Live) | UEFI bootloader with automatic multi-boot OS detection via `os-prober`. |
+| **Installer** | Rust + Tauri 2 | Read-only storage planning GUI over an unprivileged-to-root non-interactive Bash engine. |
 
-1. Download the ISO from [Releases](https://github.com/AmanicX/astra-os/releases).
-2. Write it to a USB stick:
+---
 
-   ```bash
-   sudo dd if=astraos-*.iso of=/dev/sdX bs=4M status=progress conv=fsync
-   ```
+## 🚀 The Live ISO Experience
 
-   Replace `/dev/sdX` with the USB device. Double-check it first.
+The AstraOS installation image is a fully functional desktop session:
+- **Direct Live Session:** Autologins `root` on `tty1` straight into the **Niri + Noctalia** environment—no display manager delay or intermediate rescue shell.
+- **Auto-Running GUI Installer:** The AstraOS installer window launches automatically once the desktop initializes.
+- **Live Network Management:** NetworkManager with `iwd` backend; manage connections via `nmtui` or `iwctl`.
+- **Keyboard Shortcuts:**
+  - `Super + Return`: Open Kitty Terminal
+  - `Super + Space`: Application Launcher
+  - `Super + Shift + /`: Interactive Keybinding Cheat Sheet
+  - `Super + Left / Right`: Scroll across Niri columns
 
-3. Boot the stick in **UEFI mode** and disable **Secure Boot** and **CSM/Legacy**.
-4. Start the installer and choose whole-disk or dual-boot mode.
+---
 
-The installer uses GPT, creates the ESP and Btrfs root, installs from the
-pinned Arch archive plus the AstraOS repository over the network, and
-configures the selected bootloader.
+## 🛠️ The AstraOS Installer (Rust + Tauri 2)
 
-## Building from source
+AstraOS ships a purpose-built installer built with **Rust** and **Tauri 2**:
+- **Strict Read-Only Planning:** Disk inspection and partition calculations never write or modify partition tables while browsing or configuring options.
+- **Storage Modes:** Supports **Whole Disk Erase** (automatic 1 GiB ESP + 34+ GiB Btrfs root), **Free Space Partitioning**, **Manual Partition Assignment**, and **Pre-mounted Filesystems**.
+- **Hardware Validation:** Enforces the documented 35 GiB total floor (1 GiB ESP + 34 GiB root) in both pure Rust and Bash verification engines.
+- **Safety Guarantee:** Passwords and plan configurations are handled strictly in `/run/astra-install/plan.json` (mode `0600`), parsed and instantly deleted before any destructive writes begin.
 
-Requirements: an Arch Linux host, `archiso`, `git`, `base-devel`, and about
-15 GiB of free space. Builds use the pinned date in `config/snapshot`.
+---
+
+## 🎨 SilentSDDM Wallpaper Presets & Switcher
+
+AstraOS installs [SilentSDDM](https://github.com/uiriansan/SilentSDDM) customized with seven distinctive themes. Switch them instantly using the `astra-sddm-theme` command:
 
 ```bash
-git clone https://github.com/AmanicX/astra-os.git
-cd astra
+# List all installed presets and assigned wallpapers
+astra-sddm-theme list
 
-# 1. Build the Astra and pinned AUR packages into repo/x86_64
+# View current preset
+astra-sddm-theme current
+
+# Switch to a preset (requires root)
+sudo astra-sddm-theme set astra-carina
+```
+
+### Available Presets:
+1. `astra-orbital` — Original AstraOS 4K cyan-orbital artwork (Default)
+2. `astra-aurora` — Generated teal aurora spectrum
+3. `astra-ember` — Generated warm amber celestial field
+4. `astra-lunar` — Generated deep violet lunar glow
+5. `astra-earthrise` — NASA Apollo 8 Earthrise (`as08-14-2383`)
+6. `astra-carina` — NASA/ESA/CSA James Webb Space Telescope Cosmic Cliffs
+7. `astra-deepfield` — NASA/ESA Hubble Deep Field (`PIA12110`)
+
+---
+
+## 📋 System Requirements
+
+- **Processor:** 64-bit x86_64 CPU (Intel / AMD)
+- **RAM:** 4 GiB minimum (8 GiB recommended)
+- **Storage:** Minimum 35 GiB available disk space (1 GiB FAT32 ESP + 34 GiB Btrfs root)
+- **Firmware:** UEFI (Legacy BIOS / CSM disabled; Secure Boot disabled)
+- **Network:** Active internet connection during installation for package downloads
+
+---
+
+## 📦 Building From Source
+
+Building the complete ISO requires an Arch Linux host or WSL2 Arch distribution:
+
+```bash
+# Clone the repository
+git clone https://github.com/AmanicX/astra-os.git astraos
+cd astraos
+
+# 1. Build the local offline package repository (repo/x86_64)
 sudo ./scripts/build-repo.sh --build
 
-# 2. Build the ISO. The explicit approval variable is required by design.
+# 2. Build the Rust / Tauri 2 installer release binary
+./scripts/build-installer.sh --build
+
+# 3. Build the final bootable ISO image
 sudo ASTRA_ISO_APPROVED=1 ./scripts/build-iso.sh --build
 ```
 
-The finished image is written to `out/`.
-
-The ISO build also pre-bakes the pinned Neovim plugin tree with
-`scripts/prebake-nvim.sh`. The cache lives in `build/iso/nvim-lazy`; pass
-`--force` to refresh it.
-
-## Repository layout
-
-```text
-config/          snapshot pin, pacman template and live airootfs overlay
-manifests/       declarative package and plugin lists
-packages/        Astra-owned PKGBUILDs
-scripts/         repository, ISO and pre-bake pipelines
-docs/            audit, decisions and progress notes
-```
-
-## Design notes
-
-- The live user is created from `/etc/skel`, the same configuration the
-  installer seeds for the target account.
-- Noctalia state is seeded under `~/.local/state/noctalia`, where Noctalia v5
-  actually reads it.
-- LazyVim is copied into the user's writable data directory on first launch;
-  the shipped tree stays read-only and reproducible.
-- No personal paths, usernames, credentials or browser data are shipped.
-
-## Credits
-
-AstraOS stands on excellent upstream work:
-
-- **Niri** by YaLixDee and contributors, for the scrollable tiling model.
-- **Noctalia v5** by the Noctalia team, for the shell and visual language.
-- **Arch Linux** and the Arch Linux Archive, for the base and the pinned snapshot.
-- **LazyVim** by folke and contributors, for the editor foundation.
-- **SilentSDDM** by uiriansan, for the login theme. Upstream code is GPL-3.0;
-  AstraOS supplies its own configuration and wallpaper.
-- **Kitty**, **Zsh**, **Oh My Posh** and the wider open-source community.
-
-See [`THIRD_PARTY.md`](THIRD_PARTY.md) for licenses and asset provenance.
-
-## License
-
-AstraOS is distributed under the **MIT License**. See [`LICENSE`](LICENSE).
+The compiled bootable ISO is generated in the `out/` directory (e.g. `out/astraos-YYYY.MM.DD-x86_64.iso`).
 
 ---
 
-<p align="center">Built by <a href="https://github.com/AmanicX">AmanicX</a></p>
+## 🤝 Upstream Credits & Attributions
+
+AstraOS stands proudly on the shoulders of brilliant open-source creators and engineers:
+
+- **[Niri](https://github.com/YaLixDee/niri)** by **YaLixDee and contributors** (GPL-3.0-or-later)  
+  *For designing and implementing the fluid, scrollable tiling window compositor that defines AstraOS.*
+
+- **[Noctalia](https://github.com/noctalia-dev/noctalia)** (v5) by **Clement Fombonne and the Noctalia team** (MIT)  
+  *For the elegant Wayland desktop shell, status bar, and modern control interface.*
+
+- **[SilentSDDM](https://github.com/uiriansan/SilentSDDM)** by **uiriansan and contributors** (GPL-3.0)  
+  *For the clean, minimalist display manager theme adapted with AstraOS presets and switcher.*
+
+- **[GNU GRUB](https://www.gnu.org/software/grub/)** by the **Free Software Foundation** (GPL-3.0-or-later)  
+  *For the reliable UEFI bootloader providing Btrfs root snapshot booting and automated multi-boot discovery.*
+
+- **[LazyVim](https://github.com/LazyVim/LazyVim)** by **Folke Lemaitre** and **[Neovim](https://github.com/neovim/neovim)** (Apache-2.0 / Vim License)  
+  *For the high-performance, pre-configured development and editing foundation.*
+
+- **[Arch Linux](https://archlinux.org/)** and the **Arch Linux Archive** (GPL)  
+  *For the flexible, cutting-edge distribution base and daily snapshot reproducibility.*
+
+- **[Kitty](https://github.com/kovidgoyal/kitty)** by **Kovid Goyal** (GPL-3.0)  
+  *For the GPU-accelerated terminal emulator providing silky smooth text rendering.*
+
+- **[Oh My Posh](https://github.com/JanDeDobbeleer/oh-my-posh)** by **Jan De Dobbeleer** (MIT)  
+  *For the responsive, customized shell prompt engine.*
+
+- **[Quickshell](https://github.com/outfoxxed/quickshell)** by **outfoxxed** (LGPL-3.0)  
+  *For the Wayland QML toolkit powering shell overlays and keybinding helpers.*
+
+- **[NASA](https://www.nasa.gov/) / ESA / CSA / STScI** (Public Domain)  
+  *For the historic Apollo 8 Earthrise, James Webb Space Telescope Carina Nebula, and Hubble Deep Field imagery.*
+
+---
+
+## 📄 License
+
+AstraOS is open-source software licensed under the **[MIT License](LICENSE)**.  
+Third-party upstream projects, libraries, and images retain their respective licenses (see [`THIRD_PARTY.md`](THIRD_PARTY.md)).
+
+---
+
+<p align="center">
+  Crafted with care by <a href="https://github.com/AmanicX"><strong>AmanicX</strong></a> and the AstraOS contributors.
+</p>

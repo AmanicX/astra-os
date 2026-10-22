@@ -8,9 +8,11 @@ HoldPkg = pacman glibc
 ParallelDownloads = 3
 SigLevel = Required DatabaseOptional
 LocalFileSigLevel = Optional
+DisableDownloadTimeout
 Color
 CheckSpace
 ILoveCandy
+
 
 [core]
 Server = https://archive.archlinux.org/repos/@SNAPSHOT@/core/os/$arch

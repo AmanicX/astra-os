@@ -563,7 +563,7 @@ free_space_setup() {
 		choose_esp 1 || return 1
 
 		if [[ ${STATE[esp_mode]} == new ]]; then
-			min_mib=$(((MIN_ROOT_GIB + ESP_SIZE_GIB) * 1024 + DISK_OVERHEAD_MIB))
+			min_mib=$(((MIN_ROOT_GIB + ESP_SIZE_GIB) * 1024))
 		else
 			min_mib=$((MIN_ROOT_GIB * 1024))
 		fi
@@ -948,7 +948,7 @@ prepare_whole_disk() {
 	fi
 	verify_new_partition "$disk" 1 0 "$((sectors - 1))" "$GPT_ESP_GUID" 1024
 	verify_new_partition "$disk" 2 0 "$((sectors - 1))" "$GPT_LINUX_GUID" \
-		"$((MIN_ROOT_GIB * 1024))"
+		"$((MIN_ROOT_GIB * 1024 - DISK_OVERHEAD_MIB))"
 
 	mkfs.fat -F32 "$ESP_PART" >/dev/null || die "could not format the EFI partition"
 	mkfs.btrfs -f -L AstraOS "$ROOT_PART" >/dev/null || die "could not format the root partition"
@@ -1023,7 +1023,7 @@ prepare_free_space() {
 		verify_new_partition "$disk" "$esp_num" "$start" "$end" "$GPT_ESP_GUID" 1024
 	fi
 	verify_new_partition "$disk" "$root_num" "$start" "$end" "$GPT_LINUX_GUID" \
-		"$((MIN_ROOT_GIB * 1024))"
+		"$((MIN_ROOT_GIB * 1024 - DISK_OVERHEAD_MIB))"
 	verify_gpt_unchanged "$disk" "$baseline"
 
 	mkfs.btrfs -f -L AstraOS "$ROOT_PART" >/dev/null ||

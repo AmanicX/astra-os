@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# List or switch the installed SilentSDDM AstraOS preset.
+#
+# The preset is a SilentSDDM config under the theme's configs/ directory. Each
+# AstraOS preset points at a different wallpaper. Writing the preset requires
+# root because SDDM reads /etc/sddm.conf.d/astra.conf.
+set -Eeuo pipefail
+
+THEME_DIR=${ASTRA_SDDM_THEME_DIR:-/usr/share/sddm/themes/silent}
+CONFIG_DIR="${THEME_DIR}/configs"
+SDDM_CONF=${ASTRA_SDDM_CONF:-/etc/sddm.conf.d/astra.conf}
+
+usage() {
+	cat <<'EOF'
+Usage: astra-sddm-theme <command> [preset]
+
+Commands:
+  list                 List available AstraOS presets and their wallpapers
+  current              Show the selected preset and wallpaper
+  set <preset>         Select a preset (run with sudo)
+  wallpaper [preset]   Print the wallpaper path for a preset
+
+Examples:
+  astra-sddm-theme list
+  sudo astra-sddm-theme set astra-aurora
+  astra-sddm-theme current
+EOF
+}
+
+require_root() {
+	if ((EUID != 0)); then
+		printf 'astra-sddm-theme: run this command with sudo\n' >&2
+		exit 1
+	fi
+}
+
+presets() {
+	find "${CONFIG_DIR}" -maxdepth 1 -type f -name 'astra-*.conf' \
+		-printf '%f\n' 2>/dev/null |
+		sed 's/\.conf$//' | sort
+}
+
+wallpaper_for() {
+	local preset=$1 conf="${CONFIG_DIR}/$1.conf"
+	[[ -f ${conf} ]] || return 1
+	awk -F' = ' '
+		/^\[LoginScreen\]/ { in_login = 1; next }
+		/^\[/ { if (in_login) exit }
+		in_login && /^background = / {
+			gsub(/"/, "", $2)
+			print $2
+			exit
+		}
+	' "${conf}"
+}
+
+current_preset() {
+	[[ -r ${SDDM_CONF} ]] || return 1
+	awk -F= '
+		/^ConfigFile=/ {
+			sub(/^configs\//, "", $2)
+			sub(/\.conf$/, "", $2)
+			print $2
+			exit
+		}
+	' "${SDDM_CONF}"
+}
+
+cmd_list() {
+	local preset wallpaper
+	while IFS= read -r preset; do
+		[[ -n ${preset} ]] || continue
+		wallpaper="$(wallpaper_for "${preset}" || true)"
+		printf '%-20s %s\n' "${preset}" "${wallpaper:-missing wallpaper}"
+	done < <(presets)
+}
+
+cmd_current() {
+	local preset wallpaper
+	preset="$(current_preset || true)"
+	[[ -n ${preset} ]] || {
+		printf 'astra-sddm-theme: no ConfigFile found in %s\n' "${SDDM_CONF}" >&2
+		exit 1
+	}
+	wallpaper="$(wallpaper_for "${preset}" || true)"
+	printf 'preset:    %s\n' "${preset}"
+	printf 'wallpaper: %s\n' "${wallpaper:-missing}"
+}
+
+cmd_set() {
+	local name=${1:-}
+	name=${name%.conf}
+	[[ -n ${name} ]] || {
+		usage >&2
+		exit 2
+	}
+	[[ -f "${CONFIG_DIR}/${name}.conf" ]] || {
+		printf 'astra-sddm-theme: unknown preset: %s\n' "${name}" >&2
+		printf 'Available presets:\n' >&2
+		cmd_list >&2
+		exit 1
+	}
+	require_root
+	install -d -m 0755 "$(dirname -- "${SDDM_CONF}")"
+	if [[ -f ${SDDM_CONF} ]]; then
+		if grep -q '^ConfigFile=' "${SDDM_CONF}"; then
+			sed -i "s|^ConfigFile=.*|ConfigFile=configs/${name}.conf|" "${SDDM_CONF}"
+		else
+			printf '\n[Theme]\nConfigFile=configs/%s.conf\n' "${name}" >>"${SDDM_CONF}"
+		fi
+		# Current=silent is required when the config file was created by hand.
+		if grep -q '^Current=' "${SDDM_CONF}"; then
+			sed -i 's|^Current=.*|Current=silent|' "${SDDM_CONF}"
+		else
+			sed -i '0,/^\[Theme\]/s//[Theme]\nCurrent=silent/' "${SDDM_CONF}"
+		fi
+	else
+		cat >"${SDDM_CONF}" <<EOF
+[Theme]
+Current=silent
+ConfigFile=configs/${name}.conf
+EOF
+	fi
+	printf 'SilentSDDM preset set to %s (%s)\n' "${name}" "$(wallpaper_for "${name}")"
+}
+
+cmd_wallpaper() {
+	local name=${1:-}
+	if [[ -z ${name} ]]; then
+		name="$(current_preset || true)"
+		[[ -n ${name} ]] || exit 1
+	fi
+	name=${name%.conf}
+	wallpaper_for "${name}" || {
+		printf 'astra-sddm-theme: unknown preset: %s\n' "${name}" >&2
+		exit 1
+	}
+}
+
+case ${1:-} in
+list) cmd_list ;;
+current) cmd_current ;;
+set) shift; cmd_set "$@" ;;
+wallpaper) shift; cmd_wallpaper "$@" ;;
+-h | --help | help | "") usage ;;
+*)
+	printf 'astra-sddm-theme: unknown command: %s\n' "$1" >&2
+	usage >&2
+	exit 2
+	;;
+esac

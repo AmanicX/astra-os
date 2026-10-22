@@ -38,17 +38,19 @@ placed in the ISO. An unclear license is a release blocker, not a warning.
 |---|---|---|---|---|
 | `1_shell.omp.json` | Upstream Oh My Posh theme | MIT | Yes | Byte-identical to upstream; verified by SHA-256 |
 | Oh My Posh binary | AUR `oh-my-posh-bin` 31.8.0 / upstream | MIT | Yes | Pinned package; no update notice |
-| Noctalia integration TOML | Owner-authored, based on Noctalia docs | Owner-owned | Pending owner confirmation | No separate license file |
-| niri config and keybinds | Owner-authored/modified | Owner-owned | Pending owner confirmation | No separate license file |
-| kitty config/theme | Owner-authored/modified plus Noctalia-generated palette | Owner-owned / MIT | Pending owner confirmation | Palette is generated; no third-party theme file |
-| keybind overlay (`gen-keybinds.py`, `shell.qml`, `keybinds-toggle`) | Owner-authored | Owner-owned | Pending owner confirmation | No license file found |
+| Noctalia integration TOML | Owner-authored, based on Noctalia docs | MIT | Yes | Shipped in astra-desktop-config |
+| niri config and keybinds | Owner-authored/modified | MIT | Yes | Shipped in astra-desktop-config |
+| kitty config/theme | Owner-authored/modified plus Noctalia-generated palette | MIT | Yes | Shipped in astra-desktop-config |
+| keybind overlay (`gen-keybinds.py`, `shell.qml`, `keybinds-toggle`) | Owner-authored | MIT | Yes | Shipped in astra-keybinds |
 | Neovim config | LazyVim starter derivative, Apache-2.0 | Apache-2.0 | Yes | Custom `kitty-theme.lua` is owner-authored |
 | Neovim plugins | 33 plugins pinned by `lazy-lock.json` | MIT / Apache-2.0 / GPL-3.0; generated in `manifests/nvim-plugins.tsv` | Yes, with source URLs and license files recorded | Includes GPL-3.0 `bufferline.nvim` and `nvim-lint`; unmodified upstream plugins |
-| Noctalia SDDM theme | GitHub `ClementFombonne/sddm-noctalia-theme`, commit `92bf8e6` | GPLv3 code; Tabler icons MIT | Yes for code; bundled wallpaper/screenshot removed | Chosen by owner; original Astra wallpaper replaces the bundled image |
-| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme`, commit `abb3163c` | GPL-3.0-or-later code | Code: yes. Third-party artwork/fonts removed | **Superseded by D-034.** Kept only as historical record; it is not the selected theme |
-| SilentSDDM | GitHub `uiriansan/SilentSDDM`, pinned release/commit to be recorded at package build | GPL-3.0 | Yes, with license and notices | **Selected by D-034.** Theme files under `/usr/share/sddm/themes/silent/`, AstraOS config preset, static AstraOS wallpaper; bundled credits to be audited before packaging |
-| Wallpaper | Original AstraOS artwork | Owner-owned / project license | Yes | Replaces the unknown-license 7680x4320 image; not copied |
-| Imported wallpapers | NASA/ESA/Webb public-domain or CC0/CC-BY sources; exact URLs and authors to be recorded | Per asset | Only after verification | **Planned for Phase 3 (D-035).** No import ships until its license and credit row is complete |
+| Noctalia SDDM theme | GitHub `ClementFombonne/sddm-noctalia-theme`, commit `92bf8e6` | GPLv3 code; Tabler icons MIT | Superseded | Superseded by SilentSDDM (D-034); not shipped |
+| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme`, commit `abb3163c` | GPL-3.0-or-later code | Superseded | Superseded by SilentSDDM (D-034); not shipped |
+| SilentSDDM | GitHub `uiriansan/SilentSDDM`, commit `d477613b07ca13729af20cb4699b308ac7348d2f` | GPL-3.0 | Yes, with license and notices | Installed under `/usr/share/sddm/themes/silent/`; upstream demo media removed; configured via AstraOS presets and `/etc/sddm.conf.d/astra.conf` |
+| Original Wallpapers | Original AstraOS orbital artwork and generated variants (`astraos-default.png`, `astraos-aurora.png`, `astraos-ember.png`, `astraos-lunar.png`) | MIT / Project License | Yes | 4K assets generated from SVG sources under `packages/astra-branding/` |
+| NASA Earthrise | NASA Apollo 8, image `as08-14-2383` (`astraos-earthrise.jpg`) | Public Domain (NASA) | Yes | Retrieved 2026-10; NASA public domain imagery policy |
+| NASA Carina Nebula | NASA/ESA/CSA James Webb Space Telescope (`astraos-carina.png`) | Public Domain / CC-BY-4.0 | Yes | Retrieved 2026-10; STScI/NASA/ESA/CSA |
+| NASA Hubble Deep Field | NASA/ESA Hubble Space Telescope, `PIA12110` (`astraos-deepfield.jpg`) | Public Domain (NASA/ESA) | Yes | Retrieved 2026-10; NASA JPL/STScI public domain |
 | Steam | `steam` 1.0.0.87-3, Arch multilib | LicenseRef-steam-subscriber-agreement | Yes, under Valve's terms | Owner-approved; target-only; multilib closure required |
 
 ## Explicitly not shipped

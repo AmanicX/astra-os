@@ -9,3 +9,19 @@
 .env
 *.key
 *.pem
+
+# Rust & Tauri
+**/target/
+**/*.rs.bk
+installer/ui
+
+# Makepkg build artifacts
+packages/*/*/src/
+packages/*/*/pkg/
+packages/*/*/*.pkg.tar.*
+packages/astra-sddm-theme/silent-sddm/
+packages/astra-sddm-theme/src/
+packages/astra-sddm-theme/pkg/
+packages/astra-sddm-theme/*.pkg.tar.*
+packages/astra-installer/astra-installer-gui
+
