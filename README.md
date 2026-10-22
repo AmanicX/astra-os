@@ -39,7 +39,7 @@ Instead of presenting an empty window manager or bloated desktop environment, As
 | **Base System** | Arch Linux | Pinned to Arch Linux Archive (`2026/10/18`) for predictable, reproducible builds. |
 | **Window Compositor** | [Niri](https://github.com/YaLixDee/niri) | Scrollable tiling Wayland compositor arranging windows in an infinite horizontal ribbon. |
 | **Desktop Shell** | [Noctalia](https://github.com/noctalia-dev/noctalia) (v5) | Contemporary status bar, quick settings, workspace overview, and notifications. |
-| **Display Manager** | [SilentSDDM](https://github.com/uiriansan/SilentSDDM) | Minimalist login greeter featuring 7 AstraOS orbital & deep space presets. |
+| **Greeter** | [SilentSDDM](https://github.com/uiriansan/SilentSDDM) | Minimalist login greeter featuring 7 AstraOS orbital & deep space presets. |
 | **Terminal** | Kitty + Zsh | GPU-accelerated terminal paired with Oh My Posh (`1_shell`) and autosuggestions. |
 | **Editor** | Neovim + [LazyVim](https://github.com/LazyVim/LazyVim) | Pre-baked, zero-wait editor environment tailored with custom AstraOS color scheme. |
 | **Filesystem** | Btrfs | Standard subvolumes (`@`, `@home`, `@log`, `@pkg`, `@snapshots`) with zstd compression. |
