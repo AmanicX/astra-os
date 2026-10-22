@@ -16,6 +16,8 @@ jq                           # answers JSON and installer state
 pciutils                     # lspci hardware detection
 usbutils                     # lsusb diagnostics
 vulkan-nouveau               # NVK Vulkan driver so live NVIDIA cards work without the proprietary stack
+vulkan-swrast                # Lavapipe software Vulkan driver for VMs (VirtualBox, QEMU) and headless hardware
+
 nano                         # last-resort editing on the live system
 memtest86+-efi               # Memory test from the UEFI boot loader
 edk2-shell                   # UEFI shell for diagnostics

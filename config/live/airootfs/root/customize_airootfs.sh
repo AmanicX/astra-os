@@ -39,6 +39,9 @@ if [[ -z ${WAYLAND_DISPLAY:-} && $(tty 2>/dev/null) == /dev/tty1 ]]; then
 fi
 EOF
 chmod 0644 /root/.zprofile
+cp -a /root/.zprofile /root/.bash_profile
+install -d -m 0755 /etc/profile.d
+cp -a /root/.zprofile /etc/profile.d/99-astra-live.sh
 
 # Replace the installer copies from the prebuilt astra-installer package with
 # the sources staged by build-iso.sh. mkarchiso copies a custom airootfs before
