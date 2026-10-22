@@ -31,13 +31,14 @@ EOF
 fi
 
 # Root shell entry point. Only tty1 starts the graphical session; other ttys
-# stay available for rescue work.
-cat >/root/.bash_profile <<'EOF'
+# stay available for rescue work.  Root's login shell is zsh, so we write
+# .zprofile (zsh ignores .bash_profile).
+cat >/root/.zprofile <<'EOF'
 if [[ -z ${WAYLAND_DISPLAY:-} && $(tty 2>/dev/null) == /dev/tty1 ]]; then
-	exec niri-session
+	exec niri --session
 fi
 EOF
-chmod 0644 /root/.bash_profile
+chmod 0644 /root/.zprofile
 
 # Replace the installer copies from the prebuilt astra-installer package with
 # the sources staged by build-iso.sh. mkarchiso copies a custom airootfs before
