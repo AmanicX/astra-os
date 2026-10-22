@@ -217,6 +217,10 @@ may be produced until the owner gives an explicit go-ahead. The same caution
 applies to repository builds that consume large disk or download subjects:
 report the plan and wait.
 
+**Addendum 2026-10-21:** the owner explicitly approved the ISO build. The build
+was run with `ASTRA_ISO_APPROVED=1`; the resulting image and its verification
+are recorded in `docs/BUILD.md` and the final report.
+
 ## D-022 — GRUB is the target bootloader
 
 The audit host uses systemd-boot, but the target will install GRUB. GRUB is
@@ -243,11 +247,12 @@ partition. The installer will never run `wipefs`, `mkfs`, `sgdisk -Z`,
 `parted mklabel` or any write against an existing partition. It records every
 existing GPT entry (number, start, end, type GUID, unique GUID, name and
 filesystem UUID), writes a backup of the GPT table, creates entries only in
-selected free sectors, and then compares every original entry and filesystem
-UUID after the change. A checksum of the whole GPT table cannot be compared
-because adding a partition legitimately changes it. QEMU dual-boot tests will
-also place a known pattern inside a dummy existing partition and verify it
-after the install. No real block device is used in tests.
+selected free sectors, and then compares every original entry, filesystem UUID
+and the first-MiB hash after the change. A checksum of the whole GPT table cannot be compared
+because adding a partition legitimately changes it. Loopback tests also place a
+known pattern inside a dummy existing partition and verify it after the
+installer runs; verifying an installed system in QEMU remains a separate test.
+No real block device is used in tests.
 
 ## D-025 — Gate outcome: approved with changes
 
@@ -334,3 +339,72 @@ Until `sudo -n true` succeeds, package installation, loop devices, chroots and
 QEMU tests remain blocked. The exact sudoers scope is still to be agreed; a
 broad `NOPASSWD: ALL` for the login user is the simplest option but is a real
 security trade-off.
+
+## D-033 — The offline guarantee is removed (2026-10-22)
+
+The owner no longer requires the ISO, installer or installed system to work
+without a network. Network access at runtime is acceptable. Builds may fetch
+packages, fonts, themes and app assets when needed, and the installer may use
+online package sources.
+
+This supersedes the offline-first parts of D-001, D-017, D-019, D-023, D-030,
+D-031 and the old README claims. The local repository may still be used as a
+build cache, but it is no longer a product requirement and should be removed
+from the live image when the installer stops depending on it. No silent
+downloads or unlicensed assets are allowed; explicit user actions and recorded
+licenses still apply.
+
+## D-034 — SilentSDDM with an easy theme switcher
+
+The installed system uses SilentSDDM instead of the earlier
+Astronaut/Noctalia SDDM theme. This supersedes the SDDM-theme parts of D-009
+and D-025. SilentSDDM is GPL-3.0; its license, any bundled fonts/backgrounds
+and the upstream commit must be recorded in `THIRD_PARTY.md`.
+
+The system ships a small command, `astra-sddm-theme`, to list, switch and show
+the current SilentSDDM preset. Each preset has its own associated AstraOS
+wallpaper. The default is a static image background from
+`/usr/share/backgrounds/astraos/`, not an animated background. The SDDM
+configuration lives in `/etc/sddm.conf.d/astra.conf`; the theme preset is
+selected through the theme's `ConfigFile=configs/<name>.conf` mechanism.
+
+SDDM and the theme are installed on the target and remain out of the live
+image. The live image must use root autologin into niri, not a display manager.
+
+## D-035 — Wallpaper sourcing: few original, licensed imports
+
+The default original wallpaper is replaced by a curated set. Keep a small
+number of original/generated AstraOS wallpapers and import similar
+space/astronomy images from permissively licensed sources (NASA public-domain
+media, ESA/Webb under their stated terms, CC0 or CC-BY Wikimedia Commons).
+Verify every license, color-grade for the AstraOS palette, and record the
+source URL, author, license and modifications in `THIRD_PARTY.md`.
+
+This supersedes the "no third-party wallpaper" rule in D-028 for the Phase 3
+wallpaper set. No unlicensed or unverifiable wallpaper is shipped. The
+installer, GRUB, Limine, SDDM and Plymouth artwork derive from the approved
+set.
+
+## D-036 — Installer UI is tested in WSL first
+
+Before the full QEMU/OVMF matrix, the Rust/Tauri installer is built and run as
+a normal app inside the WSL Arch environment, with the mock backend and the
+real core where possible. Once it launches, navigates and renders correctly
+there, it is tested against QEMU disk images. QEMU remains the only place where
+the storage engine and bootloader installation may touch a disk.
+
+## D-037 — Minimum storage is 35 GiB total
+
+The installer requires at least **35 GiB total** for a new installation:
+1 GiB ESP plus 34 GiB Btrfs root. This replaces the earlier 25 GiB total /
+24 GiB root threshold. Existing code that still says 25/24 must be updated
+before it is treated as verified.
+
+## D-038 — One brand identity source
+
+`config/brand.toml` is the single source for the product name, long name, id,
+ISO label prefix, website and tagline. `scripts/lib/brand.sh` reads it, and
+`scripts/rebrand-archiso.sh` applies the boot-menu names. New installer,
+updater, bootloader and theme work must read the same file or a derived
+installed copy. The wordmark is mixed-case `Astra` + `OS`; the star mark is
+unchanged.

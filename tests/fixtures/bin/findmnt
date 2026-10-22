@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Test fixture for the pre-mounted storage path.
+set -u
+target=${!#}
+case " $* " in
+*" -o FSTYPE "*)
+	case $target in
+	/mnt/boot/efi | /mnt/boot | /mnt/efi) printf 'vfat\n' ;;
+	*) exit 1 ;;
+	esac
+	;;
+*" -o SOURCE "*)
+	case $target in
+	/mnt/boot/efi | /mnt/boot | /mnt/efi) printf '/dev/fakep1\n' ;;
+	/mnt) printf '/dev/fakep2\n' ;;
+	*) exit 1 ;;
+	esac
+	;;
+*" -S "*)
+	# No partition is mounted by device in the deterministic test layout.
+	exit 1
+	;;
+*)
+	# findmnt -R is only used to display the mounts when the ESP is missing.
+	printf '/mnt /dev/fakep2 btrfs\n/mnt/boot/efi /dev/fakep1 vfat\n'
+	;;
+esac

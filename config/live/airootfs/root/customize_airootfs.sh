@@ -25,6 +25,14 @@ printf '%s ALL=(ALL:ALL) NOPASSWD: ALL\n' "${live_user}" \
 	>/etc/sudoers.d/10-astra-live
 chmod 0440 /etc/sudoers.d/10-astra-live
 
+# Replace the installer copies from the prebuilt astra-installer package with
+# the sources staged by build-iso.sh.  mkarchiso copies a custom airootfs before
+# pacstrap, so these cannot be overlaid directly without file conflicts.
+if [[ -d /root/astra-installer-overlay ]]; then
+	cp -a /root/astra-installer-overlay/. /
+	rm -rf /root/astra-installer-overlay
+fi
+
 # Seed the pinned LazyVim tree into a writable location. lazy.lua does the same
 # on first launch for any newly created user, but doing it here keeps startup
 # instant on the live image.
@@ -46,6 +54,8 @@ systemctl enable iwd.service
 systemctl enable bluetooth.service
 systemctl enable power-profiles-daemon.service
 systemctl enable getty@tty2.service
+# Keep a serial login available for headless installs and for rescue work.
+systemctl enable serial-getty@ttyS0.service
 
 # NetworkManager owns link management in the desktop session. The archiso
 # networkd default would compete with it. Keep systemd-resolved: the releng

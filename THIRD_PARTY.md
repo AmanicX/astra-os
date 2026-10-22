@@ -45,8 +45,10 @@ placed in the ISO. An unclear license is a release blocker, not a warning.
 | Neovim config | LazyVim starter derivative, Apache-2.0 | Apache-2.0 | Yes | Custom `kitty-theme.lua` is owner-authored |
 | Neovim plugins | 33 plugins pinned by `lazy-lock.json` | MIT / Apache-2.0 / GPL-3.0; generated in `manifests/nvim-plugins.tsv` | Yes, with source URLs and license files recorded | Includes GPL-3.0 `bufferline.nvim` and `nvim-lint`; unmodified upstream plugins |
 | Noctalia SDDM theme | GitHub `ClementFombonne/sddm-noctalia-theme`, commit `92bf8e6` | GPLv3 code; Tabler icons MIT | Yes for code; bundled wallpaper/screenshot removed | Chosen by owner; original Astra wallpaper replaces the bundled image |
-| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme`, commit `abb3163c` | GPL-3.0-or-later code | Code: yes. Third-party artwork/fonts removed | Owner superseded D-009 on 2026-10-20; only upstream QML/components/icons and the GPL license are shipped; the background is the AstraOS wallpaper; previews, bundled fonts and unrelated wallpapers are removed |
+| SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme`, commit `abb3163c` | GPL-3.0-or-later code | Code: yes. Third-party artwork/fonts removed | **Superseded by D-034.** Kept only as historical record; it is not the selected theme |
+| SilentSDDM | GitHub `uiriansan/SilentSDDM`, pinned release/commit to be recorded at package build | GPL-3.0 | Yes, with license and notices | **Selected by D-034.** Theme files under `/usr/share/sddm/themes/silent/`, AstraOS config preset, static AstraOS wallpaper; bundled credits to be audited before packaging |
 | Wallpaper | Original AstraOS artwork | Owner-owned / project license | Yes | Replaces the unknown-license 7680x4320 image; not copied |
+| Imported wallpapers | NASA/ESA/Webb public-domain or CC0/CC-BY sources; exact URLs and authors to be recorded | Per asset | Only after verification | **Planned for Phase 3 (D-035).** No import ships until its license and credit row is complete |
 | Steam | `steam` 1.0.0.87-3, Arch multilib | LicenseRef-steam-subscriber-agreement | Yes, under Valve's terms | Owner-approved; target-only; multilib closure required |
 
 ## Explicitly not shipped

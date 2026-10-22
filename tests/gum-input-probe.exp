@@ -1,0 +1,20 @@
+#!/usr/bin/env expect
+set timeout 8
+log_user 0
+spawn gum input --prompt "Probe> "
+expect {
+	-re {Probe>} { }
+	timeout { puts "NO_PROMPT"; exit 2 }
+}
+after 500
+if {$env(KEY) eq "lf"} {
+	send -- "\n"
+} else {
+	send -- "\r"
+}
+expect {
+	eof { }
+	timeout { puts "NO_EOF"; exit 3 }
+}
+catch wait result
+puts "STATUS=[lindex $result 3]"

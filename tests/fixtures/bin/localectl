@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Force the wizard's manual keyboard-layout input branch in tests.
+exit 1

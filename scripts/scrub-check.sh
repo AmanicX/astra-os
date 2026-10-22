@@ -108,7 +108,7 @@ for path in "${paths[@]}"; do
 done
 
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/astra-scrub.XXXXXX")"
-# shellcheck disable=SC2317  # invoked by the EXIT trap below
+# shellcheck disable=SC2317,SC2329  # invoked by the EXIT trap below
 cleanup() {
 	rm -rf -- "$tmpdir"
 }

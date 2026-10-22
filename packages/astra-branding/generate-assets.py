@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import math
 import random
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "files/usr/share/astra/branding/astraos-wallpaper.svg"
+BRAND_FILE = ROOT.parents[1] / "config/brand.toml"
 
 WIDTH = 3840
 HEIGHT = 2160
@@ -93,7 +95,15 @@ def mark(cx: float, cy: float, scale: float) -> str:
   </g>"""
 
 
+def brand_name() -> str:
+    if not BRAND_FILE.is_file():
+        return "AstraOS"
+    with BRAND_FILE.open("rb") as handle:
+        return tomllib.load(handle)["name"]
+
+
 def main() -> None:
+    name = brand_name()
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {WIDTH} {HEIGHT}" width="{WIDTH}" height="{HEIGHT}">
   <defs>
     <linearGradient id="astra-wall-bg" x1="0" y1="0" x2="1" y2="1">
@@ -135,9 +145,9 @@ def main() -> None:
         font-family="Adwaita Sans, Noto Sans, sans-serif"
         font-size="58"
         font-weight="400"
-        letter-spacing="24"
+        letter-spacing="18"
         fill="#E8EEF7"
-        fill-opacity="0.30">ASTRAOS</text>
+        fill-opacity="0.30">{name}</text>
 </svg>
 """
     OUT.parent.mkdir(parents=True, exist_ok=True)

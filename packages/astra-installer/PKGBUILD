@@ -2,11 +2,12 @@
 # Description: UEFI-only TUI installer. ISO-only; not a dependency of astra-meta.
 pkgname=astra-installer
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="AstraOS installer with a gum-powered TUI"
 arch=('x86_64')
 license=('MIT')
-depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz' 'kitty')
+depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz' 'kitty'
+	'arch-install-scripts' 'btrfs-progs' 'dosfstools' 'util-linux' 'kbd' 'networkmanager')
 install=astra-installer.install
 options=(!strip)
 

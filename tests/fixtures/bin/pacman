@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+if [[ ${1:-} == -Q ]]; then
+	printf 'astra-meta 0.1.0\n'
+	exit 0
+fi
+exit 1

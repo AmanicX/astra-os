@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Deterministic gum stand-in for the non-interactive wizard test.
+# Every consuming subcommand pops one line from GUM_QUEUE.
+set -u
+
+queue=${GUM_QUEUE:?GUM_QUEUE is required}
+take() {
+	local response
+	[[ -s $queue ]] || {
+		printf 'gum test queue is empty for %s\n' "$1" >&2
+		exit 99
+	}
+	response=$(head -n1 "$queue")
+	sed -i '1d' "$queue"
+	printf '%s' "$response"
+}
+
+case ${1:-} in
+style)
+	exit 0
+	;;
+format)
+	shift
+	printf '%s\n' "$@"
+	;;
+pager)
+	cat
+	;;
+confirm)
+	response=$(take confirm)
+	[[ $response == yes ]]
+	;;
+input | choose | filter)
+	take "$1"
+	printf '\n'
+	;;
+*)
+	printf 'unsupported fake gum command: %s\n' "${1:-}" >&2
+	exit 2
+	;;
+esac

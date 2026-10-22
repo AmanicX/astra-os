@@ -1,5 +1,6 @@
 *.iso
 *.iso.sha256
+/release/
 /build/
 /out/
 /repo/

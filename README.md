@@ -38,24 +38,25 @@ The first release targets **UEFI systems only**. Secure Boot must be disabled.
 | Editor | Neovim with a pinned, pre-baked [LazyVim](https://github.com/LazyVim/LazyVim) tree |
 | Boot | GRUB, UEFI only, 1 GiB FAT32 ESP at `/boot/efi` |
 | Filesystem | Btrfs subvolumes (`@`, `@home`, `@log`, `@pkg`, `@snapshots`) |
-| Display manager | SDDM with the Astronaut theme and AstraOS artwork |
+| Display manager | SilentSDDM with an AstraOS wallpaper and a theme-switching helper |
 | Graphics | AMD and Intel open drivers by default; NVIDIA Maxwell/Pascal/Volta via the 580xx stack |
-| Updates | Official packages from the pinned archive; the `astra-update` CLI is a v1 preview and the public update channel is not live yet |
+| Updates | Official packages plus the AstraOS repository; the `astra-update` CLI is a v1 preview and the public update channel is not live yet |
 
 ## Live image
 
-The live ISO is a real desktop, not a rescue shell. It boots through SDDM and
-logs straight into Niri with Noctalia configured.
+The live ISO is a real desktop, not a rescue shell. The target design boots
+straight into Niri with Noctalia as root on tty1, with no SDDM login screen,
+and opens the installer automatically. The current development ISO still uses
+the old live-user/SDDM path; Phase 2 replaces it.
 
-- **Live user:** `astra`
-- **Password:** `astra` (used by the lock screen and tty fallback)
-- **sudo:** passwordless in the live session
+- **Live session:** root autologin on tty1 (Phase 2)
 - **Wi-Fi:** NetworkManager and `iwctl` are available
 - **Terminal:** `Super + Return`
 - **Launcher:** `Super + Space`
 - **Keybind help:** `Super + Shift + /`
 
-The installer is in the live application launcher (Super + Space).
+The installer is in the live application launcher and opens automatically
+once the desktop is ready.
 
 ## Installing
 
@@ -72,7 +73,8 @@ The installer is in the live application launcher (Super + Space).
 4. Start the installer and choose whole-disk or dual-boot mode.
 
 The installer uses GPT, creates the ESP and Btrfs root, installs from the
-pinned archive plus the bundled Astra repository, and configures GRUB.
+pinned Arch archive plus the AstraOS repository over the network, and
+configures the selected bootloader.
 
 ## Building from source
 
@@ -124,8 +126,8 @@ AstraOS stands on excellent upstream work:
 - **Noctalia v5** by the Noctalia team, for the shell and visual language.
 - **Arch Linux** and the Arch Linux Archive, for the base and the pinned snapshot.
 - **LazyVim** by folke and contributors, for the editor foundation.
-- **Astronaut SDDM theme** by Keyitdev, for the login theme. Upstream code is
-  GPL-3.0; AstraOS replaces the background with original artwork.
+- **SilentSDDM** by uiriansan, for the login theme. Upstream code is GPL-3.0;
+  AstraOS supplies its own configuration and wallpaper.
 - **Kitty**, **Zsh**, **Oh My Posh** and the wider open-source community.
 
 See [`THIRD_PARTY.md`](THIRD_PARTY.md) for licenses and asset provenance.

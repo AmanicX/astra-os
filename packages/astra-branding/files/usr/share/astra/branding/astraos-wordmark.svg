@@ -3,8 +3,8 @@
         font-family="Adwaita Sans, Noto Sans, sans-serif"
         font-size="228"
         font-weight="700"
-        letter-spacing="18"
-        fill="#E8EEF7">ASTRA<tspan font-weight="300" fill="#67E8F9">OS</tspan></text>
+        letter-spacing="12"
+        fill="#E8EEF7">Astra<tspan font-weight="300" fill="#67E8F9">OS</tspan></text>
   <line x1="84" y1="342" x2="1220" y2="342" stroke="#67E8F9" stroke-opacity="0.55" stroke-width="4"/>
   <text x="84" y="392"
         font-family="Adwaita Sans, Noto Sans, sans-serif"
@@ -12,5 +12,5 @@
         font-weight="400"
         letter-spacing="14"
         fill="#E8EEF7"
-        fill-opacity="0.58">A LINUX SYSTEM</text>
+        fill-opacity="0.58">Astra Linux</text>
 </svg>

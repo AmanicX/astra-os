@@ -1,5 +1,17 @@
 # AstraOS Branding
 
+## Product name
+
+The product name is **AstraOS**, always mixed case. Never write `ASTRAOS` or
+`ASTRA OS` in a user-visible place. `Astra Linux` is acceptable as a long form
+in prose. The only uppercase exception is a technical identifier that cannot
+carry mixed case, such as the ISO9660 volume label `ASTRA_YYYYMM`; that value
+must stay consistent with `archisolabel=`.
+
+The identity is defined once in `config/brand.toml`. Build scripts read it
+through `scripts/lib/brand.sh`; do not hardcode a different name in boot
+entries, artwork or installer screens.
+
 ## Design philosophy: Astral Meridian
 
 Astral Meridian treats the interface as a quiet instrument for navigation.
@@ -27,10 +39,11 @@ final asset should look meticulously crafted, the product of painstaking
 alignment and many refinements by someone at the top of the field.
 
 Typography is sparse and architectural. The wordmark uses Adwaita Sans with
-wide tracking, set as a quiet caption rather than a slogan. Text appears only
-where it anchors the mark; the image does the work. The result should feel
-like an artifact from an imaginary observatory: precise, calm, and quietly
-confident.
+moderate tracking and is set as **Astra** in bold off-white followed by **OS**
+in the lighter cyan accent, with a single thin teal underline. Set it as a
+quiet caption rather than a slogan. Text appears only where it anchors the
+mark; the image does the work. The result should feel like an artifact from an
+imaginary observatory: precise, calm, and quietly confident.
 
 ## Palette
 
@@ -48,12 +61,25 @@ confident.
 | Asset | Path | Notes |
 |---|---|---|
 | Mark | `packages/astra-branding/files/usr/share/astra/branding/astraos-mark.svg` | Four-point star + ring, transparent |
-| Wordmark | `packages/astra-branding/files/usr/share/astra/branding/astraos-wordmark.svg` | Adwaita Sans, wide tracking |
-| Lockup | `packages/astra-branding/files/usr/share/astra/branding/astraos-lockup.svg` | Mark + wordmark |
+| Wordmark | `packages/astra-branding/files/usr/share/astra/branding/astraos-wordmark.svg` | Adwaita Sans, mixed-case `Astra` + `OS` |
+| Lockup | `packages/astra-branding/files/usr/share/astra/branding/astraos-lockup.svg` | Mark + mixed-case wordmark |
 | Wallpaper source | `packages/astra-branding/files/usr/share/astra/branding/astraos-wallpaper.svg` | 3840x2160 source |
 | Wallpaper | `packages/astra-branding/files/usr/share/backgrounds/astraos/astraos-default.png` | Generated with `rsvg-convert` |
 | Logo PNG | `packages/astra-branding/files/usr/share/icons/hicolor/512x512/apps/astraos-logo.png` | Generated from mark |
 
-All assets are original AstraOS work. The wordmark uses Adwaita Sans
-(OFL-1.1, package `adwaita-fonts`), which is already part of the desktop font
-set. No downloaded wallpaper, logo or icon is used.
+The wordmark uses Adwaita Sans (OFL-1.1, package `adwaita-fonts`), which is
+already part of the desktop font set.
+
+The current wallpaper is original generated work. Phase 3 replaces the single
+default with a small original set plus curated, permissively licensed imports
+(NASA/ESA/Webb public-domain or CC0/CC-BY sources). Every imported file must
+have its license and credit recorded in `THIRD_PARTY.md` before it ships.
+
+## Boot menus
+
+`scripts/rebrand-archiso.sh` is the only place that changes the assembled
+archiso menu text. It is called by `scripts/build-iso.sh` after the releng
+profile is copied. It must not rename `archisobasedir=` or
+`archisosearchuuid=`, and the archiso entry filenames stay functional. The
+`tests/branding-test.sh` check fails if a visible Arch Linux install-medium
+title survives.

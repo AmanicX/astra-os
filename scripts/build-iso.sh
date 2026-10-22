@@ -11,6 +11,10 @@ readonly SCRIPT_DIR
 source "${SCRIPT_DIR}/lib/common.sh"
 # shellcheck source=scripts/lib/manifests.sh
 source "${SCRIPT_DIR}/lib/manifests.sh"
+# shellcheck source=scripts/lib/brand.sh
+source "${SCRIPT_DIR}/lib/brand.sh"
+
+brand_load
 
 PLAN=0
 BUILD=0
@@ -63,6 +67,7 @@ live_list="${REPO_ROOT}/build/iso/live-packages.txt"
 mkdir -p "$(dirname -- "$live_list")"
 manifest_live >"$live_list"
 
+log "identity: ${BRAND_NAME} (${BRAND_LONG_NAME})"
 log "snapshot: ${SNAPSHOT}"
 log "live packages: $(wc -l <"$live_list")"
 log "repository: ${REPO_ROOT}/repo/x86_64"
@@ -110,19 +115,27 @@ rm -rf -- "$PROFILE_DIR"
 mkdir -p "$PROFILE_DIR"
 cp -r /usr/share/archiso/configs/releng/. "$PROFILE_DIR/"
 
-# 1. AstraOS identity and UEFI-only boot. v1 does not ship BIOS support.
-sed -i \
-	-e 's|^iso_name=.*|iso_name="astraos"|' \
-	-e 's|^iso_label=.*|iso_label="ASTRA_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"|' \
-	-e 's|^iso_publisher=.*|iso_publisher="AstraOS <https://astraos.org>"|' \
-	-e 's|^iso_application=.*|iso_application="AstraOS Live Installer"|' \
-	"${PROFILE_DIR}/profiledef.sh"
+# 1. Rebrand the copied boot menus and set the ISO identity. The rebrand step
+# keeps archisobasedir=, archisosearchuuid= and the entry filenames functional;
+# only menu titles, help text and the identity fields change.
+"${SCRIPT_DIR}/rebrand-archiso.sh" "${PROFILE_DIR}"
 
 # Replace the two-entry bootmodes array with UEFI systemd-boot only.
 sed -i \
 	-e "s|^bootmodes=('bios.syslinux'|bootmodes=('uefi.systemd-boot')|" \
 	-e "/^[[:space:]]*'uefi.systemd-boot')\$/d" \
 	"${PROFILE_DIR}/profiledef.sh"
+
+# Keep a serial console alongside the local display.  Headless installs and
+# rescue work need it, and it lets the UEFI boot path be verified over serial.
+grep -q '^kernel_params_x86_64=' "${PROFILE_DIR}/profiledef.sh" ||
+	printf '%s\n' 'kernel_params_x86_64="console=ttyS0,115200"' \
+		>>"${PROFILE_DIR}/profiledef.sh"
+
+# zstd keeps live-image builds practical on WSL while remaining fully supported
+# by the Arch kernel.  The releng profile's xz default takes an hour here.
+printf '%s\n' "airootfs_image_tool_options=('-comp' 'zstd' '-b' '1M')" \
+	>>"${PROFILE_DIR}/profiledef.sh"
 
 # 2. Replace the default package list with the AstraOS live manifest.
 cat "$live_list" >"${PROFILE_DIR}/packages.x86_64"
@@ -156,6 +169,26 @@ install -Dm644 "${REPO_ROOT}/config/pacman.conf.in" \
 	"${PROFILE_DIR}/airootfs/usr/share/astra/pacman.conf.in"
 install -Dm644 "${REPO_ROOT}/config/snapshot" \
 	"${PROFILE_DIR}/airootfs/usr/share/astra/snapshot"
+
+# 4b. Always ship the installer sources from this checkout.  The prebuilt
+# astra-installer package in repo/x86_64 can lag behind the source tree; the
+# live image must never boot an old installer.  Stage the files under /root and
+# let customize_airootfs.sh copy them in after packages are installed, because
+# mkarchiso copies a custom airootfs before running pacstrap and would otherwise
+# conflict with files owned by the astra-installer package.
+installer_overlay="${PROFILE_DIR}/airootfs/root/astra-installer-overlay"
+install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-install" \
+	"${installer_overlay}/usr/bin/astra-install"
+install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-installer.desktop" \
+	"${installer_overlay}/usr/share/applications/astra-installer.desktop"
+install -d "${installer_overlay}/usr/lib/astra/installer/lib"
+cp -a "${REPO_ROOT}/packages/astra-installer/lib/." \
+	"${installer_overlay}/usr/lib/astra/installer/lib/"
+find "${installer_overlay}/usr/lib/astra/installer/lib" -type f -exec chmod 0644 {} +
+install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.service" \
+	"${installer_overlay}/usr/lib/systemd/system/astra-pending-packages.service"
+install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.sh" \
+	"${installer_overlay}/usr/lib/astra/installer/pending-packages.sh"
 
 # 5. Bundle the local repository so the installer can resolve Astra and AUR
 # packages without a second network source.

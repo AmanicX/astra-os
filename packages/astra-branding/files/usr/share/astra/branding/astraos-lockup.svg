@@ -20,7 +20,7 @@
         font-family="Adwaita Sans, Noto Sans, sans-serif"
         font-size="210"
         font-weight="700"
-        letter-spacing="16"
-        fill="#E8EEF7">ASTRA<tspan font-weight="300" fill="#67E8F9">OS</tspan></text>
+        letter-spacing="10"
+        fill="#E8EEF7">Astra<tspan font-weight="300" fill="#67E8F9">OS</tspan></text>
   <line x1="694" y1="446" x2="2020" y2="446" stroke="#67E8F9" stroke-opacity="0.55" stroke-width="4"/>
 </svg>

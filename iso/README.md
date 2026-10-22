@@ -1,14 +1,17 @@
 # iso
 
-The archiso profile, based on `releng`, will live here.
+The archiso profile is assembled from `/usr/share/archiso/configs/releng` by
+`scripts/build-iso.sh`; it is not checked in here.
 
-Planned profile settings:
+Build settings:
 
-- `iso_name=astraos`, label `ASTRAOS`, zstd squashfs.
+- `iso_name=astraos` and a technical `ASTRA_YYYYMM` label, zstd squashfs.
 - Packages from `manifests/`.
-- Boot menu entries: default, basic graphics, copy-to-RAM.
-- One pinned Arch Linux Archive date for all official packages.
-- Live user `liveuser` with passwordless sudo, autologin on tty1, and a
-  welcome prompt that leads either to the desktop or to `astra-install`.
+- The boot menus are rebranded by `scripts/rebrand-archiso.sh`, which keeps
+  `archisobasedir=` and `archisosearchuuid=` functional.
+- The current build mode is UEFI systemd-boot only.
+- One pinned Arch Linux Archive date is used for official packages; network
+  access is allowed and the old offline-only rule is removed (D-033).
 
-No ISO is built until the owner explicitly says so (D-021).
+ISO builds require explicit owner approval. The build command is in
+`docs/BUILD.md`.

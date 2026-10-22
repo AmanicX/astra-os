@@ -76,8 +76,8 @@ die_net() {
 verify_meta() {
 	local file=$1
 	[[ -r $file ]] || exit 40
-	jq -e '.snapshot, .astra_repo, .notes // empty' "$file" >/dev/null \
-		|| exit 40
+	jq -e '.snapshot, .astra_repo, .notes // empty' "$file" >/dev/null ||
+		exit 40
 	# If a matching .sig is shipped alongside, verify it with the astra keyring.
 	local sig="${file}.sig"
 	if [[ -r $sig ]] && command -v gpg >/dev/null 2>&1; then
@@ -92,8 +92,8 @@ current_snapshot() {
 	if [[ -r ${SNAPSHOT_FILE} ]]; then
 		tr -d '[:space:]' <"${SNAPSHOT_FILE}"
 	else
-		"$(pacman -Q astra-meta 2>/dev/null | awk '{print $2}')" 2>/dev/null \
-			|| pacman -Q astra-meta 2>/dev/null | awk '{print $2}' || true
+		"$(pacman -Q astra-meta 2>/dev/null | awk '{print $2}')" 2>/dev/null ||
+			pacman -Q astra-meta 2>/dev/null | awk '{print $2}' || true
 	fi 2>/dev/null || true
 }
 
@@ -158,8 +158,8 @@ cmd_rollback() {
 	fi
 	require_root
 	command -v snapper >/dev/null 2>&1 || die "snapper is required for rollback"
-	snap=$(snapper -c root list --no-pager | awk 'NR>3 && $1 ~ /^[0-9]+$/ {print $1 "|" $4}' \
-		| gum choose --cursor.foreground 117 --header "Rollback to:")
+	snap=$(snapper -c root list --no-pager | awk 'NR>3 && $1 ~ /^[0-9]+$/ {print $1 "|" $4}' |
+		gum choose --cursor.foreground 117 --header "Rollback to:")
 	[[ -n $snap ]] || {
 		printf 'rollback cancelled\n'
 		exit 0

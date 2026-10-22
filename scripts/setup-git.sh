@@ -8,8 +8,11 @@ echo "  AstraOS Git Setup Assistant"
 echo "----------------------------------------------------------------"
 
 # 1. Identify the user
-read -p "Enter your GitHub username: " GH_USER
-[[ -z "$GH_USER" ]] && { echo "Username is required"; exit 1; }
+read -rp "Enter your GitHub username: " GH_USER
+[[ -z "$GH_USER" ]] && {
+	echo "Username is required"
+	exit 1
+}
 
 # 2. Setup Git Identity (Local)
 git config user.name "AstraOS Build Bot"
@@ -18,28 +21,28 @@ echo "==> Local git identity configured."
 
 # 3. Generate SSH Key if it doesn't exist
 if [[ ! -f "$HOME/.ssh/id_ed25519" ]]; then
-    echo "==> Generating new SSH key..."
-    ssh-keygen -t ed25519 -C "build@astraos.org" -N "" -f "$HOME/.ssh/id_ed25519"
-    echo "==> SSH key generated."
+	echo "==> Generating new SSH key..."
+	ssh-keygen -t ed25519 -C "build@astraos.org" -N "" -f "$HOME/.ssh/id_ed25519"
+	echo "==> SSH key generated."
 else
-    echo "==> SSH key already exists. Skipping generation."
+	echo "==> SSH key already exists. Skipping generation."
 fi
 
 # 4. Add Remote Origin
 # We use the SSH URL since we are setting up keys.
 REMOTE_URL="git@github.com:${GH_USER}/astra-os.git"
 if git remote | grep -q "origin"; then
-    echo "==> Remote 'origin' already exists. Updating URL..."
-    git remote set-url origin "$REMOTE_URL"
+	echo "==> Remote 'origin' already exists. Updating URL..."
+	git remote set-url origin "$REMOTE_URL"
 else
-    echo "==> Adding remote origin..."
-    git remote add origin "$REMOTE_URL"
+	echo "==> Adding remote origin..."
+	git remote add origin "$REMOTE_URL"
 fi
 
 # 5. Branching
 if [[ "$(git branch --show-current)" != "pre-release-testing" ]]; then
-    echo "==> Switching to 'pre-release-testing' branch..."
-    git checkout -b pre-release-testing
+	echo "==> Switching to 'pre-release-testing' branch..."
+	git checkout -b pre-release-testing
 fi
 
 echo ""
@@ -63,8 +66,8 @@ echo "----------------------------------------------------------------"
 # Try to push automatically
 echo "Attempting to push now..."
 if git push -u origin pre-release-testing 2>/dev/null; then
-    echo "==> SUCCESS! Code pushed to GitHub."
+	echo "==> SUCCESS! Code pushed to GitHub."
 else
-    echo "==> Push failed. This is normal if you haven't added the key to GitHub yet."
-    echo "    Please add the key to GitHub and run this script again."
+	echo "==> Push failed. This is normal if you haven't added the key to GitHub yet."
+	echo "    Please add the key to GitHub and run this script again."
 fi

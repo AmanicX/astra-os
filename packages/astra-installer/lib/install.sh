@@ -1,262 +1,323 @@
-# Installation logic. Executes only after the summary confirms the user's
-# final Yes. This version uses ONLINE installation via the internet.
+# Package selection and installation.
+#
+# This layer assumes the target is already mounted by storage.sh.  It runs
+# pacstrap, writes the target pacman configuration, generates fstab, and runs
+# all target configuration inside arch-chroot.  The host's grub-mkconfig is
+# never used.
 
-ask_keyboard() {
-	local layout
-	layout=$(gum input --prompt "Keyboard layout (xkb): " --placeholder "us")
-	STATE[kb_layout]="${layout:-us}"
-	gum log -l info "Keyboard: ${STATE[kb_layout]}"
+manifest_packages() {
+	local file=$1
+	[[ -r $file ]] || return 1
+	awk '
+		{
+			sub(/#.*/, "")
+			gsub(/^[ \t]+|[ \t]+$/, "")
+			if (length($0) > 0) print
+		}
+	' "$file"
 }
 
-ask_mirror_regions() {
-	local regions choice
-	regions=(
-		"World (fallback to the Arch Linux Archive)"
-		"Europe"
-		"North America"
-		"Asia"
-		"Australia"
-	)
-	choice=$(gum choose --cursor.foreground 117 --height 8 -- "${regions[@]}")
-	[[ -n ${choice} ]] || choice="World (fallback to the Arch Linux Archive)"
-	STATE[mirror_regions]="${choice%% (*}"
-	gum log -l info "Mirror region: ${STATE[mirror_regions]}"
-}
-
-driver_manifests() {
-	select_drivers | while IFS= read -r m; do
-		[[ -n "$m" ]] && printf '%s\n' "$m"
-	done
-}
-
-ask_hostname() {
-	local host
-	host=$(gum input --prompt "Hostname: " --placeholder "astraos")
-	STATE[hostname]="${host:-astraos}"
-	gum log -l info "Hostname: ${STATE[hostname]}"
-}
-
-ask_root_password() {
-	local pass1 pass2
-	pass1=$(gum password --prompt "Root password: ")
-	pass2=$(gum password --prompt "Root password (again): ")
-	[[ "$pass1" == "$pass2" ]] || die "root passwords do not match"
-	[[ -n $pass1 ]] || die "root password is required"
-	STATE[root_password]="$pass1"
-}
-
-ask_user() {
-	local name pass1 pass2 mode
-	name=$(gum input --prompt "User account: " --placeholder "user")
-	STATE[user_name]="${name:-user}"
-	pass1=$(gum password --prompt "User password: ")
-	pass2=$(gum password --prompt "User password (again): ")
-	[[ "$pass1" == "$pass2" ]] || die "user passwords do not match"
-	STATE[user_password]="$pass1"
-	mode=$(gum choose --cursor.foreground 117 --header "User sudo:" "passwordless" "with-password" "none")
-	STATE[user_sudo]="${mode:-none}"
-	gum log -l info "User: ${STATE[user_name]} (${STATE[user_sudo]} sudo)"
-}
-
-ask_packages() {
-	local extra
-	extra=$(gum input --prompt "Extra packages (comma-separated, optional): " --placeholder "")
-	STATE[extra_packages]="${extra:-}"
-}
-
-ask_timezone() {
-	local tz
-	tz=$(gum input --prompt "Timezone (Region/City, UTC for none): " --placeholder "UTC")
-	STATE[timezone]="${tz:-UTC}"
-	gum log -l info "Timezone: ${STATE[timezone]}"
-}
-
-summary() {
-	gum format --type markdown -- \
-		"## Summary
-
-- Disk: \`${STATE[disk]}\` (mode: ${STATE[storage_mode]})
-- Hostname: \`${STATE[hostname]}\`
-- Keyboard: ${STATE[kb_layout]}
-- Mirror region: ${STATE[mirror_regions]}
-- Timezone: ${STATE[timezone]}
-- User: \`${STATE[user_name]}\` (${STATE[user_sudo]} sudo)
-- Extra packages: \`${STATE[extra_packages]:-none}\`"
-
-	if ! gum confirm "Write changes to disk and install AstraOS?" \
-		--affirmative "Install" --negative "Back"; then
-		die "installation cancelled before any disk write"
-	fi
-}
-
-# Build the target package list from the bundled manifests plus the detected
-# driver sets. Each manifest line is "name # reason".
+# Fill the global PKG_LIST array with the deduplicated target package set.
 build_pkg_list() {
 	local -a list=()
-	local m tmp
-	for m in base desktop apps fonts-themes astra; do
+	local -a filtered=()
+	local -A seen=()
+	local -A excluded=()
+	local pkg manifest drv skip_nvidia_open=0
+
+	for manifest in base desktop apps fonts-themes astra; do
 		while IFS= read -r pkg; do
-			[[ -n "$pkg" ]] && list+=("$pkg")
-		done < <(manifest_packages "${MANIFESTS_DIR}/${m}.txt" 2>/dev/null || true)
+			[[ -n ${pkg:-} ]] && list+=("$pkg")
+		done < <(manifest_packages "${MANIFESTS_DIR}/${manifest}.txt" 2>/dev/null || true)
 	done
+
 	while IFS= read -r drv; do
-		[[ -n "$drv" ]] && while IFS= read -r pkg; do
-			[[ -n "$pkg" ]] && list+=("$pkg")
+		[[ -n ${drv:-} ]] || continue
+		while IFS= read -r pkg; do
+			[[ -n ${pkg:-} ]] && list+=("$pkg")
 		done < <(manifest_packages "${MANIFESTS_DIR}/${drv}.txt" 2>/dev/null || true)
-	done < <(driver_manifests)
+	done < <(select_drivers)
 
-	# astra-installer is a live-only package; never install it on the target.
-	tmp="$(mktemp)"
-	printf '%s\n' "${list[@]}" >"$tmp"
-	if [[ -r ${MANIFESTS_DIR}/target-exclude.txt ]]; then
-		manifest_packages "${MANIFESTS_DIR}/target-exclude.txt" |
-			awk 'NR == FNR { skip[$0] = 1; next } !($0 in skip) && !seen[$0]++' - "$tmp"
-	else
-		awk '!seen[$0]++' "$tmp"
-	fi
-	rm -f -- "$tmp"
-}
+	# CPU microcode is required even on machines where lspci cannot identify
+	# the GPU (for example passthrough or headless installs).
+	case "$(cpu_vendor)" in
+	amd) list+=("amd-ucode") ;;
+	intel) list+=("intel-ucode") ;;
+	esac
 
-partition_and_mount() {
-	local disk="${STATE[disk]}" mnt="${MNT_ROOT:-/mnt}" part=1
-	local n_root
+	while IFS= read -r pkg; do
+		[[ -n ${pkg:-} ]] && excluded["$pkg"]=1
+	done < <(manifest_packages "${MANIFESTS_DIR}/target-exclude.txt" 2>/dev/null || true)
 
-	if [[ ${STATE[storage_mode]} == "whole" ]]; then
-		log "wiping ${disk} (whole-disk mode)"
-		sgdisk --zap-all "$disk"
-		sgdisk -o "$disk"
-	else
-		GPT_BEFORE="$(snapshot_gpt "$disk")"
-	fi
-
-	sgdisk -n "${part}:0:+${STATE[esp_size]:-1GiB}" -t "${part}:EF00" "$disk"
-	ESP_PART="${disk}${part}"
-	n_root=$((part + 1))
-	sgdisk -n "${n_root}:0:0" -t "${n_root}:8300" "$disk"
-	ROOT_PART="${disk}${n_root}"
-
-	verify_gpt_unchanged "$disk"
-
-	log "formatting ESP (${ESP_PART}) FAT32 and root (${ROOT_PART}) Btrfs"
-	mkfs.fat -F32 "$ESP_PART"
-	mkfs.btrfs -f "$ROOT_PART"
-
-	MNT_ROOT="$mnt"
-	mount "$ROOT_PART" "$mnt"
-	mkdir -p "${mnt}${ESP_MOUNT}"
-	mount "$ESP_PART" "${mnt}${ESP_MOUNT}"
-
-	for sub in @ @home @log @pkg @snapshots; do
-		mkdir -p "${mnt}/${sub}"
-		btrfs subvolume create "${mnt}/${sub}" >/dev/null 2>&1 || true
+	# The NVIDIA manifest lists both the prebuilt and DKMS variants as a
+	# fallback pair.  They conflict on Arch; prefer DKMS so kernel updates keep
+	# working.
+	for pkg in "${list[@]}"; do
+		[[ $pkg == nvidia-open-dkms ]] && skip_nvidia_open=1
 	done
-	umount "$ROOT_PART"
-	mount -o noatime,compress=zstd:1,space_cache=v2 "$ROOT_PART" "$mnt"
-	mkdir -p "${mnt}${ESP_MOUNT}"
-	mount "$ESP_PART" "${mnt}${ESP_MOUNT}"
+
+	for pkg in "${list[@]}"; do
+		[[ -n ${pkg:-} ]] || continue
+		[[ -n ${excluded[$pkg]:-} ]] && continue
+		if [[ $pkg == nvidia-open && $skip_nvidia_open == 1 ]]; then
+			continue
+		fi
+		if [[ -n ${seen[$pkg]:-} ]]; then
+			continue
+		fi
+		seen[$pkg]=1
+		filtered+=("$pkg")
+	done
+
+	((${#filtered[@]} > 0)) || die "target package list is empty (missing manifests?)"
+	printf '%s\n' "${filtered[@]}"
 }
 
-write_target_pacman_conf() {
-	local mnt=$1 template="${ASTRA_DATA_DIR}/pacman.conf.in" snapshot
-	[[ -r ${template} ]] || die "missing pacman template: ${template}"
-	snapshot="$(tr -d '[:space:]' <"${ASTRA_DATA_DIR}/snapshot")"
-	[[ ${snapshot} =~ ^[0-9]{4}/[0-9]{2}/[0-9]{2}$ ]] ||
-		die "invalid snapshot date in the live image: ${snapshot}"
+install_extra_packages() {
+	local raw=${STATE[extra_packages]}
+	[[ -n ${raw:-} ]] || return 0
 
-	# The live config ends with [astra-local], which only exists on the ISO.
-	# The installed system uses the pinned Arch Linux Archive instead.
-	sed -e "s|@SNAPSHOT@|${snapshot}|g" "$template" |
-		awk '/^\[astra-local\]/ { exit } { print }' >"${mnt}/etc/pacman.conf"
-}
+	local -a extra=()
+	local item
+	while IFS= read -r item; do
+		item="${item//[[:space:]]/}"
+		[[ -n ${item:-} ]] || continue
+		if [[ ! $item =~ ^[A-Za-z0-9@._+-]+$ ]]; then
+			warn "ignoring invalid extra package name: ${item}"
+			continue
+		fi
+		extra+=("$item")
+	done < <(printf '%s' "$raw" | tr ',' '\n')
 
-seed_target_nvim() {
-	local mnt=$1 src="${ASTRA_DATA_DIR}/nvim/lazy"
-	if [[ ! -d ${src} ]]; then
-		warn "Neovim plugin tree is missing from the live image"
-		return 0
+	((${#extra[@]} > 0)) || return 0
+	log "installing extra packages: ${extra[*]}"
+	if ! arch-chroot "$MNT_ROOT" pacman -S --noconfirm --needed "${extra[@]}" 2>&1 |
+		tee -a "$LOG"; then
+		warn "some extra packages could not be installed"
+		ui_confirm "Continue without the failed extra packages?" ||
+			die "installation cancelled after extra package failure"
 	fi
-	install -d "${mnt}/usr/share/astra/nvim"
-	rm -rf "${mnt}/usr/share/astra/nvim/lazy"
-	cp -a "$src" "${mnt}/usr/share/astra/nvim/lazy"
+}
+
+write_target_setup_script() {
+	cat >"${TARGET_SCRIPT}" <<'TARGET_SCRIPT_EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+export LC_ALL=C
+
+# Secrets and answers are written to a mode-0600 file by the parent installer
+# and removed immediately after sourcing.
+if [[ -r /tmp/astra-env ]]; then
+	# shellcheck disable=SC1091
+	source /tmp/astra-env
+	rm -f /tmp/astra-env
+fi
+
+: "${ASTRA_HOSTNAME:?}"
+: "${ASTRA_TZ:?}"
+: "${ASTRA_LOCALE:?}"
+: "${ASTRA_KEYMAP:?}"
+: "${ASTRA_USERNAME:?}"
+: "${ASTRA_ROOT_PASSWORD:?}"
+: "${ASTRA_USER_PASSWORD:?}"
+: "${ASTRA_SUDO_MODE:?}"
+: "${ASTRA_ESP_MOUNT:?}"
+: "${ASTRA_DUAL_BOOT:=0}"
+
+echo "==> timezone and clock"
+ln -sf "/usr/share/zoneinfo/${ASTRA_TZ}" /etc/localtime
+hwclock --systohc 2>/dev/null || true
+
+echo "==> locale"
+if grep -q "^#${ASTRA_LOCALE} " /etc/locale.gen 2>/dev/null; then
+	sed -i "s|^#${ASTRA_LOCALE} |${ASTRA_LOCALE} |" /etc/locale.gen
+elif ! grep -q "^${ASTRA_LOCALE} " /etc/locale.gen 2>/dev/null; then
+	printf '%s UTF-8\n' "${ASTRA_LOCALE}" >>/etc/locale.gen
+fi
+locale-gen
+printf 'LANG=%s\n' "${ASTRA_LOCALE}" >/etc/locale.conf
+printf 'KEYMAP=%s\n' "${ASTRA_KEYMAP}" >/etc/vconsole.conf
+
+echo "==> hostname"
+printf '%s\n' "${ASTRA_HOSTNAME}" >/etc/hostname
+cat >/etc/hosts <<EOF
+127.0.0.1 localhost
+::1       localhost
+127.0.1.1 ${ASTRA_HOSTNAME}.localdomain ${ASTRA_HOSTNAME}
+EOF
+
+echo "==> root password"
+printf 'root:%s\n' "${ASTRA_ROOT_PASSWORD}" | chpasswd
+
+echo "==> user ${ASTRA_USERNAME}"
+groups="video,render,input,audio,storage,optical,network,power"
+if [[ ${ASTRA_SUDO_MODE} != none ]]; then
+	groups="wheel,${groups}"
+fi
+if id "${ASTRA_USERNAME}" >/dev/null 2>&1; then
+	usermod -aG "${groups}" -s /bin/zsh "${ASTRA_USERNAME}"
+else
+	useradd -m -U -G "${groups}" -s /bin/zsh "${ASTRA_USERNAME}"
+fi
+printf '%s:%s\n' "${ASTRA_USERNAME}" "${ASTRA_USER_PASSWORD}" | chpasswd
+
+install -d -m 0750 /etc/sudoers.d
+case "${ASTRA_SUDO_MODE}" in
+passwordless)
+	printf '%%wheel ALL=(ALL:ALL) NOPASSWD: ALL\n' >/etc/sudoers.d/90-astra
+	;;
+with-password)
+	printf '%%wheel ALL=(ALL:ALL) ALL\n' >/etc/sudoers.d/90-astra
+	;;
+none)
+	rm -f /etc/sudoers.d/90-astra
+	;;
+*)
+	printf 'invalid ASTRA_SUDO_MODE\n' >&2
+	exit 1
+	;;
+esac
+if [[ -e /etc/sudoers.d/90-astra ]]; then
+	chmod 0440 /etc/sudoers.d/90-astra
+fi
+
+echo "==> zram configuration"
+if [[ ! -e /etc/systemd/zram-generator.conf ]]; then
+	cat >/etc/systemd/zram-generator.conf <<'EOF'
+[zram0]
+zram-size = min(ram / 2, 4096)
+compression-algorithm = zstd
+EOF
+fi
+
+echo "==> services"
+systemctl enable NetworkManager.service
+systemctl enable sddm.service
+systemctl enable bluetooth.service
+systemctl enable power-profiles-daemon.service
+systemctl enable fstrim.timer
+systemctl enable systemd-timesyncd.service
+systemctl enable grub-btrfsd.service 2>/dev/null || true
+systemctl disable dhcpcd.service 2>/dev/null || true
+systemctl set-default graphical.target
+
+# Seed Neovim's lazy.nvim directory from the live image, matching the
+# configured desktop.  Do not overwrite a pre-existing user directory.
+if [[ -d /usr/share/astra/nvim/lazy && ${ASTRA_USERNAME} != root ]]; then
+	home="/home/${ASTRA_USERNAME}"
+	install -d -o "${ASTRA_USERNAME}" -g "${ASTRA_USERNAME}" \
+		"${home}/.local/share/nvim"
+	if [[ ! -d ${home}/.local/share/nvim/lazy ]]; then
+		cp -a /usr/share/astra/nvim/lazy "${home}/.local/share/nvim/lazy"
+	fi
+	chown -R "${ASTRA_USERNAME}:${ASTRA_USERNAME}" "${home}/.local"
+fi
+
+echo "==> initramfs"
+mkinitcpio -P
+
+echo "==> GRUB"
+if ! grub-install --target=x86_64-efi --efi-directory="${ASTRA_ESP_MOUNT}" \
+	--bootloader-id=AstraOS --recheck; then
+	echo "normal GRUB install failed; trying the removable fallback" >&2
+	grub-install --target=x86_64-efi --efi-directory="${ASTRA_ESP_MOUNT}" \
+		--bootloader-id=AstraOS --removable --recheck
+fi
+
+if [[ ${ASTRA_DUAL_BOOT} == 1 ]] && command -v os-prober >/dev/null 2>&1; then
+	if grep -q '^GRUB_DISABLE_OS_PROBER=' /etc/default/grub 2>/dev/null; then
+		sed -i 's/^GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub
+	else
+		printf 'GRUB_DISABLE_OS_PROBER=false\n' >>/etc/default/grub
+	fi
+fi
+
+grub-mkconfig -o /boot/grub/grub.cfg
+
+echo "==> target configuration complete"
+TARGET_SCRIPT_EOF
+	chmod 0700 "${TARGET_SCRIPT}"
 }
 
 configure_target() {
-	local mnt="${MNT_ROOT}" tz="${STATE[timezone]}" kb="${STATE[kb_layout]}"
-	local host="${STATE[hostname]}" locale="${STATE[locale]}"
+	write_target_setup_script
 
-	arch-chroot "$mnt" /usr/bin/bash <<EOF
-set -euo pipefail
-ln -sf "/usr/share/zoneinfo/${tz}" /etc/localtime
-echo "KEYMAP=${kb}" > /etc/vconsole.conf
-echo "${host}" > /etc/hostname
-printf '127.0.0.1 localhost\\n::1 localhost\\n127.0.1.1 %s.local %s\\n' "${host}" "${host}" > /etc/hosts
-printf 'LANG=%s\\n' "${locale}" > /etc/locale.conf
-printf '%s:%s\\n' '${STATE[root_password]}' '${STATE[root_password]}' | chpasswd
-useradd -m -U -G wheel,video,render,input,audio,storage,optical,network,power -s /bin/zsh '${STATE[user_name]}'
-printf '%s:%s\\n' '${STATE[user_name]}' '${STATE[user_password]}' | chpasswd
-case '${STATE[user_sudo]}' in
-	passwordless) printf '%%wheel ALL=(ALL) NOPASSWD: ALL\\n' > /etc/sudoers.d/90-astra ;;
-	with-password) printf '%%wheel ALL=(ALL) ALL\\n' > /etc/sudoers.d/90-astra ;;
-esac
-chmod 0440 /etc/sudoers.d/90-astra || true
+	local envfile="${MNT_ROOT}/tmp/astra-env"
+	mkdir -p "${MNT_ROOT}/tmp" || die "cannot create target /tmp"
 
-# Ship LazyVim writably for this user; lazy.lua seeds future users from
-# /usr/share/astra/nvim/lazy.
-if [[ -d /usr/share/astra/nvim/lazy ]]; then
-	install -d -o '${STATE[user_name]}' -g '${STATE[user_name]}' "/home/${STATE[user_name]}/.local/share/nvim"
-	rm -rf "/home/${STATE[user_name]}/.local/share/nvim/lazy"
-	cp -a /usr/share/astra/nvim/lazy "/home/${STATE[user_name]}/.local/share/nvim/lazy"
-	chown -R '${STATE[user_name]}:${STATE[user_name]}' "/home/${STATE[user_name]}/.local/share/nvim"
-fi
+	{
+		printf 'ASTRA_HOSTNAME=%q\n' "${STATE[hostname]}"
+		printf 'ASTRA_TZ=%q\n' "${STATE[timezone]}"
+		printf 'ASTRA_LOCALE=%q\n' "${STATE[locale]}"
+		printf 'ASTRA_KEYMAP=%q\n' "${STATE[kb_layout]}"
+		printf 'ASTRA_USERNAME=%q\n' "${STATE[user_name]}"
+		printf 'ASTRA_ROOT_PASSWORD=%q\n' "${STATE[root_password]}"
+		printf 'ASTRA_USER_PASSWORD=%q\n' "${STATE[user_password]}"
+		printf 'ASTRA_SUDO_MODE=%q\n' "${STATE[user_sudo]}"
+		printf 'ASTRA_ESP_MOUNT=%q\n' "${STATE[esp_mount]}"
+		if [[ ${STATE[storage_mode]} == whole ]]; then
+			printf 'ASTRA_DUAL_BOOT=0\n'
+		else
+			printf 'ASTRA_DUAL_BOOT=1\n'
+		fi
+	} >"${envfile}" || die "cannot write target environment file"
+	chmod 0600 "${envfile}"
 
-# Handle dual-boot OS prober
-if [[ "${STATE[storage_mode]}" == "dual" ]]; then
-	echo "GRUB_DISABLE_OS_PROBER=false" >> /etc/default/grub
-	pacman -S --noconfirm os-prober
-fi
+	install -m 0700 "${TARGET_SCRIPT}" "${MNT_ROOT}/tmp/astra-target-setup.sh" ||
+		die "cannot copy the target setup script"
 
-grub-install --target=x86_64-efi --efi-directory="${ESP_MOUNT}" --bootloader-id=AstraOS --removable
-grub-mkconfig -o /boot/grub/grub.cfg
-systemctl set-default graphical.target
-systemctl enable sddm.service NetworkManager.service bluetooth.service power-profiles-daemon.service
-systemctl disable dhcpcd.service 2>/dev/null || true
-EOF
+	if ! arch-chroot "${MNT_ROOT}" /tmp/astra-target-setup.sh 2>&1 | tee -a "$LOG"; then
+		rm -f "${MNT_ROOT}/tmp/astra-target-setup.sh" "${envfile}"
+		die "target configuration failed; see ${LOG}"
+	fi
+	rm -f "${MNT_ROOT}/tmp/astra-target-setup.sh" "${envfile}"
+	log "target configuration finished"
 }
 
 run_install() {
-	#- require_offline_repo # REMOVED for online install
+	prepare_storage
+	write_install_pacman_conf
 
-	partition_and_mount
+	local -a packages=()
+	while IFS= read -r pkg; do
+		[[ -n ${pkg:-} ]] && packages+=("$pkg")
+	done < <(build_pkg_list)
+	((${#packages[@]} > 0)) || die "no packages selected"
 
-	local -a pkgs=()
-	mapfile -t pkgs < <(build_pkg_list)
+	log "installing ${#packages[@]} packages into ${MNT_ROOT}"
+	gum style --foreground 117 --margin 1 "Installing ${#packages[@]} packages..." || true
 
-	# We no longer write a local-repo pacman.conf.
-	# Instead, we use the standard pacstrap which uses official mirrors.
-	log "running pacstrap (ONLINE mode)"
-	# Copy the live keyring so the first transaction can verify Arch packages.
-	# The target config is written afterwards from the pinned snapshot template.
-	pacstrap -c -M "${MNT_ROOT}" base "${pkgs[@]}"
-
-	write_target_pacman_conf "${MNT_ROOT}"
-
-	# Defensive fallback for images that ship without a populated keyring.
-	if [[ ! -s "${MNT_ROOT}/etc/pacman.d/gnupg/trustdb.gpg" ]]; then
-		arch-chroot "${MNT_ROOT}" pacman-key --init
-		arch-chroot "${MNT_ROOT}" pacman-key --populate archlinux
+	# Do NOT pass -c here.  -c tells pacstrap to use the live host's package
+	# cache, which is the 256 MiB archiso overlay (frequently only ~250 MiB
+	# free).  The default lets pacstrap use the target's own cache
+	# (/var/cache/pacman/pkg on the new root), so a 2 GiB download fits on the
+	# 40 GiB test disk and on any disk that passed the 25 GiB size check.
+	local -a pacstrap_args=(-C "$PACMAN_CONF" -M)
+	if [[ ! -d ${MNT_ROOT}/etc/pacman.d/gnupg ]]; then
+		pacstrap_args+=(-K)
 	fi
 
-	seed_target_nvim "${MNT_ROOT}"
+	if ! pacstrap "${pacstrap_args[@]}" "$MNT_ROOT" "${packages[@]}" 2>&1 |
+		tee -a "$LOG"; then
+		die "pacstrap failed. Check the network and ${LOG}."
+	fi
+
+	write_target_pacman_conf "$MNT_ROOT"
+	install_extra_packages
+
+	# Generate fstab from the actual live mounts.  This captures Btrfs subvol=
+	# options and the ESP correctly for both new and pre-mounted installs.
+	genfstab -U "$MNT_ROOT" >"${MNT_ROOT}/etc/fstab" ||
+		die "genfstab failed"
+	log "wrote target /etc/fstab"
+
 	configure_target
 
-	if [[ -n "${STATE[extra_packages]}" ]]; then
-		local -a extra=()
-		IFS=',' read -ra extra <<<"${STATE[extra_packages]}"
-		arch-chroot "${MNT_ROOT}" pacman -S --noconfirm --needed "${extra[@]}"
+	install -Dm0644 "$LOG" "${MNT_ROOT}/var/log/astra-install.log" 2>/dev/null || true
+	if [[ -r ${ANSWERS} ]]; then
+		install -Dm0644 "${ANSWERS}" "${MNT_ROOT}/var/log/astra-answers.json" 2>/dev/null || true
 	fi
 
-	genfstab -U "${MNT_ROOT}" >>"${MNT_ROOT}/etc/fstab"
-	grub-mkconfig -o "${MNT_ROOT}/boot/grub/grub.cfg"
 	cleanup_mounts
-	log "install complete"
+	log "installation finished"
 }

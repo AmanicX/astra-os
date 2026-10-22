@@ -1,4 +1,4 @@
-// Niri + Noctalia v5 — Arch Linux
+// Niri + Noctalia v5 — AstraOS
 // Target: Niri 26.04 and Noctalia v5 (the `noctalia` executable).
 // Validate the staged pair before installing: niri validate -c ./config.kdl
 // Mod is Super in a normal Niri session. Return means Enter.

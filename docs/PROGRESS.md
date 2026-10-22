@@ -1,117 +1,108 @@
 # AstraOS Progress
 
-Updated: 2026-10-19
+Updated: 2026-10-22
 
-## Phase status
+## Current status
+
+Phase 1 (naming, boot-menu rebrand and mixed-case wordmark) is implemented and
+statically tested. The actual rebuilt ISO and QEMU/OVMF boot verification are
+pending an explicitly approved privileged build.
+
+The owner has removed the offline requirement and replaced the earlier
+Astronaut/Noctalia SDDM theme with SilentSDDM. The installer is still the
+Bash/gum script; it will be replaced by the Rust/Tauri app in a later phase.
+The source tree is ahead of the old README and installer docs.
+
+## Master-prompt phases
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Read-only audit of the host; manifests; gate | **Complete; approved with changes** |
-| 1 | Decisions, include/exclude approval, repo skeleton | **In progress** |
-| 2 | Package scaffolding and build tooling | Not started |
-| 3 | Installer core and offline pacstrap path | Not started |
-| 4 | Hardware detection and driver selection | Not started |
-| 5 | Branding (logo, identity, fastfetch) | Not started |
-| 6 | Offline repository and AUR build pipeline | Not started |
-| 7 | ISO build | Not started |
-| 8 | Live session | Not started |
-| 9 | Installed desktop, offline pre-bake, SDDM | Not started |
-| 10 | AstraUpdate CLI, GUI, polkit, stable channel | Not started |
-| 11 | Automated tests | Not started |
-| 12 | Documentation, scrub, release checks | Not started |
-| 13 | Final verified/unverified report | Not started |
+| 1 | Audit; brand identity source; boot menus; mixed-case wordmark | Source complete; static tests pass; ISO boot pending |
+| 2 | Live session: no SDDM, root autologin, installer autostart | Pending |
+| 3 | Wallpapers and shared design tokens; SilentSDDM switcher | Pending |
+| 4 | Installer core and storage safety engine | Pending |
+| 5 | Installer GUI pages 1–5 with Playwright loop | Pending |
+| 6 | Storage pages and projected layouts | Pending |
+| 7 | Bootloader pages and GRUB/Limine configs | Pending |
+| 8 | Packages page and btop theme | Pending |
+| 9 | Summary, progress, done and engine integration | Pending |
+| 10 | Updater and release tooling | Pending |
+| 11 | Full QEMU/OVMF matrix and ISO rebuild commands | Pending |
 
-## Phase 0 checklist
+## Phase 1 record
 
-- [x] Read-only host inspection (no config or disk changes).
-- [x] Package inventory: 96 explicit, 3 foreign, 744 installed total.
-- [x] Config inventory: niri, Noctalia, kitty, zsh, Neovim/LazyVim, SDDM,
-      keybind overlay, Nautilus/dconf, mpv, btop, fastfetch, opencode, XDG.
-- [x] `1_shell` identified with confidence as the upstream Oh My Posh theme
-      `1_shell.omp.json` (SHA-256 matches upstream; MIT).
-- [x] Service inventory (system and user).
-- [x] Hardware inventory: HP ProBook 455R G6, AMD Ryzen 5 3500U, Radeon Vega,
-      no NVIDIA GPU.
-- [x] Wallpaper identified; license unresolved.
-- [x] Secret scan of candidate configs. No credential copied.
-- [x] `scripts/scrub-check.sh` initial implementation, shellcheck-clean,
-      shfmt-clean, and passing on the repository.
-- [x] Target and ISO manifests written; all 166 package names resolved
-      (158 official, 8 AUR, 0 unresolved).
-- [x] Proposed include/exclude list in `docs/AUDIT.md`.
-- [x] Owner approval of the include/exclude list, with changes (D-025).
-- [x] Owner decisions: Steam in, GIMP out, Noctalia SDDM theme, original
-      wallpaper/logo, no LTS, two update tracks, passwordless sudo requested.
-- [x] OS hosting: GitHub signed metadata + `[astra]`, Arch base from ALA.
-- [x] Steam is target-only; live ISO omits it.
-- [ ] Owner to specify additional include/exclude changes.
-- [ ] Passwordless sudo rule installed and verified.
-- [ ] App update track chosen (deferred; D-026).
-- [ ] Section 14 decisions that remain open.
+- Audit: `docs/PHASE1-AUDIT.md`.
+- Identity source: `config/brand.toml`, read by `scripts/lib/brand.sh`.
+- Boot rebrand: `scripts/rebrand-archiso.sh`, called from
+  `scripts/build-iso.sh` after the releng profile is copied.
+- Wordmark/lockup changed to mixed-case `Astra` + `OS`.
+- Wallpaper caption changed to `AstraOS`; 3840×2160 PNG regenerated.
+- Installer header changed to `UEFI • AstraOS • <version>`.
+- Static check: `tests/branding-test.sh` passes against the installed archiso
+  releng profile; no Arch Linux boot titles remain and the archiso search
+  tokens are preserved.
 
-## Gate outcome (2026-10-19)
+## Installer verification (2026-10-21; rerun 2026-10-22)
 
-The owner approved the Phase 0 include/exclude list with these changes:
+Environment: Arch Linux WSL2 (`AstraOS`), real `gum` 2.0.2, loopback images
+under `/var/tmp` only. Host disks were never addressed by the tests. The
+2026-10-22 rerun includes the 35 GiB storage floor and Phase 1 branding test.
 
-| Topic | Decision |
-|---|---|
-| Steam | Included for the installed system; target-only; multilib required |
-| GIMP | Excluded |
-| SDDM | Noctalia theme, GPLv3 code pinned at `92bf8e6`, original Astra wallpaper |
-| Wallpaper | Original AstraOS art; current unknown-license image not shipped |
-| LTS kernel | Omitted for v1 |
-| Logo | Original geometric star plus wordmark |
-| Default apps | loupe, pavucontrol, Papers, GNOME Calculator, Text Editor, Disk Utility approved |
-| OS updates | Signed metadata on GitHub; pinned Arch snapshot |
-| App updates | Separate stable app track; mechanism deferred (D-026) |
-| OS hosting | GitHub hosts signed metadata + `[astra]`; Arch base from ALA |
-| Steam on live ISO | Target-only, omitted from live ISO |
-| Privileged work | Passwordless sudo requested; rule not yet installed |
-| Additional changes | Owner will specify; gate not fully closed |
-
-## Blockers and constraints
-
-1. **ISO builds are paused by the owner.** No ISO will be built until the owner
-   explicitly says so. Repository/code work may continue; heavy downloads and
-   builds are reported first.
-2. `sudo` requires a password on the audit host. Package installation,
-   loop-device setup, chroot builds and QEMU tests cannot start until the owner
-   provides a non-interactive path (passwordless sudo for this workspace, or a
-   prepared build environment). The agent must not ask for or store the
-   password.
-3. QEMU, OVMF, GRUB, snapper, gum and shellcheck are not installed. `/dev/kvm`
-   exists.
-4. The host has 128 GiB free. That is above the 60 GiB target but leaves
-   limited headroom for an ISO, chroots, package cache and VM images. The owner
-   must confirm before the heavy build starts.
-5. Package manifests resolve cleanly on 2026-10-19 (158 official, 8 AUR, 0
-   unresolved). Re-verify at build time because Arch is rolling.
-6. No NVIDIA hardware is present. NVIDIA current and 580xx paths can only be
-   fixture-tested here; real hardware must be verified by the owner.
-7. The owner approved passwordless sudo but the rule is not installed yet.
-   `sudo -n true` still fails. The app update track (D-026) also needs one
-   clarification before the updater design is final.
-
-## Verification log
-
-| Item | How verified | Result |
+| Test | Command | Result |
 |---|---|---|
-| niri config syntax | `niri validate -c ~/.config/niri/config.kdl` | valid |
-| Noctalia version | `pacman -Qi noctalia`, `noctalia --version` | 5.3.0-1, v5.3.0 |
-| niri version | `pacman -Qi niri`, `niri --version` | 26.04-1, 26.04 |
-| `1_shell` identity | SHA-256 comparison with upstream theme | exact match |
-| SDDM active theme | `/etc/sddm.conf`, theme directory, running `sddm.service` | `sddm-astronaut-theme` active |
-| GPU driver | `lspci -nnk`, `amdgpu` in use | AMD Vega only |
-| Boot mode | `bootctl status` | UEFI, Secure Boot disabled |
-| Wallpaper | `file`, `identify`, `sha256sum` | 7680x4320 JPEG; license unclear |
-| Manifest names | `pacman -Si` + AUR RPC, 2026-10-19 | 158 official, 8 AUR, 0 unresolved |
-| Repository scrub | `scripts/scrub-check.sh` | passes; no secret/personal identifiers |
-| Script quality | `shellcheck`, `shfmt -d`, `bash -n` | clean |
+| Syntax | `bash -n` on all installer, build and test scripts | pass |
+| Shell lint | `shellcheck -x -a` | clean |
+| Formatting | `shfmt -d` | clean |
+| Static invariants | `tests/static-guards.sh` | pass; 35 GiB floor enforced |
+| Boot branding | `tests/branding-test.sh` | pass; no Arch Linux boot titles, archiso tokens kept |
+| Deterministic wizard | `tests/wizard-dry-run.sh` | pass; all four storage modes |
+| Real UI success path | `tests/real-gum.sh` | pass |
+| Real UI back path | `tests/real-gum.sh` (Esc and Ctrl-C at hostname) | pass; returns to storage, then to welcome, confirmed exit |
+| Free space, new ESP | `tests/storage-loop-test.sh` | pass; existing partition, marker and first-MiB hash kept; new ESP + root verified |
+| Free space, existing ESP | `tests/storage-loop-test.sh` | pass; existing ESP and data kept; root created |
+| Manual partitioning | `tests/storage-loop-test.sh` | pass; ESP untouched; root reformatted Btrfs |
+| Too-small whole disk | `tests/storage-loop-test.sh` | pass; refused before any GPT write |
+| Whole disk | `tests/storage-loop-test.sh` | pass; ESP + root created and verified |
 
-## Next
+The free-space tests snapshot every original GPT entry (number, start, end,
+size, type GUID, type code, unique GUID, name, filesystem UUID, first-MiB
+SHA-256). They also mount the preserved data partition and read a marker after
+the installer has run.
 
-Phase 1: record the approved changes, finish the package manifest
-verification for Steam/multilib, scaffold the package and build layout, and
-clarify the app update track. No ISO will be built until the owner explicitly
-says so (D-021). No personal configuration will be copied without a
-sanitization pass.
+## ISO build and QEMU verification
+
+- Previous build: 2026-10-22, WSL2 Arch Linux, ext4 working copy at
+  `/root/astraos-build`, snapshot `2026/10/18`. That ISO predates the Phase 1
+  branding changes and the owner's later requirements.
+- Phase 1 rebuild: pending explicit owner approval. The source changes are
+  ready; `scripts/build-iso.sh --plan` passes and the boot-menu rebrand test
+  passes against the installed releng profile.
+- After approval: rebuild, boot in QEMU/OVMF, and verify every AstraOS-boot
+  entry. This is the only remaining Phase 1 verification.
+
+## Historical Phase 0 record
+
+The original audit, package inventory and gate decisions are preserved in
+`docs/AUDIT.md`, `docs/DECISIONS.md` and the repository history. Key facts:
+
+- HP ProBook 455R G6, AMD Ryzen 5 3500U, Radeon Vega, no NVIDIA GPU.
+- 96 explicit packages, 3 foreign, 744 installed at audit time.
+- Target/ISO manifests resolved 158 official + 8 AUR packages, 0 unresolved on
+  2026-10-19.
+- Owner approved Steam (target-only), excluded GIMP, chose the Noctalia SDDM
+  theme (later superseded by SilentSDDM, D-034), original branding, no LTS
+  kernel, and passwordless sudo.
+- ISO builds were paused by D-021 until the owner's explicit approval.
+
+## Remaining work
+
+1. Get approval, rebuild the ISO, and verify the AstraOS-boot entries in
+   QEMU/OVMF.
+2. Phase 2: remove SDDM from the live image, autologin root on tty1 into
+   niri + Noctalia, and auto-open the installer.
+3. Phase 3: replace the default wallpaper with the licensed set, add shared
+   design tokens, and implement the SilentSDDM theme switcher.
+4. Phase 4 onward: Rust/Tauri installer core and GUI, then updater and the full
+   QEMU test matrix.
+5. Real-hardware checks for NVIDIA/Intel paths and the audit laptop remain owner
+   tasks.
