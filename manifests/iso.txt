@@ -24,4 +24,6 @@ edk2-shell                   # UEFI shell for diagnostics
 os-prober                     # Required for dual-boot detection
 gtk3                          # Tauri/WebKitGTK runtime for the installer GUI
 webkit2gtk-4.1                # Tauri/WebKitGTK renderer for the installer GUI
+oh-my-posh-bin                # Fast, shell-agnostic prompt engine for zsh
+
 
