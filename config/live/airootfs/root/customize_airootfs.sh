@@ -36,12 +36,12 @@ spawn-at-startup "kitty" "--class" "astra-installer" "astra-install"
 EOF
 fi
 
-# Root shell entry point. Only tty1 starts the graphical session; other ttys
-# stay available for rescue work.  Root's login shell is zsh, so we write
-# .zprofile (zsh ignores .bash_profile).
+# Root shell entry point on the live installer ISO.
+# tty1 starts the native AstraOS installer directly in the console.
 cat >/root/.zprofile <<'EOF'
-if [[ -z ${WAYLAND_DISPLAY:-} && $(tty 2>/dev/null) == /dev/tty1 ]]; then
-	exec niri --session
+if [[ $(tty 2>/dev/null) == /dev/tty1 ]]; then
+	clear
+	exec astra-install
 fi
 EOF
 chmod 0644 /root/.zprofile
@@ -141,7 +141,6 @@ command -v iwctl >/dev/null || {
 	echo "niri.desktop session file is missing" >&2
 	exit 1
 }
-if command -v sddm >/dev/null 2>&1; then
-	echo "sddm must not be installed in the live image" >&2
-	exit 1
-fi
+# Ensure SDDM is disabled on the live ISO so TTY1 owns the console.
+# The installer will enable SDDM on the target disk upon installation.
+systemctl disable sddm.service 2>/dev/null || true

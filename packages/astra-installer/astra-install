@@ -34,11 +34,12 @@ welcome() {
 		clear
 		gum style --foreground "#53bdfa" --border-foreground "#1e222a" --align center --width 66 --margin 1 \
 			"✦ Welcome to AstraOS ✦" \
-			"UEFI • Niri • Noctalia Desktop" 2>/dev/null || true
+			"UEFI • AstraOS Offline Installer" 2>/dev/null || true
 		ui_markdown '## Before we start
 
-- This is the native **AstraOS Installer**.
-- The install configures your selected storage, user accounts, and desktop packages.
+- This is the native **AstraOS Offline Installer**.
+- **100% Offline Installation**: No internet connection required.
+- Installs the fully configured **Niri + Noctalia** desktop environment.
 - **Back up your data.** No installer can recover a disk that was erased.
 - Nothing is written to your disk until the final **INSTALL** confirmation.
 

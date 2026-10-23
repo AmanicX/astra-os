@@ -308,55 +308,87 @@ configure_target() {
 	log "target configuration finished"
 }
 
+copy_rootfs_to_target() {
+	log "deploying AstraOS system image to ${MNT_ROOT}..."
+	gum style --foreground "#53bdfa" --margin 1 "✦ Deploying AstraOS system image to target disk..." || true
+
+	local sfs_image=""
+	# Locate the archiso squashfs system image on the live media
+	for loc in \
+		/run/archiso/bootmnt/arch/x86_64/airootfs.sfs \
+		/run/archiso/bootmnt/astraos/x86_64/airootfs.sfs \
+		/run/archiso/bootmnt/*/x86_64/airootfs.sfs \
+		/run/archiso/airootfs.sfs; do
+		if [[ -f $loc ]]; then
+			sfs_image="$loc"
+			break
+		fi
+	done
+
+	if [[ -n "$sfs_image" ]] && command -v unsquashfs >/dev/null 2>&1; then
+		log "extracting pristine rootfs image ($sfs_image) with unsquashfs..."
+		if ! unsquashfs -f -d "$MNT_ROOT" "$sfs_image" 2>&1 | tee -a "$LOG"; then
+			die "unsquashfs failed to unpack system image"
+		fi
+	elif [[ -d /run/archiso/airootfs ]]; then
+		log "copying pristine system files from /run/archiso/airootfs..."
+		if ! cp -a /run/archiso/airootfs/. "$MNT_ROOT/"; then
+			die "failed to copy system files from /run/archiso/airootfs"
+		fi
+	elif [[ -d /run/archiso/sfs/airootfs ]]; then
+		log "copying system files from /run/archiso/sfs/airootfs..."
+		if ! cp -a /run/archiso/sfs/airootfs/. "$MNT_ROOT/"; then
+			die "failed to copy system files from /run/archiso/sfs/airootfs"
+		fi
+	else
+		log "copying live system via rsync..."
+		rsync -aHAX --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} \
+			/ "$MNT_ROOT/" 2>&1 | tee -a "$LOG" || die "failed to rsync system to target"
+	fi
+
+	# Verify essential target binaries are present
+	[[ -x ${MNT_ROOT}/usr/bin/bash ]] || die "/usr/bin/bash missing on target disk"
+	[[ -x ${MNT_ROOT}/usr/bin/systemd ]] || [[ -x ${MNT_ROOT}/usr/lib/systemd/systemd ]] || die "systemd missing on target disk"
+	log "AstraOS system image successfully unpacked to ${MNT_ROOT}"
+}
+
 run_install() {
 	prepare_storage
-	write_install_pacman_conf
+	copy_rootfs_to_target
 
-	local -a packages=()
-	while IFS= read -r pkg; do
-		[[ -n ${pkg:-} ]] && packages+=("$pkg")
-	done < <(build_pkg_list)
-	((${#packages[@]} > 0)) || die "no packages selected"
-
-	log "installing ${#packages[@]} packages into ${MNT_ROOT}"
-	gum style --foreground "#53bdfa" --margin 1 "✦ Installing ${#packages[@]} packages to target disk..." || true
-
-	# Ensure host keyring is copied into target to prevent pacstrap key generation hangs
+	# Ensure host pacman keyring is present in target
 	mkdir -p "${MNT_ROOT}/etc/pacman.d"
 	if [[ -d /etc/pacman.d/gnupg && ! -d ${MNT_ROOT}/etc/pacman.d/gnupg ]]; then
 		cp -a /etc/pacman.d/gnupg "${MNT_ROOT}/etc/pacman.d/"
 		log "copied host pacman keyring to target"
 	fi
 
-	# Copy live offline AstraOS repo if present
+	# Copy offline repository if present
 	if [[ -d /usr/share/astra/repo ]]; then
 		mkdir -p "${MNT_ROOT}/usr/share/astra/repo"
 		cp -a /usr/share/astra/repo/. "${MNT_ROOT}/usr/share/astra/repo/" 2>/dev/null || true
 		log "copied offline astra-local repo to target"
 	fi
 
-	local -a pacstrap_args=(-C "$PACMAN_CONF" -M)
-
-	if ! pacstrap "${pacstrap_args[@]}" "$MNT_ROOT" "${packages[@]}" 2>&1 |
-		tee -a "$LOG"; then
-		die "pacstrap failed. Check the network and ${LOG}."
-	fi
-
-	# Verify /usr/bin/pacman exists in target
-	if [[ ! -x ${MNT_ROOT}/usr/bin/pacman ]]; then
-		die "/usr/bin/pacman was not installed into target. Base installation failed."
-	fi
+	# Generate fstab from the actual live mounts (captures Btrfs subvolumes and ESP correctly)
+	genfstab -U "$MNT_ROOT" >"${MNT_ROOT}/etc/fstab" || die "genfstab failed"
+	log "wrote target /etc/fstab"
 
 	write_target_pacman_conf "$MNT_ROOT"
 	install_extra_packages
 
-	# Generate fstab from the actual live mounts.  This captures Btrfs subvol=
-	# options and the ESP correctly for both new and pre-mounted installs.
-	genfstab -U "$MNT_ROOT" >"${MNT_ROOT}/etc/fstab" ||
-		die "genfstab failed"
-	log "wrote target /etc/fstab"
-
 	configure_target
+
+	# Clean up live-session installer autostart files from target disk
+	rm -f "${MNT_ROOT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" 2>/dev/null || true
+	rm -f "${MNT_ROOT}/etc/profile.d/99-astra-live.sh" 2>/dev/null || true
+	rm -f "${MNT_ROOT}/root/.zprofile" 2>/dev/null || true
+	rm -f "${MNT_ROOT}/root/.bash_profile" 2>/dev/null || true
+	rm -f "${MNT_ROOT}/usr/share/applications/astra-installer.desktop" 2>/dev/null || true
+	rm -f "${MNT_ROOT}/etc/xdg/autostart/astra-installer.desktop" 2>/dev/null || true
+	if [[ ${STATE[user_name]} != "astra" ]]; then
+		arch-chroot "$MNT_ROOT" userdel -r astra 2>/dev/null || true
+	fi
 
 	install -Dm0644 "$LOG" "${MNT_ROOT}/var/log/astra-install.log" 2>/dev/null || true
 	if [[ -r ${ANSWERS} ]]; then
