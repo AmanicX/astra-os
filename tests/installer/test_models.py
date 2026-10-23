@@ -50,6 +50,11 @@ class TestAstraModels(unittest.TestCase):
         self.assertEqual(safe["root_password"], "***")
         self.assertEqual(safe["user_password"], "***")
 
+    def test_browser_choices(self):
+        from astra_installer.models import BrowserChoice
+        self.assertIn(BrowserChoice.HELIUM, list(BrowserChoice))
+        self.assertEqual(BrowserChoice.HELIUM.value, "helium-browser-bin")
+
 
 if __name__ == "__main__":
     unittest.main()

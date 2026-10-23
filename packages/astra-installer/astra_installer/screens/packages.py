@@ -37,6 +37,7 @@ class PackagesScreenWidget(Container):
         yield Label("Web Browser:", classes="screen-desc")
         with RadioSet(id="radio-browser"):
             yield RadioButton("Firefox (Default AstraOS browser)", value=(self.config.browser == BrowserChoice.FIREFOX), id="opt-firefox")
+            yield RadioButton("Helium Browser (Fast private browser)", value=(self.config.browser == BrowserChoice.HELIUM), id="opt-helium")
             yield RadioButton("Chromium open-source browser", value=(self.config.browser == BrowserChoice.CHROMIUM), id="opt-chromium")
             yield RadioButton("Brave privacy browser", value=(self.config.browser == BrowserChoice.BRAVE), id="opt-brave")
             yield RadioButton("None (I will install a browser later)", value=(self.config.browser == BrowserChoice.NONE), id="opt-browser-none")
@@ -58,6 +59,8 @@ class PackagesScreenWidget(Container):
         bid = event.pressed.id
         if bid == "opt-firefox":
             self.config.browser = BrowserChoice.FIREFOX
+        elif bid == "opt-helium":
+            self.config.browser = BrowserChoice.HELIUM
         elif bid == "opt-chromium":
             self.config.browser = BrowserChoice.CHROMIUM
         elif bid == "opt-brave":

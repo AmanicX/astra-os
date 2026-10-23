@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -147,36 +148,151 @@ def run_installation_worker(config: AstraConfig, widget: Any) -> None:
         widget.set_phase(2, "Installing base system (pacstrap)")
         base_pkgs = [
             "base", "base-devel", "linux", "linux-firmware", "btrfs-progs",
-            "dosfstools", "e2fsprogs", "zsh", "sudo", "networkmanager"
+            "dosfstools", "e2fsprogs", "zsh", "sudo", "networkmanager",
+            "grub", "efibootmgr", "arch-install-scripts",
         ]
         log_msg(widget, f"Running pacstrap for core packages: {', '.join(base_pkgs)}")
+
+        # Ensure /mnt/etc exists for pacman config copy
+        (TARGET_MOUNT / "etc" / "pacman.d").mkdir(parents=True, exist_ok=True)
+
+        # Copy host pacman config + mirrorlist into target so chroot pacman works
+        if Path("/etc/pacman.conf").exists():
+            shutil.copy2("/etc/pacman.conf", TARGET_MOUNT / "etc" / "pacman.conf")
+            log_msg(widget, "Copied /etc/pacman.conf to target.")
+        if Path("/etc/pacman.d/mirrorlist").exists():
+            shutil.copy2("/etc/pacman.d/mirrorlist", TARGET_MOUNT / "etc" / "pacman.d" / "mirrorlist")
+            log_msg(widget, "Copied mirrorlist to target.")
+
+        # Copy live astra-local repo into target so chroot pacman can install
+        # AstraOS packages (paru, noctalia, etc.) from the offline repo.
+        live_repo = Path("/usr/share/astra/repo")
+        target_repo = TARGET_MOUNT / "usr" / "share" / "astra" / "repo"
+        if live_repo.exists():
+            target_repo.mkdir(parents=True, exist_ok=True)
+            if not target_repo.exists() or not any(target_repo.iterdir()):
+                shutil.copytree(live_repo, target_repo, dirs_exist_ok=True)
+                log_msg(widget, "Copied astra-local offline repo to target.")
+
+        # Use -c (host cache) + -M (skip mirrorlist re-copy, we already did it)
+        # Do NOT use -N (unshare mode causes namespace isolation that loses /mnt writes)
+        # Do NOT use -K (generates new keyring from scratch; extremely slow / fails on low entropy VMs)
+        # Flags: -c = use host pkg cache, -M = skip mirrorlist copy (we copied it manually)
         run_command_stream(
-            ["pacstrap", "-c", "-N", "-K", str(TARGET_MOUNT)] + base_pkgs,
+            ["pacstrap", "-c", "-M", str(TARGET_MOUNT)] + base_pkgs,
             widget,
             pkg_callback=widget.update_package_progress
         )
+
+        # Verify pacman actually landed in the target
+        if not (TARGET_MOUNT / "usr" / "bin" / "pacman").exists():
+            raise RuntimeError(
+                "pacstrap completed but /usr/bin/pacman not found in target. "
+                "The base system was not installed correctly."
+            )
 
         # Generate fstab
         log_msg(widget, "Generating /etc/fstab with UUIDs...")
         res = subprocess.run(["genfstab", "-U", str(TARGET_MOUNT)], stdout=subprocess.PIPE, text=True, check=True)
         (TARGET_MOUNT / "etc" / "fstab").write_text(res.stdout)
 
+        # Inject astra-local repo into target /etc/pacman.conf so chroot pacman
+        # can resolve paru, noctalia, quickshell, etc. from the offline repo.
+        target_pacman_conf = TARGET_MOUNT / "etc" / "pacman.conf"
+        if target_pacman_conf.exists():
+            conf_text = target_pacman_conf.read_text()
+            astra_repo_block = (
+                "\n[astra-local]\n"
+                "SigLevel = Optional TrustAll\n"
+                "Server = file:///usr/share/astra/repo\n"
+            )
+            if "[astra-local]" not in conf_text:
+                conf_text += astra_repo_block
+                target_pacman_conf.write_text(conf_text)
+                log_msg(widget, "Injected [astra-local] repo into target pacman.conf.")
+
+        # Refresh package databases in chroot (picks up astra-local)
+        run_chroot(TARGET_MOUNT, ["pacman", "-Sy", "--noconfirm"], widget.append_log)
+
         # -------------------------------------------------------------
-        # Phase 3: Installing AstraOS packages
+        # Phase 3: Installing AstraOS desktop packages
+        # AUR-only packages (paru, yay, helium-browser-bin, brave) cannot
+        # be installed via chroot pacman from official repos.  We split them:
+        #   - official_pkgs  → installed now via arch-chroot pacman
+        #   - pending_pkgs   → written to a list file; the astra-pending-packages
+        #                      service installs them with paru on first boot.
         # -------------------------------------------------------------
         widget.set_phase(3, "Installing AstraOS desktop and tools")
-        extra_pkgs = ["kitty", "pipewire", "pipewire-pulse", "wireplumber", "sddm"]
-        if config.browser.value != "none":
-            extra_pkgs.append(config.browser.value)
-        if config.aur_helper.value != "none":
-            extra_pkgs.append(config.aur_helper.value)
-        if config.os_prober:
-            extra_pkgs.extend(["os-prober", "ntfs-3g"])
-        if config.additional_packages:
-            extra_pkgs.extend(config.additional_packages)
 
-        log_msg(widget, f"Installing additional selected packages: {', '.join(extra_pkgs)}")
-        run_chroot(TARGET_MOUNT, ["pacman", "-S", "--noconfirm", "--needed"] + extra_pkgs, widget.append_log)
+        # Packages known to be AUR-only (not in any official Arch repo)
+        AUR_ONLY = {"paru", "yay", "helium-browser-bin", "brave", "brave-browser"}
+
+        official_extra: list[str] = ["kitty", "pipewire", "pipewire-pulse", "wireplumber", "sddm"]
+        pending_aur: list[str] = []
+
+        if config.browser.value not in ("none",):
+            pkg = config.browser.value
+            if pkg in AUR_ONLY:
+                pending_aur.append(pkg)
+            else:
+                official_extra.append(pkg)
+
+        if config.aur_helper.value not in ("none",):
+            pkg = config.aur_helper.value
+            if pkg in AUR_ONLY:
+                # paru/yay – try from astra-local repo first; fall back to pending
+                pending_aur.append(pkg)
+            else:
+                official_extra.append(pkg)
+
+        if config.os_prober:
+            official_extra.extend(["os-prober", "ntfs-3g"])
+
+        for pkg in config.additional_packages:
+            if pkg in AUR_ONLY:
+                pending_aur.append(pkg)
+            else:
+                official_extra.append(pkg)
+
+        # Try to install astra-local packages (paru, noctalia, etc.) via chroot pacman.
+        # Because the astra-local repo is now present in the target, this should work.
+        astra_desktop_pkgs = [
+            "niri", "noctalia", "quickshell", "xwayland-satellite",
+            "kitty", "pipewire", "pipewire-pulse", "wireplumber",
+            "pipewire-alsa", "pipewire-jack", "wireplumber",
+            "sddm", "networkmanager",
+            "zsh", "zsh-autosuggestions", "zsh-syntax-highlighting",
+            "neovim", "git", "fzf", "fd", "ripgrep", "bat", "eza", "btop", "fastfetch",
+            "noto-fonts", "noto-fonts-emoji", "ttf-jetbrains-mono-nerd",
+            "nautilus", "loupe", "mpv", "pavucontrol",
+            "bluez", "bluez-utils",
+            "polkit", "gnome-keyring",
+            "xdg-user-dirs", "xdg-utils",
+            "wl-clipboard", "grim", "slurp",
+        ]
+        # Merge with user selections (deduplicate)
+        all_official = list(dict.fromkeys(astra_desktop_pkgs + official_extra))
+
+        log_msg(widget, f"Installing {len(all_official)} desktop packages via pacman...")
+        run_chroot(TARGET_MOUNT, ["pacman", "-S", "--noconfirm", "--needed"] + all_official, widget.append_log)
+
+        # Try to install paru from astra-local repo (it is pre-built there)
+        if pending_aur:
+            log_msg(widget, f"Attempting astra-local install for AUR packages: {', '.join(pending_aur)}")
+            try:
+                run_chroot(TARGET_MOUNT, ["pacman", "-S", "--noconfirm", "--needed"] + pending_aur, widget.append_log)
+                pending_aur = []  # cleared – installed OK from astra-local
+            except RuntimeError as e:
+                log_msg(widget, f"[warn] astra-local install failed ({e}); queuing for first-boot paru install.")
+
+        # Queue any remaining AUR packages for first-boot installation
+        if pending_aur:
+            pending_dir = TARGET_MOUNT / "var" / "lib" / "astra"
+            pending_dir.mkdir(parents=True, exist_ok=True)
+            pending_file = pending_dir / "pending-packages"
+            with open(pending_file, "a") as pf:
+                pf.write("\n".join(pending_aur) + "\n")
+            log_msg(widget, f"Queued for first-boot paru install: {', '.join(pending_aur)}")
 
         # -------------------------------------------------------------
         # Phase 4: Configuring users & services

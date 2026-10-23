@@ -1,25 +1,26 @@
 """
 AstraOS Installer Design System & Textual Theme Tokens.
-Astral Meridian Aesthetic: Deep Void (#05070d), Midnight (#0b1220), Cyan (#5ee6f2), Starlight (#e8edf7).
-Impeccable, Emil Kowalski, and Taste skill integration.
+Noctalia palette: bg #0b0e14, fg #bfbdb6, cyan #53bdfa, amber #e6b450.
+Transparent Screen so Kitty's background_opacity 0.88 + Niri blur shine through,
+exactly like LazyVim running inside Kitty.
 """
 
 from typing import Final
 
-# Core Semantic Palette
-COLOR_BG: Final[str] = "#05070d"
-COLOR_CARD: Final[str] = "#0b1220"
-COLOR_INPUT: Final[str] = "#0e1726"
-COLOR_BORDER: Final[str] = "#1e3a5f"
-COLOR_BORDER_FOCUS: Final[str] = "#5ee6f2"
+# Noctalia colour tokens (matches kitty/themes/noctalia.conf)
+COLOR_BG: Final[str] = "#0b0e14"        # kitty background
+COLOR_CARD: Final[str] = "#12171f"      # slightly lighter surface
+COLOR_INPUT: Final[str] = "#161c26"     # input fields
+COLOR_BORDER: Final[str] = "#1e222a"    # noctalia inactive_border_color
+COLOR_BORDER_FOCUS: Final[str] = "#53bdfa"  # noctalia color4 (cyan)
 
-COLOR_TEXT: Final[str] = "#e8edf7"
-COLOR_MUTED: Final[str] = "#8e9ea9"
+COLOR_TEXT: Final[str] = "#bfbdb6"      # noctalia foreground
+COLOR_MUTED: Final[str] = "#8e959e"     # noctalia inactive tab fg
 COLOR_DIM: Final[str] = "#475569"
-COLOR_CYAN: Final[str] = "#5ee6f2"
-COLOR_AMBER: Final[str] = "#e6a45a"
-COLOR_RED: Final[str] = "#f26b6b"
-COLOR_GREEN: Final[str] = "#38bdf8"
+COLOR_CYAN: Final[str] = "#53bdfa"      # noctalia color4
+COLOR_AMBER: Final[str] = "#e6b450"     # noctalia cursor / active border
+COLOR_RED: Final[str] = "#ea6c73"       # noctalia color1
+COLOR_GREEN: Final[str] = "#7fd962"     # noctalia color2
 
 # ASCII Star mark & Wordmark
 ASTRA_STAR_SMALL: Final[str] = """
@@ -36,13 +37,16 @@ ASTRA_STAR_LARGE: Final[str] = """
           '
 """
 
-ASTRA_BANNER: Final[str] = "[bold #e8edf7]Astra[/][bold #5ee6f2]OS[/]"
+ASTRA_BANNER: Final[str] = "[bold #bfbdb6]Astra[/][bold #53bdfa]OS[/]"
 
 # Textual Application Stylesheet (CSS)
+# Screen and #app-container are transparent so Kitty's background_opacity 0.88
+# and Niri's blur compositor effect show through — matching how LazyVim looks
+# inside Kitty (no opaque box-in-a-box; the terminal glass is the background).
 APP_CSS: Final[str] = """
 Screen {
-    background: #05070d;
-    color: #e8edf7;
+    background: transparent;
+    color: #bfbdb6;
     layout: vertical;
     padding: 0;
     margin: 0;
@@ -51,7 +55,7 @@ Screen {
 #app-container {
     width: 100%;
     height: 100%;
-    background: #0b1220;
+    background: transparent;
     border: none;
     padding: 0;
     margin: 0;
@@ -61,8 +65,8 @@ Screen {
 #app-header {
     height: 3;
     dock: top;
-    background: #080d17;
-    border-bottom: solid #1e3a5f;
+    background: rgba(11,14,20,0.75);
+    border-bottom: solid #1e222a;
     layout: horizontal;
     align: center middle;
     padding: 0 2;
@@ -70,7 +74,7 @@ Screen {
 
 #header-logo {
     width: auto;
-    color: #5ee6f2;
+    color: #53bdfa;
     text-style: bold;
 }
 
@@ -78,14 +82,14 @@ Screen {
     width: 1fr;
     text-align: left;
     margin-left: 1;
-    color: #8e9ea9;
+    color: #8e959e;
 }
 
 #header-step {
     width: auto;
-    color: #5ee6f2;
+    color: #53bdfa;
     text-style: bold;
-    background: #111d2e;
+    background: rgba(11,14,20,0.6);
     padding: 0 1;
 }
 
@@ -99,8 +103,8 @@ Screen {
 #rail-container {
     width: 28;
     height: 100%;
-    border-right: solid #1e3a5f;
-    background: #080d17;
+    border-right: solid #1e222a;
+    background: rgba(11,14,20,0.6);
     padding: 1 1;
 }
 
@@ -116,14 +120,14 @@ Screen {
 }
 
 .rail-item-completed {
-    color: #38bdf8;
+    color: #7fd962;
 }
 
 .rail-item-current {
-    color: #5ee6f2;
+    color: #53bdfa;
     text-style: bold;
-    background: #0f2338;
-    border-left: wide #5ee6f2;
+    background: rgba(83,189,250,0.12);
+    border-left: wide #53bdfa;
 }
 
 .rail-item-upcoming {
@@ -138,45 +142,45 @@ Screen {
 }
 
 .screen-title {
-    color: #5ee6f2;
+    color: #53bdfa;
     text-style: bold;
     margin-bottom: 0;
 }
 
 .screen-desc {
-    color: #8e9ea9;
+    color: #8e959e;
     margin-bottom: 1;
 }
 
 .explain-panel {
-    background: #0e1726;
-    border-left: double #5ee6f2;
+    background: rgba(22,28,38,0.7);
+    border-left: double #53bdfa;
     padding: 0 1;
     margin: 1 0;
-    color: #e8edf7;
+    color: #bfbdb6;
 }
 
 .warn-panel {
-    background: #231b14;
-    border-left: double #e6a45a;
+    background: rgba(35,27,20,0.7);
+    border-left: double #e6b450;
     padding: 0 1;
     margin: 1 0;
-    color: #e6a45a;
+    color: #e6b450;
 }
 
 .danger-panel {
-    background: #271418;
-    border-left: double #f26b6b;
+    background: rgba(39,20,24,0.7);
+    border-left: double #ea6c73;
     padding: 0 1;
     margin: 1 0;
-    color: #f26b6b;
+    color: #ea6c73;
 }
 
 #nav-buttons-bar {
     dock: bottom;
     height: 3;
-    background: #080d17;
-    border-top: solid #1e3a5f;
+    background: rgba(11,14,20,0.75);
+    border-top: solid #1e222a;
     layout: horizontal;
     align: center middle;
     padding: 0 2;
@@ -193,7 +197,7 @@ Screen {
 
 #btn-back {
     background: #1e293b;
-    color: #cbd5e1;
+    color: #bfbdb6;
     border: none;
     min-width: 16;
     height: 1;
@@ -205,8 +209,8 @@ Screen {
 }
 
 #btn-next {
-    background: #5ee6f2;
-    color: #05070d;
+    background: #53bdfa;
+    color: #0b0e14;
     text-style: bold;
     border: none;
     min-width: 18;
@@ -214,29 +218,29 @@ Screen {
 }
 
 #btn-next:hover, #btn-next:focus {
-    background: #7ff0fa;
+    background: #7bd3ff;
 }
 
 #btn-next:disabled {
-    background: #1e293b;
+    background: #1e222a;
     color: #475569;
 }
 
 .btn-primary {
-    background: #5ee6f2;
-    color: #05070d;
+    background: #53bdfa;
+    color: #0b0e14;
     text-style: bold;
     border: none;
     min-width: 14;
 }
 
 .btn-primary:focus, .btn-primary:hover {
-    background: #7ff0fa;
+    background: #7bd3ff;
 }
 
 .btn-secondary {
     background: #1e293b;
-    color: #e8edf7;
+    color: #bfbdb6;
     border: none;
     min-width: 12;
 }
@@ -246,7 +250,7 @@ Screen {
 }
 
 .btn-danger {
-    background: #f26b6b;
+    background: #ea6c73;
     color: #ffffff;
     text-style: bold;
     border: none;
@@ -255,39 +259,39 @@ Screen {
 #footer-hints {
     dock: bottom;
     height: 1;
-    background: #05070d;
-    border-top: solid #111d2e;
-    color: #64748b;
+    background: transparent;
+    border-top: solid #1e222a;
+    color: #8e959e;
     text-align: center;
 }
 
 Input {
-    background: #0e1726;
-    border: tall #1e3a5f;
-    color: #e8edf7;
+    background: rgba(18,23,31,0.8);
+    border: tall #1e222a;
+    color: #bfbdb6;
     margin-bottom: 1;
 }
 
 Input:focus {
-    border: tall #5ee6f2;
+    border: tall #53bdfa;
 }
 
 OptionList {
-    background: #0e1726;
-    border: tall #1e3a5f;
-    color: #e8edf7;
+    background: rgba(18,23,31,0.8);
+    border: tall #1e222a;
+    color: #bfbdb6;
     height: 1fr;
     min-height: 8;
     max-height: 22;
 }
 
 OptionList:focus {
-    border: tall #5ee6f2;
+    border: tall #53bdfa;
 }
 
 OptionList > .option-list--option-highlighted {
-    background: #1f3647;
-    color: #5ee6f2;
+    background: rgba(83,189,250,0.2);
+    color: #53bdfa;
     text-style: bold;
 }
 
@@ -298,24 +302,24 @@ RadioSet {
 }
 
 RadioButton {
-    color: #e8edf7;
+    color: #bfbdb6;
 }
 
 RadioButton:focus {
-    color: #5ee6f2;
+    color: #53bdfa;
 }
 
 ProgressBar {
     width: 100%;
-    color: #5ee6f2;
+    color: #53bdfa;
 }
 
 #log-pane {
     height: 1fr;
     min-height: 8;
-    background: #05070d;
-    border: solid #1e3a5f;
-    color: #9cb1c2;
+    background: transparent;
+    border: solid #1e222a;
+    color: #bfbdb6;
     padding: 0 1;
     overflow-y: scroll;
 }

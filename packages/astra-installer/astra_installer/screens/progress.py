@@ -65,7 +65,7 @@ class ProgressScreenWidget(Container):
     def append_log(self, text: str) -> None:
         try:
             log_box = self.query_one("#log-pane", RichLog)
-            log_box.write(text)
+            log_box.write(text, scroll_end=True)
         except Exception:
             pass
 

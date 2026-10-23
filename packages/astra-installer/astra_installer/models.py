@@ -36,6 +36,7 @@ class BrowserChoice(str, enum.Enum):
     FIREFOX = "firefox"
     CHROMIUM = "chromium"
     BRAVE = "brave"
+    HELIUM = "helium-browser-bin"
     NONE = "none"
 
 
