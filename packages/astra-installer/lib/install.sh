@@ -258,6 +258,14 @@ if ! grub-install --target=x86_64-efi --efi-directory="${ASTRA_ESP_MOUNT}" \
 		--bootloader-id=AstraOS --removable --recheck
 fi
 
+if command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null | grep -Eiq '(VGA|3D|Display).*\[10de:'; then
+	echo "==> configuring NVIDIA parameters"
+	if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub; then
+		sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&nvidia-drm.modeset=1 nvidia-drm.fbdev=1 /' /etc/default/grub
+	fi
+	systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service 2>/dev/null || true
+fi
+
 if [[ ${ASTRA_DUAL_BOOT} == 1 ]] && command -v os-prober >/dev/null 2>&1; then
 	if grep -q '^GRUB_DISABLE_OS_PROBER=' /etc/default/grub 2>/dev/null; then
 		sed -i 's/^GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /etc/default/grub

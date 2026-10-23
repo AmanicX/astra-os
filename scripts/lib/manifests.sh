@@ -65,6 +65,7 @@ manifest_live() {
 		"$(manifest_path apps.txt)" \
 		"$(manifest_path drivers-amd.txt)" \
 		"$(manifest_path drivers-intel.txt)" \
+		"$(manifest_path drivers-nvidia.txt)" \
 		"$(manifest_path drivers-vm.txt)" \
 		"$(manifest_path fonts-themes.txt)" \
 		"$(manifest_path iso.txt)" \
