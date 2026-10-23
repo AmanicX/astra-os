@@ -96,18 +96,17 @@ require_tools git mkarchiso
 
 # The desktop config expects a pinned, read-only LazyVim tree at
 # /usr/share/astra/nvim/lazy. Build it once and cache it between ISO runs.
-NVIM_TREE="${REPO_ROOT}/build/iso/nvim-lazy"
+NVIM_TREE="${ASTRA_NVIM_TREE:-/var/tmp/astraos-nvim-lazy}"
 if [[ ! -d ${NVIM_TREE}/lazy.nvim ]]; then
 	log "pre-baking the Neovim plugin tree..."
-	prebake_user="${SUDO_USER:-$(id -un)}"
-	if [[ ${EUID} -eq 0 && ${prebake_user} != root ]]; then
-		sudo -u "$prebake_user" "${SCRIPT_DIR}/prebake-nvim.sh" --dest "$NVIM_TREE"
+	if [[ -d "${REPO_ROOT}/build/iso/nvim-lazy/lazy.nvim" ]]; then
+		cp -a "${REPO_ROOT}/build/iso/nvim-lazy" "$NVIM_TREE"
 	else
 		"${SCRIPT_DIR}/prebake-nvim.sh" --dest "$NVIM_TREE"
 	fi
 fi
 
-PROFILE_DIR="${REPO_ROOT}/build/iso/profile"
+PROFILE_DIR="${ASTRA_PROFILE_DIR:-/var/tmp/astraos-profile}"
 mkdir -p "$PROFILE_DIR"
 
 log "assembling archiso profile..."
@@ -178,16 +177,11 @@ install -Dm644 "${REPO_ROOT}/config/snapshot" \
 installer_overlay="${PROFILE_DIR}/airootfs/root/astra-installer-overlay"
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-install" \
 	"${installer_overlay}/usr/bin/astra-install"
-install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-engine" \
-	"${installer_overlay}/usr/lib/astra/installer/astra-engine"
-ln -s ../lib/astra/installer/astra-engine \
-	"${installer_overlay}/usr/bin/astra-installer-engine"
+install -d "${installer_overlay}/usr/lib/astra/installer"
+cp -a "${REPO_ROOT}/packages/astra-installer/astra_installer" \
+	"${installer_overlay}/usr/lib/astra/installer/"
 install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-installer.desktop" \
 	"${installer_overlay}/usr/share/applications/astra-installer.desktop"
-install -d "${installer_overlay}/usr/lib/astra/installer/lib"
-cp -a "${REPO_ROOT}/packages/astra-installer/lib/." \
-	"${installer_overlay}/usr/lib/astra/installer/lib/"
-find "${installer_overlay}/usr/lib/astra/installer/lib" -type f -exec chmod 0644 {} +
 install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.service" \
 	"${installer_overlay}/usr/lib/systemd/system/astra-pending-packages.service"
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.sh" \

@@ -49,6 +49,7 @@ def run_command_stream(cmd: List[str], widget: Any, pkg_callback: Callable[[int,
     log_msg(widget, f"> {' '.join(cmd)}")
     proc = subprocess.Popen(
         cmd,
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -150,15 +151,15 @@ def run_installation_worker(config: AstraConfig, widget: Any) -> None:
         ]
         log_msg(widget, f"Running pacstrap for core packages: {', '.join(base_pkgs)}")
         run_command_stream(
-            ["pacstrap", "-M", str(TARGET_MOUNT)] + base_pkgs,
+            ["pacstrap", "-c", "-N", "-K", str(TARGET_MOUNT)] + base_pkgs,
             widget,
             pkg_callback=widget.update_package_progress
         )
 
         # Generate fstab
         log_msg(widget, "Generating /etc/fstab with UUIDs...")
-        code, fstab_out, _ = subprocess.run(["genfstab", "-U", str(TARGET_MOUNT)], stdout=subprocess.PIPE, text=True, check=True)
-        (TARGET_MOUNT / "etc" / "fstab").write_text(fstab_out)
+        res = subprocess.run(["genfstab", "-U", str(TARGET_MOUNT)], stdout=subprocess.PIPE, text=True, check=True)
+        (TARGET_MOUNT / "etc" / "fstab").write_text(res.stdout)
 
         # -------------------------------------------------------------
         # Phase 3: Installing AstraOS packages
@@ -198,13 +199,17 @@ def run_installation_worker(config: AstraConfig, widget: Any) -> None:
         # Set Root Password
         log_msg(widget, "Setting administrative root password...")
         p = subprocess.Popen(["arch-chroot", str(TARGET_MOUNT), "chpasswd"], stdin=subprocess.PIPE, text=True)
-        p.communicate(f"root:{config.root_password}\n")
+        _, err = p.communicate(f"root:{config.root_password}\n")
+        if p.returncode != 0:
+            raise RuntimeError(f"Setting root password failed: {err}")
 
         # Create User
         log_msg(widget, f"Creating user account '{config.username}' with zsh...")
         run_chroot(TARGET_MOUNT, ["useradd", "-m", "-U", "-s", "/bin/zsh", config.username], widget.append_log)
         p = subprocess.Popen(["arch-chroot", str(TARGET_MOUNT), "chpasswd"], stdin=subprocess.PIPE, text=True)
-        p.communicate(f"{config.username}:{config.user_password}\n")
+        _, err = p.communicate(f"{config.username}:{config.user_password}\n")
+        if p.returncode != 0:
+            raise RuntimeError(f"Setting user password failed: {err}")
 
         # Sudo configuration (wheel)
         configure_sudo_rules(TARGET_MOUNT, config, widget.append_log)
