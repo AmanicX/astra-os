@@ -212,7 +212,9 @@ chown -R 0:0 "${PROFILE_DIR}/airootfs/usr/share/astra/nvim"
 
 log "running mkarchiso..."
 mkdir -p "${REPO_ROOT}/out"
-rm -rf -- "${REPO_ROOT}/work"
-mkarchiso -v -w "${REPO_ROOT}/work" -o "${REPO_ROOT}/out" "$PROFILE_DIR"
+WORK_DIR="${ASTRA_WORK_DIR:-/var/tmp/astraos-work}"
+rm -rf -- "$WORK_DIR"
+mkdir -p "$WORK_DIR"
+mkarchiso -v -w "$WORK_DIR" -o "${REPO_ROOT}/out" "$PROFILE_DIR"
 
 log "ISO built successfully at ${REPO_ROOT}/out"

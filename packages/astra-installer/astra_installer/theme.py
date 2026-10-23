@@ -1,23 +1,25 @@
 """
 AstraOS Installer Design System & Textual Theme Tokens.
-Mixed-case AstraOS brand identity.
+Astral Meridian Aesthetic: Deep Void (#05070d), Midnight (#0b1220), Cyan (#5ee6f2), Starlight (#e8edf7).
+Impeccable, Emil Kowalski, and Taste skill integration.
 """
 
 from typing import Final
 
 # Core Semantic Palette
-COLOR_BG: Final[str] = "#0c1017"
-COLOR_CARD: Final[str] = "#131a24"
-COLOR_INPUT: Final[str] = "#182230"
-COLOR_BORDER: Final[str] = "#3b4c58"
+COLOR_BG: Final[str] = "#05070d"
+COLOR_CARD: Final[str] = "#0b1220"
+COLOR_INPUT: Final[str] = "#0e1726"
+COLOR_BORDER: Final[str] = "#1e3a5f"
 COLOR_BORDER_FOCUS: Final[str] = "#5ee6f2"
 
 COLOR_TEXT: Final[str] = "#e8edf7"
 COLOR_MUTED: Final[str] = "#8e9ea9"
+COLOR_DIM: Final[str] = "#475569"
 COLOR_CYAN: Final[str] = "#5ee6f2"
 COLOR_AMBER: Final[str] = "#e6a45a"
 COLOR_RED: Final[str] = "#f26b6b"
-COLOR_GREEN: Final[str] = "#6be6a8"
+COLOR_GREEN: Final[str] = "#38bdf8"
 
 # ASCII Star mark & Wordmark
 ASTRA_STAR_SMALL: Final[str] = """
@@ -39,29 +41,31 @@ ASTRA_BANNER: Final[str] = "[bold #e8edf7]Astra[/][bold #5ee6f2]OS[/]"
 # Textual Application Stylesheet (CSS)
 APP_CSS: Final[str] = """
 Screen {
-    background: #0c1017;
+    background: #05070d;
     color: #e8edf7;
     layout: vertical;
-    align: center middle;
+    padding: 0;
+    margin: 0;
 }
 
 #app-container {
-    width: 98%;
-    max-width: 120;
-    height: 96%;
-    max-height: 42;
-    background: #131a24;
-    border: round #3b4c58;
-    padding: 0 1;
+    width: 100%;
+    height: 100%;
+    background: #0b1220;
+    border: none;
+    padding: 0;
+    margin: 0;
+    layout: vertical;
 }
 
 #app-header {
     height: 3;
     dock: top;
-    border-bottom: heavy #3b4c58;
+    background: #080d17;
+    border-bottom: solid #1e3a5f;
     layout: horizontal;
     align: center middle;
-    padding: 0 1;
+    padding: 0 2;
 }
 
 #header-logo {
@@ -74,27 +78,30 @@ Screen {
     width: 1fr;
     text-align: left;
     margin-left: 1;
-    color: #e8edf7;
+    color: #8e9ea9;
 }
 
 #header-step {
     width: auto;
-    color: #8e9ea9;
-    text-align: right;
+    color: #5ee6f2;
+    text-style: bold;
+    background: #111d2e;
+    padding: 0 1;
 }
 
 #content-box {
     height: 1fr;
     layout: horizontal;
-    padding: 1 0;
+    padding: 0;
+    margin: 0;
 }
 
 #rail-container {
-    width: 24;
+    width: 28;
     height: 100%;
-    border-right: solid #3b4c58;
-    padding-right: 1;
-    display: block;
+    border-right: solid #1e3a5f;
+    background: #080d17;
+    padding: 1 1;
 }
 
 #rail-scroll {
@@ -104,27 +111,29 @@ Screen {
 
 .rail-item {
     padding: 0 1;
-    color: #8e9ea9;
+    color: #475569;
+    height: 1;
 }
 
 .rail-item-completed {
-    color: #6be6a8;
+    color: #38bdf8;
 }
 
 .rail-item-current {
     color: #5ee6f2;
     text-style: bold;
-    background: #1e2938;
+    background: #0f2338;
+    border-left: wide #5ee6f2;
 }
 
 .rail-item-upcoming {
-    color: #4f6170;
+    color: #475569;
 }
 
 #main-pane {
     width: 1fr;
     height: 100%;
-    padding: 0 2;
+    padding: 1 3;
     overflow-y: auto;
 }
 
@@ -140,7 +149,7 @@ Screen {
 }
 
 .explain-panel {
-    background: #16202c;
+    background: #0e1726;
     border-left: double #5ee6f2;
     padding: 0 1;
     margin: 1 0;
@@ -163,35 +172,77 @@ Screen {
     color: #f26b6b;
 }
 
-#footer-hints {
-    height: 1;
+#nav-buttons-bar {
     dock: bottom;
-    border-top: solid #3b4c58;
-    color: #8e9ea9;
-    text-align: center;
+    height: 3;
+    background: #080d17;
+    border-top: solid #1e3a5f;
+    layout: horizontal;
+    align: center middle;
+    padding: 0 2;
+}
+
+#nav-spacer {
+    width: 1fr;
+    height: 1;
+}
+
+.spacer {
+    width: 1fr;
+}
+
+#btn-back {
+    background: #1e293b;
+    color: #cbd5e1;
+    border: none;
+    min-width: 16;
+    height: 1;
+}
+
+#btn-back:hover, #btn-back:focus {
+    background: #334155;
+    color: #ffffff;
+}
+
+#btn-next {
+    background: #5ee6f2;
+    color: #05070d;
+    text-style: bold;
+    border: none;
+    min-width: 18;
+    height: 1;
+}
+
+#btn-next:hover, #btn-next:focus {
+    background: #7ff0fa;
+}
+
+#btn-next:disabled {
+    background: #1e293b;
+    color: #475569;
 }
 
 .btn-primary {
     background: #5ee6f2;
-    color: #0c1017;
+    color: #05070d;
     text-style: bold;
     border: none;
     min-width: 14;
 }
 
-.btn-primary:focus {
+.btn-primary:focus, .btn-primary:hover {
     background: #7ff0fa;
 }
 
 .btn-secondary {
-    background: #253342;
+    background: #1e293b;
     color: #e8edf7;
     border: none;
     min-width: 12;
 }
 
-.btn-secondary:focus {
-    background: #334458;
+.btn-secondary:focus, .btn-secondary:hover {
+    background: #334155;
 }
 
 .btn-danger {
@@ -201,9 +252,18 @@ Screen {
     border: none;
 }
 
+#footer-hints {
+    dock: bottom;
+    height: 1;
+    background: #05070d;
+    border-top: solid #111d2e;
+    color: #64748b;
+    text-align: center;
+}
+
 Input {
-    background: #182230;
-    border: tall #3b4c58;
+    background: #0e1726;
+    border: tall #1e3a5f;
     color: #e8edf7;
     margin-bottom: 1;
 }
@@ -213,11 +273,12 @@ Input:focus {
 }
 
 OptionList {
-    background: #182230;
-    border: tall #3b4c58;
+    background: #0e1726;
+    border: tall #1e3a5f;
     color: #e8edf7;
-    height: auto;
-    max-height: 14;
+    height: 1fr;
+    min-height: 8;
+    max-height: 22;
 }
 
 OptionList:focus {
@@ -250,9 +311,10 @@ ProgressBar {
 }
 
 #log-pane {
-    height: 12;
-    background: #090c10;
-    border: solid #3b4c58;
+    height: 1fr;
+    min-height: 8;
+    background: #05070d;
+    border: solid #1e3a5f;
     color: #9cb1c2;
     padding: 0 1;
     overflow-y: scroll;

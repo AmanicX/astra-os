@@ -1,0 +1,9 @@
+{
+  "name": "free-llm-api",
+  "version": "1.0.0",
+  "description": "Curated directory and access provider for free LLM APIs and permanent free tiers by awesome.",
+  "author": "awesome",
+  "enabled": true,
+  "skills": [],
+  "rules": []
+}

@@ -1,0 +1,9 @@
+{
+  "name": "agent-reach",
+  "version": "1.0.0",
+  "description": "Multi-platform intelligence and search retrieval plugin for agents across GitHub, documentation, and web sources.",
+  "author": "agent-reach",
+  "enabled": true,
+  "skills": [],
+  "rules": []
+}
