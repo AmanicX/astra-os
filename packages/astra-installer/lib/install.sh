@@ -74,31 +74,62 @@ build_pkg_list() {
 }
 
 install_extra_packages() {
-	local raw=${STATE[extra_packages]}
-	[[ -n ${raw:-} ]] || return 0
-
 	local -a extra=()
-	local item
-	while IFS= read -r item; do
-		item="${item//[[:space:]]/}"
-		[[ -n ${item:-} ]] || continue
-		if [[ ! $item =~ ^[A-Za-z0-9@._+-]+$ ]]; then
-			warn "ignoring invalid extra package name: ${item}"
-			continue
-		fi
-		extra+=("$item")
-	done < <(printf '%s' "$raw" | tr ',' '\n')
+	local -a pending_aur=()
 
-	((${#extra[@]} > 0)) || return 0
-	log "installing extra packages: ${extra[*]}"
-	if ! arch-chroot "$MNT_ROOT" pacman -S --noconfirm --needed "${extra[@]}" 2>&1 |
-		tee -a "$LOG"; then
-		warn "some extra packages could not be installed"
-		if ((UNATTENDED == 1)); then
-			die "extra packages failed in unattended mode; see ${LOG}"
+	# Browser handling
+	local browser=${STATE[browser]:-none}
+	if [[ $browser != none ]]; then
+		case "$browser" in
+		helium-browser-bin|brave-bin)
+			pending_aur+=("$browser")
+			;;
+		*)
+			extra+=("$browser")
+			;;
+		esac
+	fi
+
+	# AUR helper handling
+	local aur_helper=${STATE[aur_helper]:-none}
+	if [[ $aur_helper != none ]]; then
+		case "$aur_helper" in
+		paru)
+			extra+=("paru")
+			;;
+		yay)
+			pending_aur+=("yay")
+			;;
+		esac
+	fi
+
+	# Additional user packages
+	local raw=${STATE[extra_packages]:-}
+	if [[ -n ${raw:-} ]]; then
+		local item
+		while IFS= read -r item; do
+			item="${item//[[:space:]]/}"
+			[[ -n ${item:-} ]] || continue
+			if [[ ! $item =~ ^[A-Za-z0-9@._+-]+$ ]]; then
+				warn "ignoring invalid extra package name: ${item}"
+				continue
+			fi
+			extra+=("$item")
+		done < <(printf '%s' "$raw" | tr ',' '\n')
+	fi
+
+	if ((${#extra[@]} > 0)); then
+		log "installing extra packages: ${extra[*]}"
+		if ! arch-chroot "$MNT_ROOT" pacman -S --noconfirm --needed "${extra[@]}" 2>&1 |
+			tee -a "$LOG"; then
+			warn "some extra packages could not be installed directly via pacman"
 		fi
-		ui_confirm "Continue without the failed extra packages?" ||
-			die "installation cancelled after extra package failure"
+	fi
+
+	if ((${#pending_aur[@]} > 0)); then
+		log "queuing AUR packages for first-boot installation: ${pending_aur[*]}"
+		mkdir -p "${MNT_ROOT}/var/lib/astra"
+		printf '%s\n' "${pending_aur[@]}" >>"${MNT_ROOT}/var/lib/astra/pending-packages"
 	fi
 }
 
@@ -288,21 +319,32 @@ run_install() {
 	((${#packages[@]} > 0)) || die "no packages selected"
 
 	log "installing ${#packages[@]} packages into ${MNT_ROOT}"
-	gum style --foreground 117 --margin 1 "Installing ${#packages[@]} packages..." || true
+	gum style --foreground "#53bdfa" --margin 1 "✦ Installing ${#packages[@]} packages to target disk..." || true
 
-	# Do NOT pass -c here.  -c tells pacstrap to use the live host's package
-	# cache, which is the 256 MiB archiso overlay (frequently only ~250 MiB
-	# free).  The default lets pacstrap use the target's own cache
-	# (/var/cache/pacman/pkg on the new root), so a 2 GiB download fits on the
-	# 40 GiB test disk and on any disk that passed the 25 GiB size check.
-	local -a pacstrap_args=(-C "$PACMAN_CONF" -M)
-	if [[ ! -d ${MNT_ROOT}/etc/pacman.d/gnupg ]]; then
-		pacstrap_args+=(-K)
+	# Ensure host keyring is copied into target to prevent pacstrap key generation hangs
+	mkdir -p "${MNT_ROOT}/etc/pacman.d"
+	if [[ -d /etc/pacman.d/gnupg && ! -d ${MNT_ROOT}/etc/pacman.d/gnupg ]]; then
+		cp -a /etc/pacman.d/gnupg "${MNT_ROOT}/etc/pacman.d/"
+		log "copied host pacman keyring to target"
 	fi
+
+	# Copy live offline AstraOS repo if present
+	if [[ -d /usr/share/astra/repo ]]; then
+		mkdir -p "${MNT_ROOT}/usr/share/astra/repo"
+		cp -a /usr/share/astra/repo/. "${MNT_ROOT}/usr/share/astra/repo/" 2>/dev/null || true
+		log "copied offline astra-local repo to target"
+	fi
+
+	local -a pacstrap_args=(-C "$PACMAN_CONF" -M)
 
 	if ! pacstrap "${pacstrap_args[@]}" "$MNT_ROOT" "${packages[@]}" 2>&1 |
 		tee -a "$LOG"; then
 		die "pacstrap failed. Check the network and ${LOG}."
+	fi
+
+	# Verify /usr/bin/pacman exists in target
+	if [[ ! -x ${MNT_ROOT}/usr/bin/pacman ]]; then
+		die "/usr/bin/pacman was not installed into target. Base installation failed."
 	fi
 
 	write_target_pacman_conf "$MNT_ROOT"

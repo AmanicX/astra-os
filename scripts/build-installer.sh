@@ -34,17 +34,10 @@ while (($# > 0)); do
 	shift
 done
 
-command -v python3 >/dev/null 2>&1 || {
-	echo "error: missing python3" >&2
-	exit 1
-}
-
-# 1. Syntax check all Python files in the installer
-python3 -m compileall -q "${PKG_DIR}/astra_installer"
-
-# 2. Run unit tests if tests directory exists
-if [[ -d "${REPO_ROOT}/tests/installer" ]]; then
-	python3 -m unittest discover -s "${REPO_ROOT}/tests/installer"
-fi
+# 1. Syntax check all bash installer scripts
+bash -n "${PKG_DIR}/astra-install"
+for f in "${PKG_DIR}/lib"/*.sh; do
+	[[ -f "$f" ]] && bash -n "$f"
+done
 
 printf 'AstraOS installer verified successfully.\n'

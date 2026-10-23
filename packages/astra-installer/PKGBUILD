@@ -1,31 +1,35 @@
 # Maintainer: AstraOS <build@astraos.org>
-# Description: AstraOS modern terminal installer powered by Textual and Archinstall.
+# Description: AstraOS terminal script installer powered by gum.
 # ISO-only; not a dependency of astra-meta.
 pkgname=astra-installer
 pkgver=1.0.0
-pkgrel=1
-pkgdesc="AstraOS modern terminal installer powered by Textual and Archinstall"
+pkgrel=2
+pkgdesc="AstraOS terminal script installer powered by gum"
 arch=('any')
 license=('GPL-3.0-only')
-depends=(
-	'python' 'python-textual' 'archinstall' 'kitty' 'bash' 'parted'
-	'gptfdisk' 'jq' 'pciutils' 'usbutils' 'arch-install-scripts'
-	'btrfs-progs' 'dosfstools' 'util-linux' 'kbd' 'networkmanager'
-	'os-prober' 'ntfs-3g'
-)
+depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz' 'kitty'
+	'arch-install-scripts' 'btrfs-progs' 'dosfstools' 'util-linux' 'kbd' 'networkmanager')
 install=astra-installer.install
 options=(!strip)
 
 package() {
-	install -d "${pkgdir}/usr/lib/astra/installer"
+	install -d "${pkgdir}/usr/lib/astra/installer/lib"
 	install -Dm755 "${startdir}/astra-install" \
 		"${pkgdir}/usr/bin/astra-install"
-
-	# Install Python package module
-	cp -a "${startdir}/astra_installer" "${pkgdir}/usr/lib/astra/installer/"
-
+	install -Dm755 "${startdir}/astra-engine" \
+		"${pkgdir}/usr/lib/astra/installer/astra-engine"
+	ln -s ../lib/astra/installer/astra-engine \
+		"${pkgdir}/usr/bin/astra-installer-engine"
 	install -Dm644 "${startdir}/astra-installer.desktop" \
 		"${pkgdir}/usr/share/applications/astra-installer.desktop"
+
+	cp -a "${startdir}/lib/." "${pkgdir}/usr/lib/astra/installer/lib/"
+
+	# Offline repo metadata used at install time.
+	install -Dm644 "${startdir}/pacman-offline.conf" \
+		"${pkgdir}/etc/astra/pacman-offline.conf"
+	install -Dm644 "${startdir}/pacman-target.conf" \
+		"${pkgdir}/etc/astra/pacman-target.conf"
 
 	# systemd first-boot units.
 	install -Dm644 "${startdir}/astra-pending-packages.service" \

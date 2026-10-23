@@ -177,11 +177,20 @@ install -Dm644 "${REPO_ROOT}/config/snapshot" \
 installer_overlay="${PROFILE_DIR}/airootfs/root/astra-installer-overlay"
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-install" \
 	"${installer_overlay}/usr/bin/astra-install"
-install -d "${installer_overlay}/usr/lib/astra/installer"
-cp -a "${REPO_ROOT}/packages/astra-installer/astra_installer" \
-	"${installer_overlay}/usr/lib/astra/installer/"
+install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-engine" \
+	"${installer_overlay}/usr/lib/astra/installer/astra-engine"
+ln -sf ../lib/astra/installer/astra-engine \
+	"${installer_overlay}/usr/bin/astra-installer-engine"
 install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-installer.desktop" \
 	"${installer_overlay}/usr/share/applications/astra-installer.desktop"
+install -d "${installer_overlay}/usr/lib/astra/installer/lib"
+cp -a "${REPO_ROOT}/packages/astra-installer/lib/." \
+	"${installer_overlay}/usr/lib/astra/installer/lib/"
+install -d "${installer_overlay}/etc/astra"
+install -Dm644 "${REPO_ROOT}/packages/astra-installer/pacman-offline.conf" \
+	"${installer_overlay}/etc/astra/pacman-offline.conf"
+install -Dm644 "${REPO_ROOT}/packages/astra-installer/pacman-target.conf" \
+	"${installer_overlay}/etc/astra/pacman-target.conf"
 install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.service" \
 	"${installer_overlay}/usr/lib/systemd/system/astra-pending-packages.service"
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.sh" \

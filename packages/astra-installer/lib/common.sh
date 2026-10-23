@@ -75,7 +75,9 @@ declare -g -A STATE=(
 	[root_password]=""
 	[user_name]=""
 	[user_password]=""
-	[user_sudo]="passwordless"
+	[user_sudo]="with-password"
+	[browser]="firefox"
+	[aur_helper]="paru"
 	[extra_packages]=""
 	[timezone]="UTC"
 	[locale]="en_US.UTF-8"
@@ -190,7 +192,7 @@ ui_choose() {
 	local header=$1
 	shift
 	local height=${ASTRA_UI_HEIGHT:-14}
-	gum choose --header "$header" --cursor.foreground 117 \
+	gum choose --header "$header" --cursor.foreground "#53bdfa" \
 		--height "$height" -- "$@"
 }
 
@@ -198,7 +200,7 @@ ui_filter() {
 	local header=$1
 	shift
 	local placeholder=${1:-"Type to search..."}
-	gum filter --header "$header" --placeholder "$placeholder" --height 15
+	gum filter --header "$header" --placeholder "$placeholder" --indicator.foreground "#53bdfa" --match.foreground "#53bdfa" --height 15
 }
 
 ui_input() {
@@ -206,25 +208,22 @@ ui_input() {
 	local placeholder=${2:-}
 	local value=${3:-}
 	if [[ -n ${value} ]]; then
-		gum input --prompt "${prompt}: " --placeholder "$placeholder" --value "$value"
+		gum input --prompt "${prompt}: " --prompt.foreground "#53bdfa" --placeholder "$placeholder" --value "$value"
 	else
-		gum input --prompt "${prompt}: " --placeholder "$placeholder"
+		gum input --prompt "${prompt}: " --prompt.foreground "#53bdfa" --placeholder "$placeholder"
 	fi
 }
 
 ui_password() {
 	local prompt=$1
-	# gum has no `password` subcommand; input --password is the supported form.
-	# The old installer's `gum input` failure is exactly what set -e turned into
-	# a silent exit, so keep this wrapper's status intact for the step machine.
-	gum input --password --prompt "${prompt}: "
+	gum input --password --prompt "${prompt}: " --prompt.foreground "#53bdfa"
 }
 
 ui_confirm() {
 	local question=$1
 	local yes=${2:-"Yes"}
 	local no=${3:-"No"}
-	gum confirm --affirmative "$yes" --negative "$no" -- "$question"
+	gum confirm --prompt.foreground "#53bdfa" --affirmative "$yes" --negative "$no" -- "$question"
 }
 
 ui_markdown() {
@@ -240,8 +239,8 @@ step_header() {
 		STEP=$((STEP + 1))
 	fi
 	clear
-	gum style --foreground 117 --align center --width 66 --margin 1 \
-		"AstraOS installer" \
+	gum style --foreground "#53bdfa" --border-foreground "#1e222a" --align center --width 66 --margin 1 \
+		"✦ AstraOS Installer ✦" \
 		"Step ${STEP}/${TOTAL_STEPS} • ${title}" 2>/dev/null || {
 		printf '=== AstraOS installer: %s (%s/%s) ===\n' "$title" "$STEP" "$TOTAL_STEPS"
 	}

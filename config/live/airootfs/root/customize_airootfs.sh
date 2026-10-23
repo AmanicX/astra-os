@@ -55,7 +55,7 @@ cp -a /root/.zprofile /etc/profile.d/99-astra-live.sh
 if [[ -d /root/astra-installer-overlay ]]; then
 	cp -a /root/astra-installer-overlay/. /
 	rm -rf /root/astra-installer-overlay
-	chmod 0755 /usr/bin/astra-* /usr/lib/astra/installer/pending-packages.sh
+	chmod 0755 /usr/bin/astra-* /usr/lib/astra/installer/pending-packages.sh /usr/lib/astra/installer/astra-engine 2>/dev/null || true
 fi
 
 # Seed the pinned LazyVim tree into a writable location. lazy.lua does the same
