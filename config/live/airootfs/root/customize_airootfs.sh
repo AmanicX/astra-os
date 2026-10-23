@@ -22,11 +22,17 @@ install -d -m 0700 /root
 cp -a /etc/skel/. /root/
 chown -R root:root /root
 if [[ -f /root/.config/niri/config.kdl ]] &&
-	! grep -q 'astra-installer-gui' /root/.config/niri/config.kdl; then
+	! grep -q 'astra-installer' /root/.config/niri/config.kdl; then
 	cat >>/root/.config/niri/config.kdl <<'EOF'
 
+// AstraOS live session: window rule to maximize the terminal installer window.
+window-rule {
+	match app-id="astra-installer"
+	open-maximized true
+}
+
 // AstraOS live session: open the installer once the desktop is ready.
-spawn-at-startup "astra-installer-gui"
+spawn-at-startup "kitty" "--class" "astra-installer" "astra-install"
 EOF
 fi
 
@@ -123,8 +129,8 @@ command -v noctalia >/dev/null || {
 	echo "noctalia is missing" >&2
 	exit 1
 }
-command -v astra-installer-gui >/dev/null || {
-	echo "astra-installer-gui is missing" >&2
+command -v astra-install >/dev/null || {
+	echo "astra-install is missing" >&2
 	exit 1
 }
 command -v iwctl >/dev/null || {

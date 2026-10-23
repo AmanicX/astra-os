@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
-# Build the Rust/Tauri AstraOS installer and copy the binary into the package
-# tree where build-iso.sh expects it.
+# Verify and package the AstraOS Textual/Archinstall terminal installer.
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
-SRC="${REPO_ROOT}/installer/src-tauri"
-OUT="${SRC}/target/release/astra-installer"
-PKG_BIN="${REPO_ROOT}/packages/astra-installer/astra-installer-gui"
+PKG_DIR="${REPO_ROOT}/packages/astra-installer"
 
 usage() {
 	cat <<'EOF'
 Usage: build-installer.sh [--build | --check]
 
-  --build   Build the release binary and copy it into packages/astra-installer.
+  --build   Verify Python syntax and tests for astra_installer.
             This is the default.
-  --check   Run cargo check and the Rust unit tests without copying the binary.
+  --check   Run static checks and unit tests.
   -h, --help
 EOF
 }
@@ -37,30 +34,17 @@ while (($# > 0)); do
 	shift
 done
 
-for tool in cargo pkg-config; do
-	command -v "$tool" >/dev/null 2>&1 || {
-		echo "error: missing build tool: $tool" >&2
-		exit 1
-	}
-done
-
-if [[ ! -f ${SRC}/Cargo.toml ]]; then
-	echo "error: ${SRC}/Cargo.toml is missing" >&2
-	exit 1
-fi
-
-cd "$SRC"
-
-if [[ ${MODE} == check ]]; then
-	cargo test
-	exit 0
-fi
-
-cargo build --release
-[[ -x ${OUT} ]] || {
-	echo "error: cargo did not produce ${OUT}" >&2
+command -v python3 >/dev/null 2>&1 || {
+	echo "error: missing python3" >&2
 	exit 1
 }
 
-install -Dm755 "$OUT" "$PKG_BIN"
-printf 'Built %s\nCopied to %s\n' "$OUT" "$PKG_BIN"
+# 1. Syntax check all Python files in the installer
+python3 -m compileall -q "${PKG_DIR}/astra_installer"
+
+# 2. Run unit tests if tests directory exists
+if [[ -d "${REPO_ROOT}/tests/installer" ]]; then
+	python3 -m unittest discover -s "${REPO_ROOT}/tests/installer"
+fi
+
+printf 'AstraOS installer verified successfully.\n'

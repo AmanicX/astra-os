@@ -48,6 +48,9 @@ placed in the ISO. An unclear license is a release blocker, not a warning.
 | SDDM astronaut theme | GitHub `keyitdev/sddm-astronaut-theme`, commit `abb3163c` | GPL-3.0-or-later code | Superseded | Superseded by SilentSDDM (D-034); not shipped |
 | SilentSDDM | GitHub `uiriansan/SilentSDDM`, commit `d477613b07ca13729af20cb4699b308ac7348d2f` | GPL-3.0 | Yes, with license and notices | Installed under `/usr/share/sddm/themes/silent/`; upstream demo media removed; configured via AstraOS presets and `/etc/sddm.conf.d/astra.conf` |
 | Original Wallpapers | Original AstraOS orbital artwork and generated variants (`astraos-default.png`, `astraos-aurora.png`, `astraos-ember.png`, `astraos-lunar.png`) | MIT / Project License | Yes | 4K assets generated from SVG sources under `packages/astra-branding/` |
+| archinstall | Arch Linux upstream package `archinstall` 4.5-1 | GPL-3.0-only | Yes | Upstream installation engine and disk partition models |
+| python-textual | Textualize upstream package `python-textual` 8.2.8-2 | MIT | Yes | Terminal UI framework for the AstraOS installer |
+| astra-installer | AstraOS terminal installer package | GPL-3.0-only | Yes | Uses and derives from archinstall; licensed under GPL-3.0. Rest of AstraOS remains MIT. |
 | NASA Earthrise | NASA Apollo 8, image `as08-14-2383` (`astraos-earthrise.jpg`) | Public Domain (NASA) | Yes | Retrieved 2026-10; NASA public domain imagery policy |
 | NASA Carina Nebula | NASA/ESA/CSA James Webb Space Telescope (`astraos-carina.png`) | Public Domain / CC-BY-4.0 | Yes | Retrieved 2026-10; STScI/NASA/ESA/CSA |
 | NASA Hubble Deep Field | NASA/ESA Hubble Space Telescope, `PIA12110` (`astraos-deepfield.jpg`) | Public Domain (NASA/ESA) | Yes | Retrieved 2026-10; NASA JPL/STScI public domain |

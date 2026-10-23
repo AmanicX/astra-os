@@ -408,3 +408,41 @@ ISO label prefix, website and tagline. `scripts/lib/brand.sh` reads it, and
 updater, bootloader and theme work must read the same file or a derived
 installed copy. The wordmark is mixed-case `Astra` + `OS`; the star mark is
 unchanged.
+
+## D-039 — Return to Terminal Installer powered by Archinstall & Textual
+
+The Rust/Tauri GUI installer is cancelled following runtime fragility (stopping
+early on execution without adequate error logging or recovery). The new installer
+is a polished terminal application combining:
+1. **Engine**: Arch Linux's upstream `archinstall` (version 4.5-1), utilizing its
+   proven models (`DiskLayoutConfiguration`, `PartitionModification`, `Installer`,
+   fstab, bootloader, users, mirrors, and package handling).
+2. **Presentation**: `python-textual` (version 8.2.8-2), providing true-color,
+   CSS-themable, mouse-enabled, modern TUI wizard with full sequential 17-screen
+   Next/Back navigation.
+3. **Dependency Impact**: Zero additional dependency overhead. `archinstall` 4.5-1
+   in official Arch repositories already requires `python-textual` as a mandatory
+   dependency.
+
+## D-040 — GPL-3.0 Licensing for Installer Package
+
+Because the installer uses and extends `archinstall` (GPL-3.0-only), the
+`astra-installer` package is licensed under GNU General Public License v3.0.
+The rest of AstraOS remains under the MIT License. This boundary is recorded in
+`THIRD_PARTY.md`.
+
+## D-041 — Guarded Storage Safety Engine
+
+No disk write is permitted until explicit confirmation on the summary screen
+(requiring typing the disk or partition name). The storage planner generates a
+typed `StoragePlan`. Before applying, partition tables are dumped to
+`/root/astra-partition-backup-*` and SHA-256 hashes of the first MiB of all
+untouched partitions are recorded and validated post-installation.
+
+## D-042 — Resilient Supervised Execution and Error Recovery
+
+The installer runs under a supervised worker that never silently exits. Every
+exception, network hiccup, or non-zero exit from pacstrap or post-install hooks is
+intercepted, displayed with full cause and log details, and offers immediate
+retry without repartitioning.
+

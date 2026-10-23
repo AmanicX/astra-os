@@ -1,36 +1,43 @@
-# astra-install
+# astra-install — Modern Terminal Installer for AstraOS
 
-Status: **implemented and tested in WSL with real `gum` and loopback disks.**
-The live ISO and an installed-system boot are verified separately (see
-`docs/BUILD.md`).
+Status: **Archinstall-based Textual TUI (v2.0)**  
+License: **GPL-3.0** (derived from and integrating upstream `archinstall` 4.5-1)
 
-## Shape
+## Architecture
 
-- Bash + `gum`, usable on a bare TTY and inside kitty.
-- One function per step in `packages/astra-installer/lib/*.sh`.
-- State is an associative array. A password-free copy is written to
-  `/run/astra-install/answers.json`; passwords only travel through a mode-0600
-  file and pipes to `chpasswd`, and are removed afterwards.
-- Logs go to `/var/log/astra-install.log`; the log is copied to the target at
-  the end. Fatal errors keep the terminal open and print the log path.
-- No `set -e`: `gum` returns non-zero for Esc, and optional probes
-  (`blkid`, `lspci`, `findmnt`) return non-zero routinely. Fatal paths use
-  `die`, which logs, cleans up, and exits non-zero with an explanation.
-- Branded header on every screen. `Esc`/`Ctrl-C` on a step returns to the
-  previous step instead of closing the terminal. The welcome screen is the
-  only place that exits, and it asks for a second confirmation.
+- **Engine**: Upstream `archinstall` 4.5-1 library (`archinstall.lib.installer.Installer`, `DiskLayoutConfiguration`, `DeviceModification`, `PartitionModification`, `btrfs_options`, `genfstab`, `add_bootloader`, and user management).
+- **Presentation**: `python-textual` (v8.2.8) true-color TUI wizard featuring a sequential 17-screen workflow with a strict Back/Next stack.
+- **Brand Palette**:
+  - Deep Navy background (`#0c1017`)
+  - Off-white text (`#e8edf7`)
+  - Cyan accent (`#5ee6f2` - selection, progress, active items)
+  - Amber highlight (`#e6a45a` - warnings, attention)
+  - Slate-teal hairlines (`#3b4c58` - borders, subtle text)
+  - Red (`#f26b6b` - destructive actions)
+  - Green (`#6be6a8` - preserved, untouched partitions)
+- **Unattended Mode**: Full compatibility with `astra-install --config <file.json> --creds <creds.json> --silent`.
+- **Fallback**: Graceful fallback to sequential text prompts if terminal capabilities or window dimensions prevent rich TUI initialization.
 
-## Prompt order
+## The 17 Screens (Strict Sequential Order)
 
-1. Keyboard layout
-2. Package source (Arch Linux Archive snapshot or regional mirrors)
-3. Storage
-4. Hostname
-5. Root password
-6. User account and sudo
-7. Timezone and locale
-8. Additional packages
-9. Review and final confirmation
+1. **Welcome**: Logo / ASCII star-mark, system health check (UEFI, internet, Secure Boot warning, RAM, usable disk). Next is blocked until network is active.
+2. **Keyboard layout**: Searchable list with live testing field.
+3. **Locale**: Searchable UTF-8 locale selection (default `en_US.UTF-8`).
+4. **Timezone**: Searchable region/city list with NTP sync enabled.
+5. **Repository region**: Mirror region selector with background speed ranking.
+6. **multilib**: Informational screen noting multilib, parallel downloads, and color enabled automatically.
+7. **Swap**: zram (recommended default), swap partition (custom size), or no swap.
+8. **Hostname**: Default `astraos` or custom RFC 1123 validated name.
+9. **Root password**: Masked input with verification and strength indicator.
+10. **User account**: Username and password with verification.
+11. **Sudo mode**: Standard account (no sudo) vs Administrator (`wheel` with user password). No `NOPASSWD`.
+12. **Mounting / Partitioning**: Safe storage planner (Erase disk, Use free space, Manual / pre-mounted).
+13. **Extra boot entries (os-prober)**: Automatic dual-boot OS detection via GRUB.
+14. **Additional packages**: Curated base inventory display, search/validator, browser and AUR helper pickers.
+15. **Summary**: Grouped review with jump-back edit actions, before/after disk layout bar, and typed confirmation.
+16. **Installation**: Phase progress bar, package counter, live streaming log pane.
+17. **Finished**: Completion summary with "Reboot now?" (Yes / No).
+
 
 No disk write happens before the final **INSTALL** confirmation. The one
 exception is `cfdisk`, which the user operates directly in free-space and

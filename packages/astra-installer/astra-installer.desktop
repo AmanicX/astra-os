@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=AstraOS Installer
+Name=Install AstraOS
 Comment=Install AstraOS to disk
-TryExec=/usr/bin/astra-installer-gui
-Exec=/usr/bin/astra-installer-gui
+TryExec=/usr/bin/astra-install
+Exec=kitty --class astra-installer astra-install
 Icon=astraos-logo
 Terminal=false
 Categories=System;

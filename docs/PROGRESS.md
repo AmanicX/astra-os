@@ -1,33 +1,25 @@
 # AstraOS Progress
 
-Updated: 2026-10-22
+Updated: 2026-10-23
 
-## Current status
+## Current Status: Archinstall + Textual Terminal Installer
 
-Phase 1 (naming, boot-menu rebrand and mixed-case wordmark) is implemented and
-statically tested. The actual rebuilt ISO and QEMU/OVMF boot verification are
-pending an explicitly approved privileged build.
+The Rust/Tauri GUI installer has been retired. The installer is now an Archinstall-powered
+terminal application with a custom Textual (Python) 17-screen sequential wizard.
 
-The owner has removed the offline requirement and replaced the earlier
-Astronaut/Noctalia SDDM theme with SilentSDDM. The installer is still the
-Bash/gum script; it will be replaced by the Rust/Tauri app in a later phase.
-The source tree is ahead of the old README and installer docs.
+### Phase Tracker
 
-## Master-prompt phases
-
-| Phase | Scope | Status |
+| Phase | Description | Status |
 |---|---|---|
-| 1 | Audit; brand identity source; boot menus; mixed-case wordmark | Source complete; static tests pass; ISO boot pending |
-| 2 | Live session: no SDDM, root autologin, installer autostart | Pending |
-| 3 | Wallpapers and shared design tokens; SilentSDDM switcher | Pending |
-| 4 | Installer core and storage safety engine | Pending |
-| 5 | Installer GUI pages 1–5 with Playwright loop | Pending |
-| 6 | Storage pages and projected layouts | Pending |
-| 7 | Bootloader pages and GRUB/Limine configs | Pending |
-| 8 | Packages page and btop theme | Pending |
-| 9 | Summary, progress, done and engine integration | Pending |
-| 10 | Updater and release tooling | Pending |
-| 11 | Full QEMU/OVMF matrix and ISO rebuild commands | Pending |
+| **0** | **Audit & Architecture**: Audit repository, old failure analysis, verify `archinstall` 4.5-1 and `python-textual` 8.2.8-2, write decisions | **DONE** |
+| **1** | **Cleanup & Skeleton**: Remove Tauri GUI artifacts, verify updater independence, build Textual wizard skeleton and theme system | **IN PROGRESS** |
+| **2** | **Screens 1–11**: Welcome, Keyboard, Locale, Timezone, Mirrors, Multilib, Swap, Hostname, Root PW, User, Sudo | Pending |
+| **3** | **Storage Guard & Screen 12**: Typed operations, baseline snapshot, free-space planner, no unconfirmed wipes | Pending |
+| **4** | **Screens 13–17 & Supervised Install**: Extra boot (os-prober), Additional packages, Summary, Progress, Finished | Pending |
+| **5** | **AstraOS Post-Install Hooks**: Desktop, SilentSDDM, branding, hardware, zsh, LazyVim sync | Pending |
+| **6** | **Live Session Integration**: Auto-start maximized in kitty under Niri, clean skel, desktop entry | Pending |
+| **7** | **Test Matrix & Rebuild**: Headless visual tests, interactive Pexpect/tmux tests, QEMU/OVMF image test | Pending |
+
 
 ## Phase 1 record
 

@@ -1,44 +1,31 @@
 # Maintainer: AstraOS <build@astraos.org>
-# Description: AstraOS installer: Tauri GUI, non-interactive engine, TUI fallback.
+# Description: AstraOS modern terminal installer powered by Textual and Archinstall.
 # ISO-only; not a dependency of astra-meta.
 pkgname=astra-installer
-pkgver=0.2.0
+pkgver=1.0.0
 pkgrel=1
-pkgdesc="AstraOS Tauri GUI installer with a typed non-interactive engine and TUI fallback"
-arch=('x86_64')
-license=('MIT')
-depends=('bash' 'gum' 'parted' 'gptfdisk' 'jq' 'pciutils' 'usbutils' 'bzip2' 'xz' 'kitty'
-	'arch-install-scripts' 'btrfs-progs' 'dosfstools' 'util-linux' 'kbd' 'networkmanager'
-	'gtk3' 'webkit2gtk-4.1')
+pkgdesc="AstraOS modern terminal installer powered by Textual and Archinstall"
+arch=('any')
+license=('GPL-3.0-only')
+depends=(
+	'python' 'python-textual' 'archinstall' 'kitty' 'bash' 'parted'
+	'gptfdisk' 'jq' 'pciutils' 'usbutils' 'arch-install-scripts'
+	'btrfs-progs' 'dosfstools' 'util-linux' 'kbd' 'networkmanager'
+	'os-prober' 'ntfs-3g'
+)
 install=astra-installer.install
 options=(!strip)
 
 package() {
-	install -d "${pkgdir}/usr/lib/astra/installer/lib"
+	install -d "${pkgdir}/usr/lib/astra/installer"
 	install -Dm755 "${startdir}/astra-install" \
 		"${pkgdir}/usr/bin/astra-install"
-	install -Dm755 "${startdir}/astra-engine" \
-		"${pkgdir}/usr/lib/astra/installer/astra-engine"
-	ln -s ../lib/astra/installer/astra-engine \
-		"${pkgdir}/usr/bin/astra-installer-engine"
+
+	# Install Python package module
+	cp -a "${startdir}/astra_installer" "${pkgdir}/usr/lib/astra/installer/"
+
 	install -Dm644 "${startdir}/astra-installer.desktop" \
 		"${pkgdir}/usr/share/applications/astra-installer.desktop"
-
-	# The Tauri binary is built by scripts/build-installer.sh.  It is optional
-	# in the package so a source-only package build still produces a working TUI
-	# fallback; the ISO build requires it and overlays it explicitly.
-	if [[ -x ${startdir}/astra-installer-gui ]]; then
-		install -Dm755 "${startdir}/astra-installer-gui" \
-			"${pkgdir}/usr/bin/astra-installer-gui"
-	fi
-
-	cp -a "${startdir}/lib/." "${pkgdir}/usr/lib/astra/installer/lib/"
-
-	# Offline repo metadata used at install time.
-	install -Dm644 "${startdir}/pacman-offline.conf" \
-		"${pkgdir}/etc/astra/pacman-offline.conf"
-	install -Dm644 "${startdir}/pacman-target.conf" \
-		"${pkgdir}/etc/astra/pacman-target.conf"
 
 	# systemd first-boot units.
 	install -Dm644 "${startdir}/astra-pending-packages.service" \

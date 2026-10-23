@@ -193,13 +193,9 @@ install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.ser
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.sh" \
 	"${installer_overlay}/usr/lib/astra/installer/pending-packages.sh"
 
-# The Tauri binary is the primary live install UI.  Refuse to build an ISO that
-# silently falls back to the TUI because the GUI was forgotten.
-gui_bin="${REPO_ROOT}/installer/src-tauri/target/release/astra-installer"
-[[ -x ${gui_bin} ]] ||
-	die "astra-installer GUI is not built; run scripts/build-installer.sh --build first"
-install -Dm755 "${gui_bin}" \
-	"${installer_overlay}/usr/bin/astra-installer-gui"
+# 4. Verify terminal installer entrypoint is ready.
+[[ -f "${REPO_ROOT}/packages/astra-installer/astra-install" ]] ||
+	die "astra-install executable is missing from packages/astra-installer"
 
 # 5. Bundle the local repository so the installer can resolve Astra and AUR
 # packages without a second network source.
