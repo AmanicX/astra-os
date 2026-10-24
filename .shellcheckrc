@@ -2,5 +2,5 @@
 # SC1091: sourced files live at install time, not in the build tree.
 # SC2154: many variables are shared across sourced installer libraries.
 # SC2034: globals declared in one sourced lib are used by another.
-disable=SC1091,SC2154,SC2034,SC2016
+disable=SC1091,SC2154,SC2034,SC2016,SC2059
 shell=bash

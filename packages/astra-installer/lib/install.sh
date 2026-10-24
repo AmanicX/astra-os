@@ -118,9 +118,18 @@ install_extra_packages() {
 		done < <(printf '%s' "$raw" | tr ',' '\n')
 	fi
 
-	if ((${#extra[@]} > 0)); then
-		log "installing extra packages: ${extra[*]}"
-		if ! arch-chroot "$MNT_ROOT" pacman -S --noconfirm --needed "${extra[@]}" 2>&1 |
+	local -a needed_extra=()
+	for p in "${extra[@]}"; do
+		if arch-chroot "$MNT_ROOT" pacman -Q "$p" >/dev/null 2>&1; then
+			log "package $p is already present in target system"
+		else
+			needed_extra+=("$p")
+		fi
+	done
+
+	if ((${#needed_extra[@]} > 0)); then
+		log "installing extra packages: ${needed_extra[*]}"
+		if ! arch-chroot "$MNT_ROOT" pacman -S --noconfirm --needed "${needed_extra[@]}" 2>&1 |
 			tee -a "$LOG"; then
 			warn "some extra packages could not be installed directly via pacman"
 		fi
@@ -141,7 +150,11 @@ export LC_ALL=C
 
 # Secrets and answers are written to a mode-0600 file by the parent installer
 # and removed immediately after sourcing.
-if [[ -r /tmp/astra-env ]]; then
+if [[ -r /root/astra-env ]]; then
+	# shellcheck disable=SC1091
+	source /root/astra-env
+	rm -f /root/astra-env
+elif [[ -r /tmp/astra-env ]]; then
 	# shellcheck disable=SC1091
 	source /tmp/astra-env
 	rm -f /tmp/astra-env
@@ -337,8 +350,8 @@ TARGET_SCRIPT_EOF
 configure_target() {
 	write_target_setup_script
 
-	local envfile="${MNT_ROOT}/tmp/astra-env"
-	mkdir -p "${MNT_ROOT}/tmp" || die "cannot create target /tmp"
+	local envfile="${MNT_ROOT}/root/astra-env"
+	mkdir -p "${MNT_ROOT}/root" || die "cannot create target /root"
 
 	{
 		printf 'ASTRA_HOSTNAME=%q\n' "${STATE[hostname]}"
@@ -358,14 +371,14 @@ configure_target() {
 	} >"${envfile}" || die "cannot write target environment file"
 	chmod 0600 "${envfile}"
 
-	install -m 0700 "${TARGET_SCRIPT}" "${MNT_ROOT}/tmp/astra-target-setup.sh" ||
+	install -m 0700 "${TARGET_SCRIPT}" "${MNT_ROOT}/root/astra-target-setup.sh" ||
 		die "cannot copy the target setup script"
 
-	if ! arch-chroot "${MNT_ROOT}" /tmp/astra-target-setup.sh 2>&1 | tee -a "$LOG"; then
-		rm -f "${MNT_ROOT}/tmp/astra-target-setup.sh" "${envfile}"
+	if ! arch-chroot "${MNT_ROOT}" /root/astra-target-setup.sh 2>&1 | tee -a "$LOG"; then
+		rm -f "${MNT_ROOT}/root/astra-target-setup.sh" "${envfile}"
 		die "target configuration failed; see ${LOG}"
 	fi
-	rm -f "${MNT_ROOT}/tmp/astra-target-setup.sh" "${envfile}"
+	rm -f "${MNT_ROOT}/root/astra-target-setup.sh" "${envfile}"
 	log "target configuration finished"
 }
 

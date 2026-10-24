@@ -119,16 +119,15 @@ cp -r /usr/share/archiso/configs/releng/. "$PROFILE_DIR/"
 # only menu titles, help text and the identity fields change.
 "${SCRIPT_DIR}/rebrand-archiso.sh" "${PROFILE_DIR}"
 
-# Replace the two-entry bootmodes array with UEFI systemd-boot only.
+# Use UEFI GRUB so the live ISO displays the custom AstraOS GRUB theme with custom logo and wallpaper.
 sed -i \
-	-e "s|^bootmodes=('bios.syslinux'|bootmodes=('uefi.systemd-boot')|" \
+	-e "s|^bootmodes=('bios.syslinux'|bootmodes=('uefi.grub')|" \
 	-e "/^[[:space:]]*'uefi.systemd-boot')\$/d" \
 	"${PROFILE_DIR}/profiledef.sh"
 
-# Keep a serial console alongside the local display.  Headless installs and
-# rescue work need it, and it lets the UEFI boot path be verified over serial.
+# Keep a serial console alongside the local display, and enable quiet splash for Plymouth.
 grep -q '^kernel_params_x86_64=' "${PROFILE_DIR}/profiledef.sh" ||
-	printf '%s\n' 'kernel_params_x86_64="console=ttyS0,115200"' \
+	printf '%s\n' 'kernel_params_x86_64="console=ttyS0,115200 quiet splash vt.global_cursor_default=0"' \
 		>>"${PROFILE_DIR}/profiledef.sh"
 
 # zstd keeps live-image builds practical on WSL while remaining fully supported
@@ -206,10 +205,6 @@ if [[ -d "${REPO_ROOT}/packages/astra-branding/files/usr/share/plymouth/themes/a
 	install -d "${installer_overlay}/usr/share/plymouth/themes"
 	cp -a "${REPO_ROOT}/packages/astra-branding/files/usr/share/plymouth/themes/astra" \
 		"${installer_overlay}/usr/share/plymouth/themes/"
-fi
-if [[ -f "${REPO_ROOT}/packages/astra-branding/files/etc/plymouth/plymouthd.conf" ]]; then
-	install -Dm644 "${REPO_ROOT}/packages/astra-branding/files/etc/plymouth/plymouthd.conf" \
-		"${installer_overlay}/etc/plymouth/plymouthd.conf"
 fi
 
 # 4. Verify terminal installer entrypoint is ready.

@@ -78,14 +78,7 @@ if [[ -d ${theme_src} ]]; then
 	mkdir -p "${profile}/grub/themes/astra"
 	cp -a "${theme_src}/." "${profile}/grub/themes/astra/"
 	if [[ -f "${profile}/grub/grub.cfg" ]]; then
-		sed -i '/insmod all_video/a \
-    insmod gfxterm\
-    insmod png\
-    set gfxmode="1920x1080,auto"\
-    if [ -f "${prefix}/themes/astra/theme.txt" ]; then\
-        set theme="${prefix}/themes/astra/theme.txt"\
-    fi\
-    terminal_output gfxterm' "${profile}/grub/grub.cfg"
+		sed -i 's/terminal_output console/insmod gfxterm\n    insmod png\n    set gfxmode="1920x1080,auto"\n    if [ -f "${prefix}\/themes\/astra\/theme.txt" ]; then\n        set theme="${prefix}\/themes\/astra\/theme.txt"\n    fi\n    terminal_output gfxterm/' "${profile}/grub/grub.cfg"
 	fi
 fi
 

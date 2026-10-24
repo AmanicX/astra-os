@@ -89,6 +89,7 @@ systemctl enable iwd.service
 systemctl enable bluetooth.service
 systemctl enable power-profiles-daemon.service
 systemctl disable sddm.service 2>/dev/null || true
+plymouth-set-default-theme astra 2>/dev/null || true
 
 # NetworkManager owns link management in the desktop session. The archiso
 # networkd default would compete with it. Keep systemd-resolved: the releng

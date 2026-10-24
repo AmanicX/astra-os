@@ -1,0 +1,31 @@
+; https://github.com/uiriansan/SilentSDDM
+
+[SddmGreeterTheme]
+Name=AstraOS Silent
+Type=sddm-theme
+Description=AstraOS SilentSDDM theme
+License=GPL-3.0-or-later
+Version=1.5.0
+Theme-Id=silent
+Theme-API=2.0
+MainScript=Main.qml
+
+TranslationsDirectory=translations
+QtVersion=6
+
+ConfigFile=configs/astra-orbital.conf
+# ConfigFile=configs/default-left.conf
+# ConfigFile=configs/default-right.conf
+# ConfigFile=configs/rei.conf
+# ConfigFile=configs/ken.conf
+# ConfigFile=configs/silvia.conf
+# ConfigFile=configs/everforest.conf
+# ConfigFile=configs/catppuccin-latte.conf
+# ConfigFile=configs/catppuccin-frappe.conf
+# ConfigFile=configs/catppuccin-macchiato.conf
+# ConfigFile=configs/catppuccin-mocha.conf
+# ConfigFile=configs/nord.conf
+# ConfigFile=configs/gruvbox.conf
+# ConfigFile=configs/eldritch-cthulhu.conf
+# ConfigFile=configs/eldritch-abyss.conf
+# ConfigFile=configs/eldritch-dusk.conf

@@ -23,12 +23,39 @@
 
 ## 🌌 Overview
 
-**AstraOS** is an Arch-based Linux distribution crafted for developers, creators, and enthusiasts who desire a coherent, aesthetic, and distraction-free computing experience out of the box. 
+**AstraOS** is an Arch-based Linux desktop experience crafted for developers, creators, and enthusiasts who desire a coherent, aesthetic, and distraction-free computing environment. 
 
-Instead of presenting an empty window manager or bloated desktop environment, AstraOS harmoniously pairs the innovative scrollable tiling model of **Niri** with the refined, modern Wayland shell of **Noctalia v5**. It handles the essential details often left incomplete: a daily-pinned Arch Linux Archive snapshot, pre-baked LazyVim with instant startup, GPU-accelerated Kitty terminal with Oh My Posh, a live desktop environment with automatic installer launch, and SilentSDDM login presets featuring high-resolution space imagery.
+Instead of presenting an empty window manager or bloated desktop environment, AstraOS harmoniously pairs the innovative scrollable tiling model of **Niri** with the refined, modern Wayland shell of **Noctalia v5**. It handles the essential details often left incomplete: pre-configured LazyVim, Opencode AI agent, GPU-accelerated Kitty terminal with Oh My Posh, SilentSDDM login themes featuring high-resolution space imagery, pulsing cosmic Plymouth splash, and cosmic GRUB theming.
 
-> [!IMPORTANT]
-> **UEFI Systems Only:** AstraOS is engineered strictly for modern UEFI hardware with GPT disk partitioning. Legacy BIOS/CSM and Secure Boot must be disabled.
+---
+
+## ⚡ Quick Install on Arch Linux
+
+You can transform any fresh or minimal Arch Linux installation into AstraOS using our interactive setup script:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/AmanicX/astra-os.git
+cd astra-os
+
+# 2. Run the setup script (as regular user with sudo privileges)
+./setup.sh
+```
+
+### What `setup.sh` sets up for you:
+- **Interactive Customization:**
+  - Choose your preferred **AUR Helper** (`paru`, `yay`, or `skip`)
+  - Choose your preferred **Web Browser** (`firefox`, `helium-browser-bin`, `chromium`, `brave-bin`, or `none`)
+  - Optional toggles for Rebranding, GRUB theming, Plymouth, and SDDM
+- **Window Management & Desktop Shell:** Niri (scrollable tiling compositor) + Noctalia v5 desktop shell & status bar
+- **Terminal & Prompt:** Kitty terminal (Noctalia palette) + Zsh + Oh My Posh (`1_shell` prompt)
+- **Developer Suite:** Neovim with LazyVim starter + Opencode AI assistant + development CLI tools (`fzf`, `ripgrep`, `bat`, `eza`, `zoxide`, `lazygit`, `btop`)
+- **System Theming & Splash:**
+  - `/etc/os-release` AstraOS branding & high-res icons
+  - Plymouth pulsing cosmic star boot splash
+  - 1080p cosmic GRUB theme
+  - SilentSDDM with orbital presets and dynamic theme switcher (`astra-sddm-theme`)
+- **System Services:** Automatic configuration and enablement of `sddm`, `NetworkManager`, `bluetooth`, `power-profiles-daemon`, and `pipewire` audio.
 
 ---
 
