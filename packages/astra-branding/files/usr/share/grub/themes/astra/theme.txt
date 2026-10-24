@@ -1,0 +1,46 @@
+# AstraOS GRUB Theme
+# Noctalia-inspired calm cosmic design
+
+title-text: ""
+desktop-image: "background.png"
+desktop-color: "#05070d"
+terminal-font: "Unifont Regular 16"
+terminal-box: "terminal_box_*.png"
+terminal-left: "10%"
+terminal-top: "20%"
+terminal-width: "80%"
+terminal-height: "60%"
+terminal-border: "0"
+
++ image {
+    top = 18%
+    left = 50%-160
+    width = 320
+    height = 72
+    file = "logo.png"
+}
+
++ boot_menu {
+    top = 36%
+    left = 50%-320
+    width = 640
+    height = 42%
+    item_font = "Unifont Regular 16"
+    item_color = "#94a3b8"
+    selected_item_color = "#ffffff"
+    item_height = 40
+    item_padding = 10
+    item_spacing = 6
+    selected_item_pixmap_style = "select_*.png"
+}
+
++ progress_bar {
+    id = "__timeout__"
+    left = 50%-180
+    top = 82%
+    width = 360
+    height = 4
+    show_text = false
+    bar_style = "progress_bar_*.png"
+    highlight_style = "progress_highlight_*.png"
+}

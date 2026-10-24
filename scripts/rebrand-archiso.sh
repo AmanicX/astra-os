@@ -72,6 +72,33 @@ while IFS= read -r -d '' grub_file; do
 done < <(find "${profile}/grub" -maxdepth 1 -type f \
 	\( -name 'grub.cfg' -o -name 'loopback.cfg' \) -print0)
 
+# AstraOS GRUB Theme on the ISO media
+theme_src="${REPO_ROOT}/packages/astra-branding/files/usr/share/grub/themes/astra"
+if [[ -d ${theme_src} ]]; then
+	mkdir -p "${profile}/grub/themes/astra"
+	cp -a "${theme_src}/." "${profile}/grub/themes/astra/"
+	if [[ -f "${profile}/grub/grub.cfg" ]]; then
+		sed -i '/insmod all_video/a \
+    insmod gfxterm\
+    insmod png\
+    set gfxmode="1920x1080,auto"\
+    if [ -f "${prefix}/themes/astra/theme.txt" ]; then\
+        set theme="${prefix}/themes/astra/theme.txt"\
+    fi\
+    terminal_output gfxterm' "${profile}/grub/grub.cfg"
+	fi
+fi
+
+# systemd-boot splash on the ISO
+splash_src="${REPO_ROOT}/packages/astra-branding/files/usr/share/astra/branding/splash.bmp"
+if [[ -f ${splash_src} && -d "${profile}/efiboot/loader" ]]; then
+	cp -f "${splash_src}" "${profile}/efiboot/loader/splash.bmp"
+	if [[ -f "${profile}/efiboot/loader/loader.conf" ]]; then
+		grep -q '^splash' "${profile}/efiboot/loader/loader.conf" ||
+			printf 'splash /loader/splash.bmp\n' >>"${profile}/efiboot/loader/loader.conf"
+	fi
+fi
+
 # syslinux is not in the current UEFI-only build, but keep the profile source
 # consistent if a BIOS boot mode is enabled later.
 while IFS= read -r -d '' sys_file; do

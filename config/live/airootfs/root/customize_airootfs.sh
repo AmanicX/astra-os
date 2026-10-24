@@ -40,8 +40,11 @@ fi
 # tty1 starts the native AstraOS installer directly in the console.
 cat >/root/.zprofile <<'EOF'
 if [[ $(tty 2>/dev/null) == /dev/tty1 ]]; then
-	clear
-	exec astra-install
+	if [[ ! -f /tmp/.astra-exit ]]; then
+		clear
+		astra-install || touch /tmp/.astra-exit
+		touch /tmp/.astra-exit
+	fi
 fi
 EOF
 chmod 0644 /root/.zprofile

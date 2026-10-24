@@ -247,10 +247,63 @@ if [[ -d /usr/share/astra/nvim/lazy && ${ASTRA_USERNAME} != root ]]; then
 	chown -R "${ASTRA_USERNAME}:${ASTRA_USERNAME}" "${home}/.local"
 fi
 
+echo "==> cleaning live initramfs drop-ins"
+rm -f /etc/mkinitcpio.conf.d/archiso.conf /etc/mkinitcpio.conf.d/live.conf 2>/dev/null || true
+
+echo "==> branding os-release"
+command -v astra-write-os-release >/dev/null 2>&1 && astra-write-os-release || true
+
+echo "==> configuring Plymouth boot splash"
+if [[ -d /usr/share/plymouth/themes/astra ]]; then
+	mkdir -p /etc/plymouth
+	cat >/etc/plymouth/plymouthd.conf <<'EOF_PLY'
+[Daemon]
+Theme=astra
+ShowDelay=0
+DeviceTimeout=8
+EOF_PLY
+	if grep -q '^HOOKS=' /etc/mkinitcpio.conf && ! grep -q 'plymouth' /etc/mkinitcpio.conf; then
+		sed -i -E 's/(systemd|udev)/\1 plymouth/' /etc/mkinitcpio.conf
+	fi
+fi
+
 echo "==> initramfs"
 mkinitcpio -P
 
 echo "==> GRUB"
+mkdir -p /boot/grub/themes
+if [[ -d /usr/share/grub/themes/astra ]]; then
+	cp -a /usr/share/grub/themes/astra /boot/grub/themes/
+fi
+
+if [[ -f /etc/default/grub ]]; then
+	if grep -q '^GRUB_DISTRIBUTOR=' /etc/default/grub; then
+		sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="AstraOS"/' /etc/default/grub
+	else
+		printf 'GRUB_DISTRIBUTOR="AstraOS"\n' >>/etc/default/grub
+	fi
+
+	if [[ -f /boot/grub/themes/astra/theme.txt ]]; then
+		if grep -q '^GRUB_THEME=' /etc/default/grub; then
+			sed -i 's|^GRUB_THEME=.*|GRUB_THEME="/boot/grub/themes/astra/theme.txt"|' /etc/default/grub
+		else
+			printf 'GRUB_THEME="/boot/grub/themes/astra/theme.txt"\n' >>/etc/default/grub
+		fi
+		if grep -q '^GRUB_GFXMODE=' /etc/default/grub; then
+			sed -i 's/^GRUB_GFXMODE=.*/GRUB_GFXMODE="1920x1080,auto"/' /etc/default/grub
+		else
+			printf 'GRUB_GFXMODE="1920x1080,auto"\n' >>/etc/default/grub
+		fi
+	fi
+
+	# Add quiet splash for smooth graphical handoff
+	if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub; then
+		if ! grep -q 'splash' /etc/default/grub; then
+			sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&quiet splash loglevel=3 rd.udev.log_priority=3 vt.global_cursor_default=0 /' /etc/default/grub
+		fi
+	fi
+fi
+
 if ! grub-install --target=x86_64-efi --efi-directory="${ASTRA_ESP_MOUNT}" \
 	--bootloader-id=AstraOS --recheck; then
 	echo "normal GRUB install failed; trying the removable fallback" >&2
@@ -354,9 +407,49 @@ copy_rootfs_to_target() {
 			/ "$MNT_ROOT/" 2>&1 | tee -a "$LOG" || die "failed to rsync system to target"
 	fi
 
-	# Verify essential target binaries are present
+	# mkarchiso places the kernel and initramfs on the ISO boot filesystem outside
+	# of airootfs.sfs. When unpacking airootfs.sfs to target, ${MNT_ROOT}/boot lacks
+	# the kernel binary. Copy vmlinuz-linux and fallback initramfs from the ISO boot partition.
+	mkdir -p "${MNT_ROOT}/boot"
+	local kernel_copied=0
+	for kloc in \
+		/run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux \
+		/run/archiso/bootmnt/astraos/boot/x86_64/vmlinuz-linux \
+		/run/archiso/bootmnt/*/boot/x86_64/vmlinuz-linux \
+		/run/archiso/bootmnt/boot/x86_64/vmlinuz-linux \
+		/run/archiso/bootmnt/*/vmlinuz-linux \
+		/run/archiso/bootmnt/vmlinuz-linux; do
+		if [[ -f $kloc ]]; then
+			cp -f "$kloc" "${MNT_ROOT}/boot/vmlinuz-linux"
+			log "copied kernel ($kloc) to ${MNT_ROOT}/boot/vmlinuz-linux"
+			kernel_copied=1
+			break
+		fi
+	done
+	if ((kernel_copied == 0)) && [[ -f /boot/vmlinuz-linux ]]; then
+		cp -f /boot/vmlinuz-linux "${MNT_ROOT}/boot/vmlinuz-linux"
+		log "copied host /boot/vmlinuz-linux to ${MNT_ROOT}/boot/vmlinuz-linux"
+		kernel_copied=1
+	fi
+
+	for iloc in \
+		/run/archiso/bootmnt/arch/boot/x86_64/initramfs-linux.img \
+		/run/archiso/bootmnt/astraos/boot/x86_64/initramfs-linux.img \
+		/run/archiso/bootmnt/*/boot/x86_64/initramfs-linux.img \
+		/run/archiso/bootmnt/boot/x86_64/initramfs-linux.img \
+		/run/archiso/bootmnt/*/initramfs-linux.img \
+		/run/archiso/bootmnt/initramfs-linux.img; do
+		if [[ -f $iloc ]]; then
+			cp -f "$iloc" "${MNT_ROOT}/boot/initramfs-linux.img"
+			log "copied initramfs ($iloc) to ${MNT_ROOT}/boot/initramfs-linux.img"
+			break
+		fi
+	done
+
+	# Verify essential target binaries and files are present
 	[[ -x ${MNT_ROOT}/usr/bin/bash ]] || die "/usr/bin/bash missing on target disk"
 	[[ -x ${MNT_ROOT}/usr/bin/systemd ]] || [[ -x ${MNT_ROOT}/usr/lib/systemd/systemd ]] || die "systemd missing on target disk"
+	[[ -f ${MNT_ROOT}/boot/vmlinuz-linux ]] || die "vmlinuz-linux missing on target disk"
 	log "AstraOS system image successfully unpacked to ${MNT_ROOT}"
 }
 
@@ -387,13 +480,17 @@ run_install() {
 
 	configure_target
 
-	# Clean up live-session installer autostart files from target disk
+	# Clean up live-session installer autostart and temporary files from target disk
 	rm -f "${MNT_ROOT}/etc/systemd/system/getty@tty1.service.d/autologin.conf" 2>/dev/null || true
 	rm -f "${MNT_ROOT}/etc/profile.d/99-astra-live.sh" 2>/dev/null || true
 	rm -f "${MNT_ROOT}/root/.zprofile" 2>/dev/null || true
 	rm -f "${MNT_ROOT}/root/.bash_profile" 2>/dev/null || true
 	rm -f "${MNT_ROOT}/usr/share/applications/astra-installer.desktop" 2>/dev/null || true
 	rm -f "${MNT_ROOT}/etc/xdg/autostart/astra-installer.desktop" 2>/dev/null || true
+	rm -f "${MNT_ROOT}/tmp/.astra-"* 2>/dev/null || true
+	if [[ -d "${MNT_ROOT}/etc/skel" ]]; then
+		cp -a "${MNT_ROOT}/etc/skel/." "${MNT_ROOT}/root/" 2>/dev/null || true
+	fi
 	if [[ ${STATE[user_name]} != "astra" ]]; then
 		arch-chroot "$MNT_ROOT" userdel -r astra 2>/dev/null || true
 	fi

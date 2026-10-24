@@ -1,0 +1,32 @@
+[Plymouth Theme]
+Name=AstraOS
+Description=Calm cosmic boot splash for AstraOS
+ModuleName=two-step
+
+[two-step]
+Font=Adwaita Sans 12
+TitleFont=Adwaita Sans Light 28
+MonospaceFont=Adwaita Mono 12
+ImageDir=/usr/share/plymouth/themes/astra
+DialogHorizontalAlignment=.5
+DialogVerticalAlignment=.6
+TitleHorizontalAlignment=.5
+TitleVerticalAlignment=.382
+HorizontalAlignment=.5
+VerticalAlignment=.45
+WatermarkHorizontalAlignment=.5
+WatermarkVerticalAlignment=.92
+Transition=fade
+TransitionDuration=0.3
+BackgroundStartColor=0x05070d
+BackgroundEndColor=0x0b1220
+ProgressBar=false
+
+[boot-up]
+UseEndAnimation=false
+
+[shutdown]
+UseEndAnimation=false
+
+[reboot]
+UseEndAnimation=false

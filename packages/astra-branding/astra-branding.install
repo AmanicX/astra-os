@@ -1,5 +1,8 @@
 post_install() {
 	/usr/bin/astra-write-os-release
+	if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+		plymouth-set-default-theme astra 2>/dev/null || true
+	fi
 }
 
 post_upgrade() {

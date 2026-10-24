@@ -196,6 +196,22 @@ install -Dm644 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.ser
 install -Dm755 "${REPO_ROOT}/packages/astra-installer/astra-pending-packages.sh" \
 	"${installer_overlay}/usr/lib/astra/installer/pending-packages.sh"
 
+# Stage latest GRUB and Plymouth theme assets
+if [[ -d "${REPO_ROOT}/packages/astra-branding/files/usr/share/grub/themes/astra" ]]; then
+	install -d "${installer_overlay}/usr/share/grub/themes"
+	cp -a "${REPO_ROOT}/packages/astra-branding/files/usr/share/grub/themes/astra" \
+		"${installer_overlay}/usr/share/grub/themes/"
+fi
+if [[ -d "${REPO_ROOT}/packages/astra-branding/files/usr/share/plymouth/themes/astra" ]]; then
+	install -d "${installer_overlay}/usr/share/plymouth/themes"
+	cp -a "${REPO_ROOT}/packages/astra-branding/files/usr/share/plymouth/themes/astra" \
+		"${installer_overlay}/usr/share/plymouth/themes/"
+fi
+if [[ -f "${REPO_ROOT}/packages/astra-branding/files/etc/plymouth/plymouthd.conf" ]]; then
+	install -Dm644 "${REPO_ROOT}/packages/astra-branding/files/etc/plymouth/plymouthd.conf" \
+		"${installer_overlay}/etc/plymouth/plymouthd.conf"
+fi
+
 # 4. Verify terminal installer entrypoint is ready.
 [[ -f "${REPO_ROOT}/packages/astra-installer/astra-install" ]] ||
 	die "astra-install executable is missing from packages/astra-installer"

@@ -1,16 +1,23 @@
 pkgname=astra-branding
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="AstraOS identity, original logo, wallpaper and release metadata"
 arch=('x86_64')
 license=('MIT' 'CC-BY-SA-4.0')
 depends=('adwaita-fonts')
 install=astra-branding.install
-backup=('etc/motd')
+backup=('etc/motd' 'etc/plymouth/plymouthd.conf')
 options=(!strip)
 
 package() {
-	cp -a "${startdir}/files/usr/." "${pkgdir}/usr/"
+	if [[ -d "${startdir}/files/usr" ]]; then
+		mkdir -p "${pkgdir}/usr"
+		cp -a "${startdir}/files/usr/." "${pkgdir}/usr/"
+	fi
+	if [[ -d "${startdir}/files/etc" ]]; then
+		mkdir -p "${pkgdir}/etc"
+		cp -a "${startdir}/files/etc/." "${pkgdir}/etc/"
+	fi
 
 	install -Dm755 "${startdir}/astra-write-os-release" \
 		"${pkgdir}/usr/bin/astra-write-os-release"
