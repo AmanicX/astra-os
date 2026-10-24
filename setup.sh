@@ -255,6 +255,29 @@ show_menu() {
 	fi
 }
 
+# --- Shared Library & ALPM Compatibility -------------------------------------
+fix_libalpm() {
+	local target_alpm=""
+	# Find real file (not symlink) first
+	target_alpm="$(find /usr/lib -maxdepth 1 -name 'libalpm.so.*' ! -type l 2>/dev/null | sort -V | tail -n 1)"
+	if [[ -z "${target_alpm}" ]]; then
+		target_alpm="$(find /usr/lib -maxdepth 1 -name 'libalpm.so*' 2>/dev/null | sort -V | tail -n 1)"
+	fi
+	if [[ -n "${target_alpm}" && -e "${target_alpm}" ]]; then
+		# Ensure compatibility symlinks exist for all common ALPM versions (13, 14, 15, 16, 17)
+		for ver in 13 14 15 16 17; do
+			if [[ ! -e "/usr/lib/libalpm.so.${ver}" ]]; then
+				sudo ln -sf "${target_alpm}" "/usr/lib/libalpm.so.${ver}" 2>/dev/null || true
+			fi
+		done
+	fi
+}
+
+is_helper_functional() {
+	local h="$1"
+	command -v "${h}" >/dev/null 2>&1 && "${h}" --version >/dev/null 2>&1
+}
+
 # --- Core Dependencies & AUR Helper Setup -------------------------------------
 setup_aur_helper() {
 	step_header 2 9 "Configuring Base Tools & AUR Helper"
@@ -270,28 +293,48 @@ setup_aur_helper() {
 		sudo pacman -Sy
 	fi
 
-	# 3. Bootstrap selected AUR helper
+	# 3. Fix any libalpm library version mismatches
+	fix_libalpm
+
+	# 4. Bootstrap selected AUR helper
 	if [[ "${OPT_AUR}" == "paru" ]]; then
-		if command -v paru >/dev/null 2>&1; then
-			step_success "paru is already installed"
+		if is_helper_functional paru; then
+			step_success "paru is already installed and verified functional"
 		else
 			step_info "Building and installing paru-bin from AUR..."
-			rm -rf /tmp/paru-bin
-			git clone --depth 1 https://aur.archlinux.org/paru-bin.git /tmp/paru-bin
-			(cd /tmp/paru-bin && makepkg -si --noconfirm)
-			rm -rf /tmp/paru-bin
-			step_success "paru installed successfully"
+			rm -rf /tmp/paru-bin /tmp/paru
+			if git clone --depth 1 https://aur.archlinux.org/paru-bin.git /tmp/paru-bin && \
+			   (cd /tmp/paru-bin && makepkg -si --noconfirm); then
+				step_success "paru-bin installed successfully"
+			elif git clone --depth 1 https://aur.archlinux.org/paru.git /tmp/paru && \
+			     (cd /tmp/paru && makepkg -si --noconfirm); then
+				step_success "paru installed from source"
+			else
+				step_warn "Could not build paru; attempting yay-bin..."
+				if git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && \
+				   (cd /tmp/yay-bin && makepkg -si --noconfirm); then
+					OPT_AUR="yay"
+					step_success "yay installed as fallback"
+				fi
+			fi
+			rm -rf /tmp/paru-bin /tmp/paru /tmp/yay-bin
+			fix_libalpm
 		fi
 	elif [[ "${OPT_AUR}" == "yay" ]]; then
-		if command -v yay >/dev/null 2>&1; then
-			step_success "yay is already installed"
+		if is_helper_functional yay; then
+			step_success "yay is already installed and verified functional"
 		else
 			step_info "Building and installing yay-bin from AUR..."
-			rm -rf /tmp/yay-bin
-			git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin
-			(cd /tmp/yay-bin && makepkg -si --noconfirm)
-			rm -rf /tmp/yay-bin
-			step_success "yay installed successfully"
+			rm -rf /tmp/yay-bin /tmp/yay
+			if git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && \
+			   (cd /tmp/yay-bin && makepkg -si --noconfirm); then
+				step_success "yay-bin installed successfully"
+			elif git clone --depth 1 https://aur.archlinux.org/yay.git /tmp/yay && \
+			     (cd /tmp/yay && makepkg -si --noconfirm); then
+				step_success "yay installed from source"
+			fi
+			rm -rf /tmp/yay-bin /tmp/yay
+			fix_libalpm
 		fi
 	else
 		step_info "Skipping AUR helper installation as requested."
@@ -300,23 +343,43 @@ setup_aur_helper() {
 	step_end
 }
 
-# Helper to run AUR install command
+# Helper to run AUR install command with error isolation and makepkg fallback
 aur_install() {
 	local pkgs=("$@")
-	if command -v paru >/dev/null 2>&1; then
-		paru -S --needed --noconfirm "${pkgs[@]}"
-	elif command -v yay >/dev/null 2>&1; then
-		yay -S --needed --noconfirm "${pkgs[@]}"
-	else
-		# Fallback: clone and makepkg each pkg
+	fix_libalpm
+
+	local installed_via_helper=0
+	if is_helper_functional paru; then
+		step_info "Installing via paru: ${pkgs[*]}..."
+		if paru -S --needed --noconfirm "${pkgs[@]}"; then
+			installed_via_helper=1
+		else
+			step_warn "paru encountered an issue; falling back to direct makepkg..."
+		fi
+	elif is_helper_functional yay; then
+		step_info "Installing via yay: ${pkgs[*]}..."
+		if yay -S --needed --noconfirm "${pkgs[@]}"; then
+			installed_via_helper=1
+		else
+			step_warn "yay encountered an issue; falling back to direct makepkg..."
+		fi
+	fi
+
+	# Fallback if helper was unavailable or failed
+	if [[ ${installed_via_helper} -eq 0 ]]; then
 		for pkg in "${pkgs[@]}"; do
-			step_info "Building AUR package ${pkg} via git & makepkg..."
-			rm -rf "/tmp/${pkg}"
-			if git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "/tmp/${pkg}"; then
-				(cd "/tmp/${pkg}" && makepkg -si --noconfirm)
-				rm -rf "/tmp/${pkg}"
+			if pacman -Q "${pkg}" >/dev/null 2>&1; then
+				step_info "Package ${pkg} is already installed."
+				continue
+			fi
+			step_info "Building AUR package ${pkg} directly via makepkg..."
+			local build_dir="/tmp/astra-build-${pkg}"
+			rm -rf "${build_dir}"
+			if git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "${build_dir}"; then
+				(cd "${build_dir}" && makepkg -si --noconfirm) || step_warn "makepkg failed for ${pkg}"
+				rm -rf "${build_dir}"
 			else
-				step_warn "Could not clone AUR package ${pkg}."
+				step_warn "Could not clone AUR repository for ${pkg}"
 			fi
 		done
 	fi
