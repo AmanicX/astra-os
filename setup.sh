@@ -54,6 +54,7 @@ readonly TARGET_USER TARGET_HOME
 # --- Options / State ----------------------------------------------------------
 OPT_AUR="paru"        # paru | yay | skip
 OPT_BROWSER="firefox" # firefox | helium | chromium | brave | none
+OPT_DRIVERS="yes"     # yes | no
 OPT_REBRAND="yes"     # yes | no
 OPT_GRUB="yes"        # yes | no
 OPT_PLYMOUTH="yes"    # yes | no
@@ -127,7 +128,7 @@ keep_sudo_alive() {
 
 # --- Pre-flight Checks --------------------------------------------------------
 check_environment() {
-	step_header 1 8 "Checking System Environment"
+	step_header 1 9 "Checking System Environment"
 
 	# 1. Root check
 	if [[ ${EUID} -eq 0 && -z ${SUDO_USER:-} ]]; then
@@ -203,35 +204,42 @@ show_menu() {
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ Selected Browser:${C_RESET} ${OPT_BROWSER}\n"
 	printf "${C_CYAN}│${C_RESET}\n"
 
-	# 3. System Rebranding
+	# 3. Hardware Drivers
+	read -r -p "Detect hardware and install GPU / CPU / VM drivers? [Y/n]: " choice_drv
+	if [[ "${choice_drv}" =~ ^[Nn] ]]; then
+		OPT_DRIVERS="no"
+	fi
+	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ Hardware Drivers:${C_RESET} ${OPT_DRIVERS}\n"
+
+	# 4. System Rebranding
 	read -r -p "Rebrand system to AstraOS (/etc/os-release & logo)? [Y/n]: " choice_rebrand
 	if [[ "${choice_rebrand}" =~ ^[Nn] ]]; then
 		OPT_REBRAND="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ Rebranding:${C_RESET} ${OPT_REBRAND}\n"
 
-	# 4. GRUB Theming
+	# 5. GRUB Theming
 	read -r -p "Install AstraOS cosmic GRUB Theme & 1080p styling? [Y/n]: " choice_grub
 	if [[ "${choice_grub}" =~ ^[Nn] ]]; then
 		OPT_GRUB="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ GRUB Theming:${C_RESET} ${OPT_GRUB}\n"
 
-	# 5. Plymouth Boot Splash
+	# 6. Plymouth Boot Splash
 	read -r -p "Install AstraOS Plymouth boot splash (cosmic star animation)? [Y/n]: " choice_ply
 	if [[ "${choice_ply}" =~ ^[Nn] ]]; then
 		OPT_PLYMOUTH="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ Plymouth Boot Splash:${C_RESET} ${OPT_PLYMOUTH}\n"
 
-	# 6. SDDM Theme
+	# 7. SDDM Theme
 	read -r -p "Install AstraOS SilentSDDM login theme and enable SDDM? [Y/n]: " choice_sddm
 	if [[ "${choice_sddm}" =~ ^[Nn] ]]; then
 		OPT_SDDM="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ SDDM Theme:${C_RESET} ${OPT_SDDM}\n"
 
-	# 7. Desktop Dotfiles
+	# 8. Desktop Dotfiles
 	read -r -p "Deploy AstraOS desktop dotfiles (Niri, Noctalia, Kitty, LazyVim, Opencode)? [Y/n]: " choice_dot
 	if [[ "${choice_dot}" =~ ^[Nn] ]]; then
 		OPT_DOTFILES="no"
@@ -249,7 +257,7 @@ show_menu() {
 
 # --- Core Dependencies & AUR Helper Setup -------------------------------------
 setup_aur_helper() {
-	step_header 2 8 "Configuring Base Tools & AUR Helper"
+	step_header 2 9 "Configuring Base Tools & AUR Helper"
 
 	# 1. Base devel & git
 	step_info "Installing base development tools via pacman..."
@@ -314,9 +322,103 @@ aur_install() {
 	fi
 }
 
+# --- Hardware & Driver Detection Engine ---------------------------------------
+detect_and_install_drivers() {
+	if [[ "${OPT_DRIVERS}" != "yes" ]]; then
+		return 0
+	fi
+
+	step_header 3 9 "Detecting Hardware & Installing Drivers"
+
+	local DRIVER_PKGS=()
+
+	# 1. CPU Microcode Detection
+	if [[ -r /proc/cpuinfo ]]; then
+		if grep -q "AuthenticAMD" /proc/cpuinfo; then
+			step_info "Detected AMD processor -> adding amd-ucode"
+			DRIVER_PKGS+=("amd-ucode")
+		elif grep -q "GenuineIntel" /proc/cpuinfo; then
+			step_info "Detected Intel processor -> adding intel-ucode"
+			DRIVER_PKGS+=("intel-ucode")
+		fi
+	fi
+
+	# 2. Virtual Machine Guest Tools
+	local virt
+	virt="$(systemd-detect-virt 2>/dev/null || true)"
+	case "${virt}" in
+		oracle)
+			step_info "Detected VirtualBox environment -> adding virtualbox-guest-utils"
+			DRIVER_PKGS+=("virtualbox-guest-utils")
+			;;
+		vmware)
+			step_info "Detected VMware environment -> adding open-vm-tools"
+			DRIVER_PKGS+=("open-vm-tools")
+			;;
+		kvm|qemu|bochs)
+			step_info "Detected QEMU/KVM environment -> adding qemu-guest-agent spice-vdagent"
+			DRIVER_PKGS+=("qemu-guest-agent" "spice-vdagent")
+			;;
+		*)
+			;;
+	esac
+
+	# 3. GPU Display Controller Detection
+	local has_gpu=0
+	if command -v lspci >/dev/null 2>&1; then
+		# Check NVIDIA
+		if lspci -nn 2>/dev/null | grep -Eiq '(VGA compatible controller|3D controller|Display controller).*\[10de:'; then
+			step_info "Detected NVIDIA graphics controller -> adding nvidia-open & utils"
+			DRIVER_PKGS+=("nvidia-open" "nvidia-utils" "lib32-nvidia-utils" "nvidia-settings")
+			has_gpu=1
+		fi
+		# Check AMD
+		if lspci -nn 2>/dev/null | grep -Eiq '(VGA compatible controller|3D controller|Display controller).*\[1002:'; then
+			step_info "Detected AMD graphics controller -> adding mesa & vulkan-radeon"
+			DRIVER_PKGS+=("mesa" "vulkan-radeon" "lib32-mesa" "lib32-vulkan-radeon" "libva-utils")
+			has_gpu=1
+		fi
+		# Check Intel
+		if lspci -nn 2>/dev/null | grep -Eiq '(VGA compatible controller|3D controller|Display controller).*\[8086:'; then
+			step_info "Detected Intel graphics controller -> adding mesa, vulkan-intel & intel-media-driver"
+			DRIVER_PKGS+=("mesa" "vulkan-intel" "lib32-mesa" "lib32-vulkan-intel" "intel-media-driver" "libva-utils")
+			has_gpu=1
+		fi
+	fi
+
+	# Fallback if no specific GPU detected
+	if [[ ${has_gpu} -eq 0 ]]; then
+		step_info "Generic / standard graphics -> ensuring mesa is installed"
+		DRIVER_PKGS+=("mesa" "lib32-mesa")
+	fi
+
+	# Install detected driver packages
+	if [[ ${#DRIVER_PKGS[@]} -gt 0 ]]; then
+		step_info "Installing hardware packages: ${DRIVER_PKGS[*]}..."
+		sudo pacman -S --needed --noconfirm "${DRIVER_PKGS[@]}"
+		step_success "Hardware drivers installed"
+	fi
+
+	# Enable VM services if installed
+	if [[ "${virt}" == "oracle" ]]; then
+		sudo systemctl enable vboxservice.service 2>/dev/null || true
+	elif [[ "${virt}" == "vmware" ]]; then
+		sudo systemctl enable vmtoolsd.service 2>/dev/null || true
+	elif [[ "${virt}" =~ ^(kvm|qemu)$ ]]; then
+		sudo systemctl enable qemu-guest-agent.service 2>/dev/null || true
+	fi
+
+	# Enable NVIDIA services if installed
+	if command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null | grep -Eiq '(VGA compatible controller|3D controller|Display controller).*\[10de:'; then
+		sudo systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service 2>/dev/null || true
+	fi
+
+	step_end
+}
+
 # --- Package Installation Engine ----------------------------------------------
 install_system_packages() {
-	step_header 3 8 "Installing Desktop Packages & Dependencies"
+	step_header 4 9 "Installing Desktop Packages & Dependencies"
 
 	step_info "Synchronizing pacman package databases..."
 	sudo pacman -Sy --noconfirm
@@ -481,7 +583,7 @@ setup_branding() {
 		return 0
 	fi
 
-	step_header 4 8 "Applying AstraOS System Branding"
+	step_header 5 9 "Applying AstraOS System Branding"
 
 	# 1. Update /etc/os-release and /usr/lib/os-release
 	step_info "Configuring /etc/os-release..."
@@ -531,7 +633,7 @@ setup_grub() {
 		return 0
 	fi
 
-	step_header 5 8 "Installing AstraOS GRUB Theme"
+	step_header 6 9 "Installing AstraOS GRUB Theme"
 
 	local GRUB_SRC="${PACKAGES_DIR}/astra-branding/files/usr/share/grub/themes/astra"
 	if [[ -d "${GRUB_SRC}" ]]; then
@@ -568,6 +670,12 @@ setup_grub() {
 				if ! grep -q 'splash' /etc/default/grub; then
 					sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&quiet splash loglevel=3 rd.udev.log_priority=3 vt.global_cursor_default=0 /' /etc/default/grub
 				fi
+				# NVIDIA modeset parameters if NVIDIA is detected
+				if command -v lspci >/dev/null 2>&1 && lspci -nn 2>/dev/null | grep -Eiq '(VGA compatible controller|3D controller|Display controller).*\[10de:'; then
+					if ! grep -q 'nvidia-drm.modeset=1' /etc/default/grub; then
+						sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/&nvidia-drm.modeset=1 nvidia_drm.fbdev=1 /' /etc/default/grub
+					fi
+				fi
 			fi
 
 			# Enable os-prober if dual boot
@@ -597,7 +705,7 @@ setup_plymouth() {
 		return 0
 	fi
 
-	step_header 6 8 "Configuring Plymouth Cosmic Boot Splash"
+	step_header 7 9 "Configuring Plymouth Cosmic Boot Splash"
 
 	local PLY_SRC="${PACKAGES_DIR}/astra-branding/files/usr/share/plymouth/themes/astra"
 	if [[ -d "${PLY_SRC}" ]]; then
@@ -636,7 +744,7 @@ setup_sddm() {
 		return 0
 	fi
 
-	step_header 7 8 "Configuring SDDM Login Manager & Theme"
+	step_header 8 9 "Configuring SDDM Login Manager & Theme"
 
 	local SDDM_THEME_DIR="/usr/share/sddm/themes/silent"
 	sudo mkdir -p "${SDDM_THEME_DIR}"
@@ -715,7 +823,7 @@ setup_desktop_dotfiles() {
 		return 0
 	fi
 
-	step_header 8 8 "Deploying Dotfiles & Desktop Configuration"
+	step_header 9 9 "Deploying Dotfiles & Desktop Configuration"
 
 	local SKEL_SRC="${PACKAGES_DIR}/astra-desktop-config/files/etc/skel"
 
@@ -863,6 +971,10 @@ parse_args() {
 				OPT_NONINTERACTIVE=1
 				shift
 				;;
+			--no-drivers)
+				OPT_DRIVERS="no"
+				shift
+				;;
 			--no-rebrand)
 				OPT_REBRAND="no"
 				shift
@@ -891,6 +1003,7 @@ Options:
   --aur <paru|yay|skip>     Select AUR helper (default: paru)
   --browser <name>          Select web browser (firefox|helium|chromium|brave|none)
   -y, --yes                 Non-interactive mode with default answers
+  --no-drivers              Skip automatic hardware & GPU driver installation
   --no-rebrand              Skip /etc/os-release rebranding
   --no-grub                 Skip GRUB theme installation
   --no-plymouth             Skip Plymouth boot splash installation
@@ -914,6 +1027,7 @@ main() {
 	check_environment
 	show_menu
 	setup_aur_helper
+	detect_and_install_drivers
 	install_system_packages
 	setup_branding
 	setup_grub
