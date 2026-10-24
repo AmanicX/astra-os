@@ -304,15 +304,15 @@ setup_aur_helper() {
 			step_info "Building and installing paru-bin from AUR..."
 			rm -rf /tmp/paru-bin /tmp/paru
 			if git clone --depth 1 https://aur.archlinux.org/paru-bin.git /tmp/paru-bin && \
-			   (cd /tmp/paru-bin && makepkg -si --noconfirm); then
+			   (cd /tmp/paru-bin && makepkg -si --noconfirm --skippgpcheck); then
 				step_success "paru-bin installed successfully"
 			elif git clone --depth 1 https://aur.archlinux.org/paru.git /tmp/paru && \
-			     (cd /tmp/paru && makepkg -si --noconfirm); then
+			     (cd /tmp/paru && makepkg -si --noconfirm --skippgpcheck); then
 				step_success "paru installed from source"
 			else
 				step_warn "Could not build paru; attempting yay-bin..."
 				if git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && \
-				   (cd /tmp/yay-bin && makepkg -si --noconfirm); then
+				   (cd /tmp/yay-bin && makepkg -si --noconfirm --skippgpcheck); then
 					OPT_AUR="yay"
 					step_success "yay installed as fallback"
 				fi
@@ -327,10 +327,10 @@ setup_aur_helper() {
 			step_info "Building and installing yay-bin from AUR..."
 			rm -rf /tmp/yay-bin /tmp/yay
 			if git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && \
-			   (cd /tmp/yay-bin && makepkg -si --noconfirm); then
+			   (cd /tmp/yay-bin && makepkg -si --noconfirm --skippgpcheck); then
 				step_success "yay-bin installed successfully"
 			elif git clone --depth 1 https://aur.archlinux.org/yay.git /tmp/yay && \
-			     (cd /tmp/yay && makepkg -si --noconfirm); then
+			     (cd /tmp/yay && makepkg -si --noconfirm --skippgpcheck); then
 				step_success "yay installed from source"
 			fi
 			rm -rf /tmp/yay-bin /tmp/yay
@@ -351,14 +351,14 @@ aur_install() {
 	local installed_via_helper=0
 	if is_helper_functional paru; then
 		step_info "Installing via paru: ${pkgs[*]}..."
-		if paru -S --needed --noconfirm "${pkgs[@]}"; then
+		if paru -S --needed --noconfirm --mflags "--skippgpcheck" "${pkgs[@]}" 2>/dev/null || paru -S --needed --noconfirm "${pkgs[@]}"; then
 			installed_via_helper=1
 		else
 			step_warn "paru encountered an issue; falling back to direct makepkg..."
 		fi
 	elif is_helper_functional yay; then
 		step_info "Installing via yay: ${pkgs[*]}..."
-		if yay -S --needed --noconfirm "${pkgs[@]}"; then
+		if yay -S --needed --noconfirm --mflags "--skippgpcheck" "${pkgs[@]}" 2>/dev/null || yay -S --needed --noconfirm "${pkgs[@]}"; then
 			installed_via_helper=1
 		else
 			step_warn "yay encountered an issue; falling back to direct makepkg..."
@@ -376,7 +376,7 @@ aur_install() {
 			local build_dir="/tmp/astra-build-${pkg}"
 			rm -rf "${build_dir}"
 			if git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "${build_dir}"; then
-				(cd "${build_dir}" && makepkg -si --noconfirm) || step_warn "makepkg failed for ${pkg}"
+				(cd "${build_dir}" && makepkg -si --noconfirm --skippgpcheck) || step_warn "makepkg failed for ${pkg}"
 				rm -rf "${build_dir}"
 			else
 				step_warn "Could not clone AUR repository for ${pkg}"
@@ -702,8 +702,11 @@ setup_grub() {
 	if [[ -d "${GRUB_SRC}" ]]; then
 		step_info "Deploying GRUB theme to /boot/grub/themes/astra..."
 		sudo mkdir -p /boot/grub/themes/astra /usr/share/grub/themes/astra
-		sudo cp -a "${GRUB_SRC}/." /boot/grub/themes/astra/
-		sudo cp -a "${GRUB_SRC}/." /usr/share/grub/themes/astra/
+		sudo cp -r --no-preserve=ownership "${GRUB_SRC}/." /boot/grub/themes/astra/ 2>/dev/null || \
+		sudo cp -r "${GRUB_SRC}/." /boot/grub/themes/astra/ 2>/dev/null || true
+
+		sudo cp -r --no-preserve=ownership "${GRUB_SRC}/." /usr/share/grub/themes/astra/ 2>/dev/null || \
+		sudo cp -r "${GRUB_SRC}/." /usr/share/grub/themes/astra/ 2>/dev/null || true
 
 		if [[ -f /etc/default/grub ]]; then
 			step_info "Configuring /etc/default/grub..."
