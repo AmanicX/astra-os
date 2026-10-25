@@ -794,11 +794,51 @@ ShowDelay=0
 DeviceTimeout=8
 EOF
 
-		# Add plymouth to mkinitcpio HOOKS
+		# Link default.plymouth symlink
+		sudo ln -sfn /usr/share/plymouth/themes/astra/astra.plymouth /usr/share/plymouth/themes/default.plymouth
+
+		# Set default theme via plymouth CLI utility if present
+		if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+			sudo plymouth-set-default-theme astra 2>/dev/null || true
+		fi
+
+		# Configure mkinitcpio for early KMS and Plymouth hook
 		if [[ -f /etc/mkinitcpio.conf ]]; then
+			step_info "Configuring /etc/mkinitcpio.conf..."
+
+			# Add early KMS module based on detected hardware
+			local virt
+			virt="$(systemd-detect-virt 2>/dev/null || true)"
+			local kms_mod=""
+			case "${virt}" in
+				oracle) kms_mod="vboxvideo" ;;
+				vmware) kms_mod="vmwgfx" ;;
+				kvm|qemu) kms_mod="virtio_gpu" ;;
+				*)
+					if command -v lspci >/dev/null 2>&1; then
+						if lspci -nn 2>/dev/null | grep -Eiq '(VGA compatible controller|3D controller|Display controller).*\[1002:'; then
+							kms_mod="amdgpu"
+						elif lspci -nn 2>/dev/null | grep -Eiq '(VGA compatible controller|3D controller|Display controller).*\[8086:'; then
+							kms_mod="i915"
+						fi
+					fi
+					;;
+			esac
+
+			if [[ -n "${kms_mod}" ]] && grep -q '^MODULES=' /etc/mkinitcpio.conf && ! grep -q "${kms_mod}" /etc/mkinitcpio.conf; then
+				sudo sed -i "s/^MODULES=(\(.*\))/MODULES=(\1 ${kms_mod})/" /etc/mkinitcpio.conf
+			fi
+
+			# Add plymouth hook after udev or systemd
 			if grep -q '^HOOKS=' /etc/mkinitcpio.conf && ! grep -q 'plymouth' /etc/mkinitcpio.conf; then
 				step_info "Adding plymouth hook to /etc/mkinitcpio.conf..."
-				sudo sed -i -E 's/(systemd|udev)/\1 plymouth/' /etc/mkinitcpio.conf
+				if grep -Eiq 'HOOKS=.*systemd' /etc/mkinitcpio.conf; then
+					sudo sed -i -E 's/systemd/systemd plymouth/' /etc/mkinitcpio.conf
+				elif grep -Eiq 'HOOKS=.*udev' /etc/mkinitcpio.conf; then
+					sudo sed -i -E 's/udev/udev plymouth/' /etc/mkinitcpio.conf
+				else
+					sudo sed -i -E 's/HOOKS=\((.*)\)/HOOKS=(\1 plymouth)/' /etc/mkinitcpio.conf
+				fi
 			fi
 
 			step_info "Regenerating initramfs with mkinitcpio -P..."
