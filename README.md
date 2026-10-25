@@ -54,14 +54,14 @@ git clone https://github.com/AmanicX/astra-os.git
 cd astra-os
 
 # 2. Run the setup script
-./setup.sh
+./setup-fixed.sh
 ```
 
 *(You can also run `./install.sh`, which acts as an entrypoint wrapper).*
 
 ---
 
-## 🛠️ What `setup.sh` Does (Detailed Breakdown)
+## 🛠️ What `setup-fixed.sh` Does (Detailed Breakdown)
 
 The setup script executes a structured, 9-stage installation pipeline:
 
@@ -74,7 +74,7 @@ The setup script executes a structured, 9-stage installation pipeline:
 ### 2. Base Tooling & AUR Helper Setup
 - Installs essential compilation tools: `base-devel`, `git`, `curl`, and `wget`.
 - Enables the `[multilib]` repository in `/etc/pacman.conf` if commented.
-- **ALPM / Shared Library Compatibility:** Auto-provisions compatibility symlinks (`libalpm.so.13` through `libalpm.so.17`) to prevent AUR helper breakage across pacman upgrades.
+
 - **AUR Helper Selection:**
   - `paru` *(Default)*: Automatically clones and compiles `paru-bin` from the AUR via `makepkg`.
   - `yay`: Clones and compiles `yay-bin` from the AUR.
