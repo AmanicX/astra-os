@@ -38,6 +38,16 @@ Instead of presenting an empty window manager or bloated generic desktop, Astra 
 
 Install a minimal Arch Linux base system (using the standard `archinstall` script or manual bootstrap), reboot into your new installation as a regular user with `sudo` permissions, and run:
 
+### Option 1: Instant One-Liner (Recommended — No manual git clone needed)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AmanicX/astra-os/main/install.sh | bash
+```
+
+*(You can also use `bash -c "$(curl -fsSL https://raw.githubusercontent.com/AmanicX/astra-os/main/install.sh)"`)*
+
+### Option 2: Manual Clone
+
 ```bash
 # 1. Clone the Astra Linux repository
 git clone https://github.com/AmanicX/astra-os.git
