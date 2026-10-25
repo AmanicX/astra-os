@@ -304,15 +304,15 @@ setup_aur_helper() {
 			step_info "Building and installing paru-bin from AUR..."
 			rm -rf /tmp/paru-bin /tmp/paru
 			if git clone --depth 1 https://aur.archlinux.org/paru-bin.git /tmp/paru-bin && \
-			   (cd /tmp/paru-bin && makepkg -si --noconfirm --skippgpcheck); then
+			   (cd /tmp/paru-bin && makepkg -s --noconfirm --skippgpcheck && sudo pacman -U --noconfirm ./*.pkg.tar*); then
 				step_success "paru-bin installed successfully"
 			elif git clone --depth 1 https://aur.archlinux.org/paru.git /tmp/paru && \
-			     (cd /tmp/paru && makepkg -si --noconfirm --skippgpcheck); then
+			     (cd /tmp/paru && makepkg -s --noconfirm --skippgpcheck && sudo pacman -U --noconfirm ./*.pkg.tar*); then
 				step_success "paru installed from source"
 			else
 				step_warn "Could not build paru; attempting yay-bin..."
 				if git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && \
-				   (cd /tmp/yay-bin && makepkg -si --noconfirm --skippgpcheck); then
+				   (cd /tmp/yay-bin && makepkg -s --noconfirm --skippgpcheck && sudo pacman -U --noconfirm ./*.pkg.tar*); then
 					OPT_AUR="yay"
 					step_success "yay installed as fallback"
 				fi
@@ -327,10 +327,10 @@ setup_aur_helper() {
 			step_info "Building and installing yay-bin from AUR..."
 			rm -rf /tmp/yay-bin /tmp/yay
 			if git clone --depth 1 https://aur.archlinux.org/yay-bin.git /tmp/yay-bin && \
-			   (cd /tmp/yay-bin && makepkg -si --noconfirm --skippgpcheck); then
+			   (cd /tmp/yay-bin && makepkg -s --noconfirm --skippgpcheck && sudo pacman -U --noconfirm ./*.pkg.tar*); then
 				step_success "yay-bin installed successfully"
 			elif git clone --depth 1 https://aur.archlinux.org/yay.git /tmp/yay && \
-			     (cd /tmp/yay && makepkg -si --noconfirm --skippgpcheck); then
+			     (cd /tmp/yay && makepkg -s --noconfirm --skippgpcheck && sudo pacman -U --noconfirm ./*.pkg.tar*); then
 				step_success "yay installed from source"
 			fi
 			rm -rf /tmp/yay-bin /tmp/yay
@@ -376,7 +376,7 @@ aur_install() {
 			local build_dir="/tmp/astra-build-${pkg}"
 			rm -rf "${build_dir}"
 			if git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "${build_dir}"; then
-				(cd "${build_dir}" && makepkg -si --noconfirm --skippgpcheck) || step_warn "makepkg failed for ${pkg}"
+				(cd "${build_dir}" && makepkg -s --noconfirm --skippgpcheck && sudo pacman -U --noconfirm ./*.pkg.tar*) || step_warn "makepkg failed for ${pkg}"
 				rm -rf "${build_dir}"
 			else
 				step_warn "Could not clone AUR repository for ${pkg}"
