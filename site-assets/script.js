@@ -419,15 +419,50 @@
     });
   });
 
-  /* ── CLICK TO COPY CODE SNIPPETS ──────────────────────── */
-  document.querySelectorAll('.install__step code, .install__quick-box code, .presets__cli code').forEach(code => {
+  /* ── CLICK TO COPY CODE SNIPPETS (EMIL KOWALSKI FLUID RESPONSE) ── */
+  const oneLinerCommand = 'curl -fsSL https://raw.githubusercontent.com/AmanicX/astra-os/main/install.sh | bash';
+  const copyPill = document.getElementById('copyOneLinerBtn');
+  const codeBlock = document.getElementById('oneLinerCodeBlock');
+
+  function triggerCopyOneLiner(e) {
+    if (e) e.stopPropagation();
+    navigator.clipboard.writeText(oneLinerCommand).then(() => {
+      if (copyPill) {
+        const originalContent = copyPill.innerHTML;
+        copyPill.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span class="copy-text" style="font-weight:700;">Copied!</span>
+        `;
+        copyPill.style.background = 'rgba(94, 230, 242, 0.28)';
+        copyPill.style.borderColor = 'var(--cyan)';
+        copyPill.style.color = '#FFFFFF';
+
+        if (codeBlock) {
+          codeBlock.style.boxShadow = 'inset 0 0 16px rgba(94, 230, 242, 0.25)';
+        }
+
+        setTimeout(() => {
+          copyPill.innerHTML = originalContent;
+          copyPill.style.background = '';
+          copyPill.style.borderColor = '';
+          copyPill.style.color = '';
+          if (codeBlock) codeBlock.style.boxShadow = '';
+        }, 2200);
+      }
+    }).catch(() => {});
+  }
+
+  if (copyPill) copyPill.addEventListener('click', triggerCopyOneLiner);
+  if (codeBlock) codeBlock.addEventListener('click', triggerCopyOneLiner);
+
+  document.querySelectorAll('.install__step-code-box code, .install__quick-box code').forEach(code => {
     code.style.cursor = 'pointer';
-    code.title = 'Click to copy';
+    code.title = 'Click to copy command';
     code.addEventListener('click', () => {
       const text = code.innerText.replace(/^\$\s*/, '');
       navigator.clipboard.writeText(text).then(() => {
         const original = code.innerHTML;
-        code.innerHTML = '<span style="color:#67e8f9">✓ Copied!</span>';
+        code.innerHTML = '<span style="color:var(--cyan); font-weight:600;">✓ Copied to clipboard!</span>';
         setTimeout(() => { code.innerHTML = original; }, 1800);
       }).catch(() => {});
     });
