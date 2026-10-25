@@ -10,4 +10,8 @@ readonly GENERATOR="/usr/share/astra/keybinds/gen-keybinds.py"
 }
 
 python3 "$GENERATOR"
-exec qs -c keybinds -d
+if command -v qs >/dev/null 2>&1; then
+	exec qs -c keybinds -d
+else
+	exec quickshell -c keybinds -d
+fi

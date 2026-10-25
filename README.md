@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="packages/astra-branding/files/usr/share/astra/branding/astraos-lockup.svg" alt="AstraOS" width="560">
+  <img src="packages/astra-branding/files/usr/share/astra/branding/astraos-lockup.svg" alt="Astra Linux" width="560">
 </p>
 
-<h1 align="center">AstraOS</h1>
+<h1 align="center">Astra Linux</h1>
 
 <p align="center">
   A focused, design-driven, cosmic Linux desktop experience built around
@@ -22,12 +22,14 @@
 
 ## 🌌 Overview
 
-**AstraOS** transforms a minimal Arch Linux installation into a fully configured, coherent, and distraction-free desktop computing environment. 
+**Astra Linux** transforms a minimal Arch Linux installation into a fully configured, coherent, and distraction-free desktop computing environment. 
 
-Instead of presenting an empty window manager or bloated generic desktop, AstraOS harmoniously pairs the innovative scrollable tiling model of **Niri** with the refined, modern Wayland shell of **Noctalia v5**. Every detail is pre-configured:
+Instead of presenting an empty window manager or bloated generic desktop, Astra Linux harmoniously pairs the innovative scrollable tiling model of **Niri** with the refined, modern Wayland shell of **Noctalia v5**. Every detail is pre-configured:
 - **Terminal & Prompt:** GPU-accelerated **Kitty** with the transparent Noctalia palette, paired with **Zsh** and the **Oh-My-Posh** (`1_shell`) cosmic prompt.
+- **System Info & Fastfetch:** Pre-configured **Fastfetch** featuring the custom Astra celestial diamond star ASCII logo in solar gold (`#e6a45a`) and void cyan (`#5ee6f2`).
 - **Developer Suite:** **Neovim** pre-configured with **LazyVim** and custom base16 theme synchronization, plus the **OpenCode** terminal AI coding agent.
-- **Cosmic Theming:** Custom 1080p cosmic **GRUB** theme, a 24-frame pulsing star **Plymouth** boot splash, and **SilentSDDM** login greeter with 7 celestial presets.
+- **Curated Wallpapers:** Bright, high-resolution aesthetic daylight landscapes and celestial horizons with **zero logos**, integrated into Noctalia's wallpaper switcher.
+- **Cosmic Theming:** Custom 1080p cosmic **GRUB** theme, a 24-frame pulsing star **Plymouth** boot splash, and **SilentSDDM** login greeter with 10 presets.
 - **Hardware Integration:** Automatic detection and configuration of CPU microcode, GPU stacks (NVIDIA, AMD, Intel), and Virtual Machine guest additions (VirtualBox, VMware, QEMU/KVM).
 
 ---
@@ -37,7 +39,7 @@ Instead of presenting an empty window manager or bloated generic desktop, AstraO
 Install a minimal Arch Linux base system (using the standard `archinstall` script or manual bootstrap), reboot into your new installation as a regular user with `sudo` permissions, and run:
 
 ```bash
-# 1. Clone the AstraOS repository
+# 1. Clone the Astra Linux repository
 git clone https://github.com/AmanicX/astra-os.git
 cd astra-os
 
@@ -62,6 +64,7 @@ The setup script executes a structured, 9-stage installation pipeline:
 ### 2. Base Tooling & AUR Helper Setup
 - Installs essential compilation tools: `base-devel`, `git`, `curl`, and `wget`.
 - Enables the `[multilib]` repository in `/etc/pacman.conf` if commented.
+- **ALPM / Shared Library Compatibility:** Auto-provisions compatibility symlinks (`libalpm.so.13` through `libalpm.so.17`) to prevent AUR helper breakage across pacman upgrades.
 - **AUR Helper Selection:**
   - `paru` *(Default)*: Automatically clones and compiles `paru-bin` from the AUR via `makepkg`.
   - `yay`: Clones and compiles `yay-bin` from the AUR.
@@ -93,24 +96,25 @@ The setup script executes a structured, 9-stage installation pipeline:
   - `Chromium`: Official repository.
   - `Brave`: Privacy browser (`brave-bin` from AUR).
 
-### 5. AstraOS System Branding
-- Creates `/usr/lib/astraos-release` and symlinks `/etc/os-release` with AstraOS distribution identity:
+### 5. Astra Linux System Branding
+- Creates `/usr/lib/astralinux-release` and symlinks `/etc/os-release` with Astra Linux distribution identity:
   ```ini
-  NAME="AstraOS"
-  PRETTY_NAME="AstraOS"
-  ID=astraos
+  NAME="Astra Linux"
+  PRETTY_NAME="Astra Linux"
+  ID=astralinux
   ID_LIKE=arch
   BUILD_ID=rolling
   ANSI_COLOR="38;2;94;230;242"
   LOGO=astraos-logo
   ```
-- Installs AstraOS high-resolution icons into `/usr/share/icons/hicolor/` and rebuilds the icon cache.
-- Deploys cosmic wallpapers into `/usr/share/backgrounds/astraos/`.
+- Installs Astra branding assets (including the custom Fastfetch ASCII logo and vector marks) to `/usr/share/astra/branding/`.
+- Installs Astra icons into `/usr/share/icons/hicolor/` and rebuilds the icon cache.
+- Deploys high-resolution bright wallpapers into `/usr/share/backgrounds/astraos/`.
 
 ### 6. GRUB Cosmic Theming
-- Installs the AstraOS GRUB theme into `/boot/grub/themes/astra/`.
+- Installs the Astra Linux GRUB theme into `/boot/grub/themes/astra/`.
 - Configures `/etc/default/grub` with:
-  - `GRUB_DISTRIBUTOR="AstraOS"`
+  - `GRUB_DISTRIBUTOR="Astra Linux"`
   - `GRUB_THEME="/boot/grub/themes/astra/theme.txt"`
   - `GRUB_GFXMODE="1920x1080,auto"`
   - Kernel parameters: `quiet splash loglevel=3 rd.udev.log_priority=3 vt.global_cursor_default=0`
@@ -125,8 +129,11 @@ The setup script executes a structured, 9-stage installation pipeline:
 
 ### 8. SilentSDDM Display Manager & Presets
 - Deploys the minimalist SilentSDDM greeter into `/usr/share/sddm/themes/silent/`.
-- Links AstraOS wallpapers and installs seven orbital/space presets into `/usr/share/sddm/themes/silent/configs/`.
-- Writes `/etc/sddm.conf.d/astra.conf` with `Current=silent` and `ConfigFile=configs/astra-orbital.conf`.
+- Installs 10 presets into `/usr/share/sddm/themes/silent/configs/`.
+- Configures `/etc/sddm.conf.d/astra.conf` with:
+  - `DisplayServer=x11` on `MinimumVT=7` (ensuring clean hardware VT handoff when launching the Wayland session on VT 1, avoiding black screens in VMs).
+  - Explicit session default set to `niri.desktop`.
+- Pre-seeds `/var/lib/sddm/state.conf` to direct SDDM immediately into Niri.
 - Installs the `astra-sddm-theme` preset switcher utility into `/usr/local/bin/`.
 - Enables `sddm.service` for automatic graphical login.
 
@@ -139,7 +146,8 @@ The setup script executes a structured, 9-stage installation pipeline:
   - `~/.config/opencode/`: OpenCode AI assistant settings and Matugen theme (`tui.json`, `cli.json`).
   - `~/.config/ohmyposh/`: Cosmic `1_shell.omp.json` prompt theme.
   - `~/.config/quickshell/`: Interactive keybind overlay widget (`Super + Shift + /`).
-  - `~/.config/fastfetch/` & `~/.config/btop/`: Customized system monitors.
+  - `~/.config/fastfetch/`: System information monitor pre-configured with the Astra star ASCII logo.
+  - `~/.config/environment.d/10-astra.conf`: Wayland environment defaults (`WLR_NO_HARDWARE_CURSORS=1`, `WLR_RENDERER_ALLOW_SOFTWARE=1`).
   - `~/.zshrc`: Shell history, compinit, autosuggestions, and Oh-My-Posh integration.
 - Updates GNOME/GTK `dconf` databases.
 - Sets the default login shell to `/bin/zsh` via `chsh`.
@@ -169,7 +177,7 @@ The setup script executes a structured, 9-stage installation pipeline:
 
 ## 🎨 SilentSDDM Preset Switcher
 
-AstraOS includes seven pre-configured presets for the SilentSDDM login greeter. You can switch presets anytime using the `astra-sddm-theme` command:
+Astra Linux includes pre-configured presets for the SilentSDDM login greeter. You can switch presets anytime using the `astra-sddm-theme` command:
 
 ```bash
 # List all available presets
@@ -179,17 +187,31 @@ astra-sddm-theme list
 astra-sddm-theme current
 
 # Switch to a preset (requires root)
-sudo astra-sddm-theme set astra-carina
+sudo astra-sddm-theme set astra-daylight
 ```
 
 ### Available Presets:
-1. `astra-orbital` — Original AstraOS 4K cyan-orbital artwork *(Default)*
-2. `astra-aurora` — Vibrant teal aurora spectrum
-3. `astra-ember` — Warm amber celestial dust field
-4. `astra-lunar` — Deep violet lunar twilight
-5. `astra-earthrise` — NASA Apollo 8 Earthrise (`as08-14-2383`)
-6. `astra-carina` — James Webb Space Telescope Cosmic Cliffs
-7. `astra-deepfield` — Hubble Deep Field (`PIA12110`)
+1. `astra-orbital` — Default bright daylight mountain vista *(Default)*
+2. `astra-daylight` — Daylight alpine mountain panorama (no logos)
+3. `astra-sunrise` — Warm minimalist sunrise river and valley (no logos)
+4. `astra-alpine` — Clear blue sky over mountain range (no logos)
+5. `astra-aurora` — Vibrant teal aurora spectrum
+6. `astra-ember` — Warm amber celestial dust field
+7. `astra-lunar` — Deep violet lunar twilight
+8. `astra-earthrise` — NASA Apollo 8 Earthrise (`as08-14-2383`)
+9. `astra-carina` — James Webb Space Telescope Cosmic Cliffs
+10. `astra-deepfield` — Hubble Deep Field (`PIA12110`)
+
+---
+
+## 🖥️ VirtualBox / VM Configuration Notes
+
+If running Astra Linux inside a virtual machine (e.g. **VirtualBox**):
+
+1. **Enable 3D Acceleration:** Niri requires an active OpenGL/KMS render node (`/dev/dri/renderD128`). In VirtualBox, ensure **Enable 3D Acceleration** is checked under **VM Settings > Display** (or run `VBoxManage modifyvm "<VM_NAME>" --accelerate3d on`).
+2. **Graphics Controller:** Use `VMSVGA` with at least 128MB of Video RAM.
+3. **Cursor Support:** Astra Linux automatically sets `WLR_NO_HARDWARE_CURSORS=1` in `/etc/environment` so software-rendered cursors do not disappear or freeze in virtualized environments.
+4. **DRM & VT Handoff:** SDDM is configured with `MinimumVT=7` to guarantee a clean kernel VT switch to VT 1 upon login, ensuring the virtual display adapter initializes Wayland immediately without blank screens.
 
 ---
 
@@ -222,7 +244,7 @@ Options:
 
 ## 🤝 Upstream Credits & Attributions
 
-AstraOS is made possible by these outstanding open-source projects:
+Astra Linux is made possible by these outstanding open-source projects:
 
 - **[Niri](https://github.com/YaLixDee/niri)** by YaLixDee and contributors *(Scrollable tiling Wayland compositor)*
 - **[Noctalia](https://github.com/noctalia-dev/noctalia)** (v5) by Clement Fombonne and the Noctalia team *(Desktop shell, status bar, and control center)*
@@ -232,6 +254,7 @@ AstraOS is made possible by these outstanding open-source projects:
 - **[Kitty](https://github.com/kovidgoyal/kitty)** by Kovid Goyal *(GPU-accelerated terminal emulator)*
 - **[Oh My Posh](https://github.com/JanDeDobbeleer/oh-my-posh)** by Jan De Dobbeleer *(Prompt theme engine)*
 - **[Quickshell](https://github.com/outfoxxed/quickshell)** by outfoxxed *(Wayland QML desktop widget toolkit)*
+- **[Fastfetch](https://github.com/fastfetch-cli/fastfetch)** by Linus Dierheimer and contributors *(Modern, blazing-fast system information tool)*
 - **[GNU GRUB](https://www.gnu.org/software/grub/)** & **[Plymouth](https://www.freedesktop.org/wiki/Software/Plymouth/)** *(Bootloader and graphical boot splash)*
 - **[Arch Linux](https://archlinux.org/)** *(The simple, lightweight, flexible base)*
 - **NASA / ESA / CSA / STScI** *(Historic Apollo 8 Earthrise, JWST Carina Nebula, and Hubble Deep Field imagery)*
@@ -240,5 +263,5 @@ AstraOS is made possible by these outstanding open-source projects:
 
 ## 📄 License
 
-AstraOS is open-source software licensed under the **[MIT License](LICENSE)**.  
+Astra Linux is open-source software licensed under the **[MIT License](LICENSE)**.  
 Third-party upstream projects retain their respective open-source licenses (see [`THIRD_PARTY.md`](THIRD_PARTY.md)).

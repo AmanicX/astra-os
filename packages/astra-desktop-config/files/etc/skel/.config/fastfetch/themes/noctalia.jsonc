@@ -1,8 +1,9 @@
 {
   "logo": {
+    "source": "/usr/share/astra/branding/astra-ascii.txt",
     "color": {
-      "1": "#e6b450",
-      "2": "#aad94c"
+      "1": "cyan",
+      "2": "yellow"
     }
   },
   "display": {

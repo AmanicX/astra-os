@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ==============================================================================
-#  ✦ AstraOS — Desktop Setup & Configuration Script
+#  ✦ Astra Linux — Desktop Setup & Configuration Script
 #  https://github.com/AmanicX/astra-os
 #
 #  Transforms a minimal Arch Linux installation into a fully-configured
-#  AstraOS desktop featuring Niri, Noctalia, Kitty, LazyVim, Opencode,
+#  Astra Linux desktop featuring Niri, Noctalia, Kitty, LazyVim, Opencode,
 #  Oh-My-Posh Zsh, SilentSDDM, Plymouth, and cosmic GRUB theming.
 # ==============================================================================
 
@@ -138,7 +138,7 @@ check_environment() {
 
 	# 2. Arch Linux check
 	if [[ ! -f /etc/arch-release ]] && ! grep -qiE 'arch|astra' /etc/os-release 2>/dev/null; then
-		die "AstraOS setup requires an Arch Linux base system. /etc/arch-release was not found."
+		die "Astra Linux setup requires an Arch Linux base system. /etc/arch-release was not found."
 	fi
 	step_success "Arch Linux base detected"
 
@@ -168,7 +168,7 @@ show_menu() {
 		return 0
 	fi
 
-	printf "${C_CYAN}${C_BOLD}╭─ Configure Your AstraOS Experience ───────────────────────${C_RESET}\n"
+	printf "${C_CYAN}${C_BOLD}╭─ Configure Your Astra Linux Experience ───────────────────────${C_RESET}\n"
 	printf "${C_CYAN}│${C_RESET} Please choose your preferred components:\n"
 	printf "${C_CYAN}│${C_RESET}\n"
 
@@ -212,35 +212,35 @@ show_menu() {
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ Hardware Drivers:${C_RESET} ${OPT_DRIVERS}\n"
 
 	# 4. System Rebranding
-	read -r -p "Rebrand system to AstraOS (/etc/os-release & logo)? [Y/n]: " choice_rebrand
+	read -r -p "Rebrand system to Astra Linux (/etc/os-release & logo)? [Y/n]: " choice_rebrand
 	if [[ "${choice_rebrand}" =~ ^[Nn] ]]; then
 		OPT_REBRAND="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ Rebranding:${C_RESET} ${OPT_REBRAND}\n"
 
 	# 5. GRUB Theming
-	read -r -p "Install AstraOS cosmic GRUB Theme & 1080p styling? [Y/n]: " choice_grub
+	read -r -p "Install Astra Linux cosmic GRUB Theme & 1080p styling? [Y/n]: " choice_grub
 	if [[ "${choice_grub}" =~ ^[Nn] ]]; then
 		OPT_GRUB="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ GRUB Theming:${C_RESET} ${OPT_GRUB}\n"
 
 	# 6. Plymouth Boot Splash
-	read -r -p "Install AstraOS Plymouth boot splash (cosmic star animation)? [Y/n]: " choice_ply
+	read -r -p "Install Astra Linux Plymouth boot splash (cosmic star animation)? [Y/n]: " choice_ply
 	if [[ "${choice_ply}" =~ ^[Nn] ]]; then
 		OPT_PLYMOUTH="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ Plymouth Boot Splash:${C_RESET} ${OPT_PLYMOUTH}\n"
 
 	# 7. SDDM Theme
-	read -r -p "Install AstraOS SilentSDDM login theme and enable SDDM? [Y/n]: " choice_sddm
+	read -r -p "Install Astra Linux SilentSDDM login theme and enable SDDM? [Y/n]: " choice_sddm
 	if [[ "${choice_sddm}" =~ ^[Nn] ]]; then
 		OPT_SDDM="no"
 	fi
 	printf "${C_CYAN}│${C_RESET}   ${C_GREEN}→ SDDM Theme:${C_RESET} ${OPT_SDDM}\n"
 
 	# 8. Desktop Dotfiles
-	read -r -p "Deploy AstraOS desktop dotfiles (Niri, Noctalia, Kitty, LazyVim, Opencode)? [Y/n]: " choice_dot
+	read -r -p "Deploy Astra Linux desktop dotfiles (Niri, Noctalia, Kitty, LazyVim, Opencode)? [Y/n]: " choice_dot
 	if [[ "${choice_dot}" =~ ^[Nn] ]]; then
 		OPT_DOTFILES="no"
 	fi
@@ -248,7 +248,7 @@ show_menu() {
 
 	printf "${C_CYAN}╰───────────────────────────────────────────────────────────${C_RESET}\n\n"
 
-	read -r -p "Begin AstraOS installation with the above settings? [Y/n]: " confirm
+	read -r -p "Begin Astra Linux installation with the above settings? [Y/n]: " confirm
 	if [[ "${confirm}" =~ ^[Nn] ]]; then
 		printf "\nInstallation cancelled by user.\n"
 		exit 0
@@ -646,42 +646,50 @@ setup_branding() {
 		return 0
 	fi
 
-	step_header 5 9 "Applying AstraOS System Branding"
+	step_header 5 9 "Applying Astra Linux System Branding"
 
 	# 1. Update /etc/os-release and /usr/lib/os-release
 	step_info "Configuring /etc/os-release..."
 	sudo mkdir -p /usr/lib
-	sudo tee /usr/lib/astraos-release >/dev/null <<'EOF'
-NAME="AstraOS"
-PRETTY_NAME="AstraOS"
-ID=astraos
+	sudo tee /usr/lib/astralinux-release >/dev/null <<'EOF'
+NAME="Astra Linux"
+PRETTY_NAME="Astra Linux"
+ID=astralinux
 ID_LIKE=arch
 BUILD_ID=rolling
 ANSI_COLOR="38;2;94;230;242"
 LOGO=astraos-logo
-HOME_URL="https://astraos.org"
+HOME_URL="https://github.com/AmanicX/astra-os"
 SUPPORT_URL="https://github.com/AmanicX/astra-os"
 EOF
 
-	sudo cp /usr/lib/astraos-release /usr/lib/os-release
+	sudo cp /usr/lib/astralinux-release /usr/lib/os-release
 	if [[ -L /etc/os-release ]]; then
 		sudo ln -sfn /usr/lib/os-release /etc/os-release
 	else
-		sudo cp /usr/lib/astraos-release /etc/os-release
+		sudo cp /usr/lib/astralinux-release /etc/os-release
 	fi
-	step_success "Branded OS to AstraOS in os-release"
+	step_success "Branded OS to Astra Linux in os-release"
 
-	# 2. Install AstraOS Icons
+	# 2. Install Astra Branding Assets (Fastfetch ASCII, marks, SVGs)
+	if [[ -d "${PACKAGES_DIR}/astra-branding/files/usr/share/astra/branding" ]]; then
+		step_info "Installing Astra branding assets..."
+		sudo mkdir -p /usr/share/astra/branding
+		sudo cp -a "${PACKAGES_DIR}/astra-branding/files/usr/share/astra/branding/." /usr/share/astra/branding/
+		step_success "Astra branding assets installed to /usr/share/astra/branding"
+	fi
+
+	# 3. Install Astra Icons
 	if [[ -d "${PACKAGES_DIR}/astra-branding/files/usr/share/icons/hicolor" ]]; then
-		step_info "Installing AstraOS icons..."
+		step_info "Installing Astra icons..."
 		sudo cp -a "${PACKAGES_DIR}/astra-branding/files/usr/share/icons/hicolor/." /usr/share/icons/hicolor/
 		sudo gtk-update-icon-cache -q -t /usr/share/icons/hicolor 2>/dev/null || true
-		step_success "AstraOS logo icons installed"
+		step_success "Astra logo icons installed"
 	fi
 
-	# 3. Install Wallpapers
+	# 4. Install Wallpapers
 	if [[ -d "${PACKAGES_DIR}/astra-branding/files/usr/share/backgrounds/astraos" ]]; then
-		step_info "Installing AstraOS high-resolution wallpapers..."
+		step_info "Installing high-resolution wallpapers..."
 		sudo mkdir -p /usr/share/backgrounds/astraos
 		sudo cp -a "${PACKAGES_DIR}/astra-branding/files/usr/share/backgrounds/astraos/." /usr/share/backgrounds/astraos/
 		step_success "Wallpapers installed to /usr/share/backgrounds/astraos"
@@ -696,7 +704,7 @@ setup_grub() {
 		return 0
 	fi
 
-	step_header 6 9 "Installing AstraOS GRUB Theme"
+	step_header 6 9 "Installing Astra Linux GRUB Theme"
 
 	local GRUB_SRC="${PACKAGES_DIR}/astra-branding/files/usr/share/grub/themes/astra"
 	if [[ -d "${GRUB_SRC}" ]]; then
@@ -712,9 +720,9 @@ setup_grub() {
 			step_info "Configuring /etc/default/grub..."
 			# Set distributor
 			if grep -q '^GRUB_DISTRIBUTOR=' /etc/default/grub; then
-				sudo sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="AstraOS"/' /etc/default/grub
+				sudo sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="Astra Linux"/' /etc/default/grub
 			else
-				echo 'GRUB_DISTRIBUTOR="AstraOS"' | sudo tee -a /etc/default/grub >/dev/null
+				echo 'GRUB_DISTRIBUTOR="Astra Linux"' | sudo tee -a /etc/default/grub >/dev/null
 			fi
 
 			# Set theme
@@ -754,7 +762,7 @@ setup_grub() {
 			# Regenerate grub.cfg
 			step_info "Generating GRUB configuration (grub-mkconfig)..."
 			sudo grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || true
-			step_success "AstraOS GRUB theme applied"
+			step_success "Astra Linux GRUB theme applied"
 		else
 			step_warn "/etc/default/grub not found. Skipped grub-mkconfig."
 		fi
@@ -847,9 +855,10 @@ setup_sddm() {
 
 	# Configure SDDM
 	step_info "Writing /etc/sddm.conf.d/astra.conf..."
-	sudo mkdir -p /etc/sddm.conf.d
+	sudo mkdir -p /etc/sddm.conf.d /var/lib/sddm
 	sudo tee /etc/sddm.conf.d/astra.conf >/dev/null <<'EOF'
 [General]
+DisplayServer=x11
 HaltCommand=/usr/bin/systemctl poweroff
 RebootCommand=/usr/bin/systemctl reboot
 Numlock=on
@@ -867,7 +876,23 @@ EnableAvatars=true
 [Users]
 RememberLastUser=true
 RememberLastSession=true
+
+[Autologin]
+Session=niri.desktop
+
+[Last]
+Session=/usr/share/wayland-sessions/niri.desktop
+
+[X11]
+MinimumVT=7
 EOF
+
+	# Pre-seed last session so SDDM defaults immediately to Niri
+	sudo tee /var/lib/sddm/state.conf >/dev/null <<'EOF'
+[Last]
+Session=/usr/share/wayland-sessions/niri.desktop
+EOF
+	sudo chmod 0644 /var/lib/sddm/state.conf 2>/dev/null || true
 
 	# Install theme switcher utility
 	if [[ -f "${PACKAGES_DIR}/astra-sddm-theme/astra-sddm-theme" ]]; then
@@ -878,7 +903,7 @@ EOF
 	# Enable sddm service
 	step_info "Enabling sddm.service..."
 	sudo systemctl enable sddm.service 2>/dev/null || true
-	step_success "AstraOS SilentSDDM configured and enabled"
+	step_success "Astra Linux SilentSDDM configured and enabled"
 
 	step_end
 }
@@ -927,6 +952,26 @@ setup_desktop_dotfiles() {
 		sudo ln -sf /usr/local/bin/astra-default-browser /usr/bin/astra-default-browser 2>/dev/null || true
 	fi
 
+	# 4b. Wayland VM & Quickshell Compatibility
+	step_info "Configuring Wayland VM environment variables and helpers..."
+	sudo mkdir -p /etc/environment.d "${TARGET_HOME}/.config/environment.d"
+	if ! grep -q 'WLR_NO_HARDWARE_CURSORS' /etc/environment 2>/dev/null; then
+		echo 'WLR_NO_HARDWARE_CURSORS=1' | sudo tee -a /etc/environment >/dev/null
+	fi
+	if ! grep -q 'WLR_RENDERER_ALLOW_SOFTWARE' /etc/environment 2>/dev/null; then
+		echo 'WLR_RENDERER_ALLOW_SOFTWARE=1' | sudo tee -a /etc/environment >/dev/null
+	fi
+	tee "${TARGET_HOME}/.config/environment.d/10-astra.conf" >/dev/null <<'EOF'
+WLR_NO_HARDWARE_CURSORS=1
+WLR_RENDERER_ALLOW_SOFTWARE=1
+EOF
+
+	# Ensure qs symlink is available for astra-keybinds-start and quickshell CLI
+	if command -v quickshell >/dev/null 2>&1; then
+		sudo ln -sf "$(command -v quickshell)" /usr/local/bin/qs 2>/dev/null || true
+		sudo ln -sf "$(command -v quickshell)" /usr/bin/qs 2>/dev/null || true
+	fi
+
 	# 5. Dconf database update
 	if [[ -d "${PACKAGES_DIR}/astra-desktop-config/files/etc/dconf" ]]; then
 		step_info "Applying GNOME / GTK dconf profiles..."
@@ -955,9 +1000,15 @@ setup_desktop_dotfiles() {
 		sudo sed -i "s/firefox\.desktop/${DESKTOP_FILE}/g" /etc/skel/.config/mimeapps.list 2>/dev/null || true
 	fi
 
-	# 8. Set Default Wallpaper
-	if [[ -f /usr/share/backgrounds/astraos/astraos-default.png ]]; then
-		cp /usr/share/backgrounds/astraos/astraos-default.png "${TARGET_HOME}/Pictures/Wallpapers/default.png" 2>/dev/null || true
+	# 8. Set Default Wallpaper & populate user wallpapers
+	if [[ -d /usr/share/backgrounds/astraos ]]; then
+		mkdir -p "${TARGET_HOME}/Pictures/Wallpapers"
+		cp -n /usr/share/backgrounds/astraos/* "${TARGET_HOME}/Pictures/Wallpapers/" 2>/dev/null || true
+		if [[ -f /usr/share/backgrounds/astraos/astra-daylight-mountain.png ]]; then
+			cp /usr/share/backgrounds/astraos/astra-daylight-mountain.png "${TARGET_HOME}/Pictures/Wallpapers/default.png" 2>/dev/null || true
+		elif [[ -f /usr/share/backgrounds/astraos/astraos-default.png ]]; then
+			cp /usr/share/backgrounds/astraos/astraos-default.png "${TARGET_HOME}/Pictures/Wallpapers/default.png" 2>/dev/null || true
+		fi
 	fi
 
 	# 9. Set Default Shell to Zsh
@@ -989,7 +1040,7 @@ show_completion() {
 	cat <<EOF
 
 ${C_CYAN}${C_BOLD}╭───────────────────────────────────────────────────────────╮
-│  ✦ AstraOS Setup Complete! Welcome to the Stars ✦         │
+│  ✦ Astra Linux Setup Complete! Welcome to the Stars ✦     │
 ╰───────────────────────────────────────────────────────────╯${C_RESET}
 
   ${C_GOLD}✦ Compositor:${C_RESET}    Niri ${C_MUTED}(Scrollable tiling Wayland compositor)${C_RESET}
@@ -1015,7 +1066,7 @@ EOF
 	if [[ ${OPT_NONINTERACTIVE} -eq 0 ]]; then
 		read -r -p "Would you like to reboot now? [y/N]: " reboot_choice
 		if [[ "${reboot_choice}" =~ ^[Yy] ]]; then
-			printf "\nRebooting into AstraOS...\n"
+			printf "\nRebooting into Astra Linux...\n"
 			sudo systemctl reboot
 		fi
 	fi
