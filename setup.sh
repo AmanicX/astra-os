@@ -1044,10 +1044,10 @@ EOF
 	if [[ -d /usr/share/backgrounds/astraos ]]; then
 		mkdir -p "${TARGET_HOME}/Pictures/Wallpapers"
 		cp -n /usr/share/backgrounds/astraos/* "${TARGET_HOME}/Pictures/Wallpapers/" 2>/dev/null || true
-		if [[ -f /usr/share/backgrounds/astraos/astra-daylight-mountain.png ]]; then
-			cp /usr/share/backgrounds/astraos/astra-daylight-mountain.png "${TARGET_HOME}/Pictures/Wallpapers/default.png" 2>/dev/null || true
-		elif [[ -f /usr/share/backgrounds/astraos/astraos-default.png ]]; then
+		if [[ -f /usr/share/backgrounds/astraos/astraos-default.png ]]; then
 			cp /usr/share/backgrounds/astraos/astraos-default.png "${TARGET_HOME}/Pictures/Wallpapers/default.png" 2>/dev/null || true
+		elif [[ -f /usr/share/backgrounds/astraos/astraos-default.jpg ]]; then
+			cp /usr/share/backgrounds/astraos/astraos-default.jpg "${TARGET_HOME}/Pictures/Wallpapers/default.jpg" 2>/dev/null || true
 		fi
 	fi
 
