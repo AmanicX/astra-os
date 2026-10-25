@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-# Force the wizard's manual timezone input branch in tests.
-exit 1

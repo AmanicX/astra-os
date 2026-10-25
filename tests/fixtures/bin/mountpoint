@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# Test fixture: /mnt and /mnt/boot/efi are the pre-mounted layout.
-case "${2:-}" in
-/mnt | /mnt/boot/efi) exit 0 ;;
-*) exit 1 ;;
-esac

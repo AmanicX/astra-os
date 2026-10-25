@@ -1,19 +1,15 @@
-*.iso
-*.iso.sha256
-/release/
-/build/
-/out/
-/repo/
-/work/
+# Logs and environment
 *.log
 .env
 *.key
 *.pem
 
-# Rust & Tauri
-**/target/
-**/*.rs.bk
-installer/ui
+# Build artifacts
+/build/
+/out/
+/release/
+/repo/
+/work/
 
 # Makepkg build artifacts
 packages/*/*/src/
@@ -23,5 +19,3 @@ packages/astra-sddm-theme/silent-sddm/
 packages/astra-sddm-theme/src/
 packages/astra-sddm-theme/pkg/
 packages/astra-sddm-theme/*.pkg.tar.*
-packages/astra-installer/astra-installer-gui
-
