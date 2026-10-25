@@ -384,6 +384,17 @@
     'ArrowLeft': '←',
     'ArrowRight': '→',
     '/': '/',
+    'e': 'E',
+    'E': 'E',
+    '1': '1',
+    '2': '2',
+    '3': '3',
+    '4': '4',
+    '5': '5',
+    '6': '6',
+    '7': '7',
+    '8': '8',
+    '9': '9',
   };
 
   const kbds = document.querySelectorAll('.keybind kbd');
@@ -409,7 +420,7 @@
   });
 
   /* ── CLICK TO COPY CODE SNIPPETS ──────────────────────── */
-  document.querySelectorAll('.install__step code, .presets__cli code').forEach(code => {
+  document.querySelectorAll('.install__step code, .install__quick-box code, .presets__cli code').forEach(code => {
     code.style.cursor = 'pointer';
     code.title = 'Click to copy';
     code.addEventListener('click', () => {
@@ -428,7 +439,7 @@
   });
 
   console.log(
-    '%c✦ AstraOS %c— Astral Meridian',
+    '%c✦ Astra Linux %c— Cosmic Desktop Experience',
     'color: #67E8F9; font-size: 16px; font-weight: 700;',
     'color: #6B7A90; font-size: 16px; font-weight: 300;'
   );
