@@ -1,18 +1,10 @@
 # packages
 
-AstraOS-owned PKGBUILDs live here. Planned packages:
+Astra Linux desktop component assets and configurations used by [`setup.sh`](../setup.sh):
 
 | Package | Purpose |
 |---|---|
-| `astra-branding` | `os-release`, logo, fastfetch config, wallpapers, GRUB/Plymouth tweaks |
-| `astra-desktop-config` | niri, Noctalia, kitty, zsh, Neovim, mpv, btop, GTK/dconf defaults |
-| `astra-sddm-theme` | chosen SDDM theme plus `/etc/sddm.conf.d/astra.conf` |
-| `astra-keybinds` | keybind overlay generator, QML and toggle script |
-| `astra-installer` | `astra-install` and its libraries |
-| `astra-updater` | `astra-update`, GUI, polkit policy and systemd units |
-| `astra-keyring` | project signing key |
-| `astra-meta` | depends on the complete desktop |
-
-No PKGBUILD is written before the Phase 0 gate is approved. Package naming and
-file layouts follow Arch packaging conventions; every package is built in a
-clean chroot and signed with the Astra key.
+| [`astra-branding`](./astra-branding/) | Distribution identity (`/etc/os-release`), Fastfetch ASCII star, high-res bright wallpapers, 1080p GRUB theme, 24-frame Plymouth boot splash, and hicolor icons |
+| [`astra-desktop-config`](./astra-desktop-config/) | Default configurations for Niri, Noctalia v5, Kitty terminal, Zsh + Oh-My-Posh (`1_shell`), LazyVim, Opencode AI agent, Btop, and GTK / Dconf profiles |
+| [`astra-sddm-theme`](./astra-sddm-theme/) | SilentSDDM login greeter theme, Astra orbital / daylight presets, wallpaper links, and `astra-sddm-theme` switcher CLI |
+| [`astra-keybinds`](./astra-keybinds/) | Quickshell interactive keybind cheatsheet overlay and toggle scripts |
